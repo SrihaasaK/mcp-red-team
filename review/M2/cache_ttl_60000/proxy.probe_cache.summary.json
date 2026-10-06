@@ -1,0 +1,14 @@
+{
+  "server": "probe_cache",
+  "trial_id": "cache_ttl_60000",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2026-07-28",
+  "era_observed": "2026-07-28",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 2,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 8
+}

@@ -24,3 +24,5 @@ scaffolds/*/.venv/
 runs/
 # ruflo AgentDB store (local tooling, not part of this project)
 agentdb.rvf*
+review/M2/final/
+review/M2/drafts/

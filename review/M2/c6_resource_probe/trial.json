@@ -1,0 +1,20 @@
+{
+  "run_id": "c6",
+  "trial_id": "c6",
+  "task_id": "probe",
+  "instruction": "",
+  "era": "2026-07-28",
+  "transport": "streamable-http",
+  "scaffold": "openai-agents",
+  "model": "none",
+  "mode": "record",
+  "trial_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M2/c6_resource_probe",
+  "servers": [
+    "notes"
+  ],
+  "mcp": {},
+  "recording_dir": null,
+  "base_url": "https://api.anthropic.com/v1/",
+  "model_settings": {},
+  "max_turns": 12
+}

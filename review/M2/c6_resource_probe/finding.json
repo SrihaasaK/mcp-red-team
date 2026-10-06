@@ -1,0 +1,11 @@
+{
+  "question": "Does the OpenAI Agents SDK surface MCP resource reads to the model?",
+  "method": "static inspection of the installed openai-agents 0.23.1 (adapter venv)",
+  "evidence": {
+    "agents.mcp.util.get_function_tools": "builds the model toolset from list_tools ONLY; no call to list_resources or resources/read",
+    "MCPServerStreamableHttp": "has list_resources/read_resource methods for manual app use, but the Agent loop never calls them",
+    "Agent": "has no 'resources' field; resources are not part of the model-visible toolset"
+  },
+  "conclusion": "The model cannot read an MCP resource through the OpenAI Agents SDK as the harness uses it. Class 6 (resource-content injection) is N/A on the OpenAI scaffold.",
+  "note": "LangGraph and Claude Agent SDK are determined by a D17-style probe before their first result (PREREG N/A rule)."
+}

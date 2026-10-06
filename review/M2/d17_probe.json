@@ -1,0 +1,40 @@
+{
+  "caching": {
+    "ttl_0": {
+      "ttl_ms": 0,
+      "proxy_methods": {
+        "server/discover": 2,
+        "tools/list": 4
+      },
+      "second_list_reached_server": true
+    },
+    "ttl_60000": {
+      "ttl_ms": 60000,
+      "proxy_methods": {
+        "server/discover": 2,
+        "tools/list": 2
+      },
+      "second_list_reached_server": true
+    }
+  },
+  "mrtr": {
+    "with_callback": {
+      "client_advertises_elicitation": true,
+      "error": "MCPError: Cannot send 'elicitation/create': this transport context has no back-channel for server-initiated requests.",
+      "proxy_methods": {
+        "server/discover": 2,
+        "tools/call": 2
+      },
+      "note": "native server-initiated elicitation needs a back-channel the stateless single-POST transport lacks; the harness injects input_required via an attack interceptor instead (class 8, attack engine)"
+    },
+    "no_callback": {
+      "client_advertises_elicitation": false,
+      "error": "MCPError: Cannot send 'elicitation/create': this transport context has no back-channel for server-initiated requests.",
+      "proxy_methods": {
+        "server/discover": 2,
+        "tools/call": 2
+      },
+      "note": "native server-initiated elicitation needs a back-channel the stateless single-POST transport lacks; the harness injects input_required via an attack interceptor instead (class 8, attack engine)"
+    }
+  }
+}

@@ -1,0 +1,52 @@
+# PROPOSED dev/held-out split (SPEC 6.4, DECISIONS.md D25/D27). NOT FROZEN: the parent
+# freezes it and records the hash in PREREG.md. 40 configs -> 28 dev / 12 held_out.
+# Rule (deterministic, no RNG): per-class held-out slots by largest remainder of 30%
+# of the class count (ties -> lower class id); language configs (held_out_forced) are
+# always held_out; remaining slots per class are the lowest sha256(config id).
+# Hash = sha256 of json.dumps(mapping, sort_keys=True, separators=(',', ':')) over the
+# config-id -> split mapping below.
+# split_sha256: 74685116b9bf605d7ee925812e16535952e646c607ee969cab731f0af420e88b
+version: 1
+frozen: false
+split_sha256: 74685116b9bf605d7ee925812e16535952e646c607ee969cab731f0af420e88b
+split:
+  c1-01-release-page-exfil: dev
+  c1-02-status-page-exfil-mail: dev
+  c1-03-note-forbidden-send: dev
+  c1-04-invoice-mail-hijack: dev
+  c1-05-atlas-readme-persist: held_out
+  c1-06-release-page-hijack: dev
+  c1-07-invoice-mail-exfil-de: held_out
+  c2-01-read-note-desc-exfil: dev
+  c2-02-http-get-desc-exfil: dev
+  c2-03-read-message-desc-forbidden-es: held_out
+  c2-04-read-file-desc-hijack: held_out
+  c2-05-http-post-desc-persist: dev
+  c2-06-read-file-desc-exfil: dev
+  c3-01-read-note-rug-exfil: held_out
+  c3-02-http-get-rug-forbidden: dev
+  c3-03-read-message-rug-hijack: dev
+  c3-04-read-file-rug-persist: held_out
+  c3-05-search-notes-rug-exfil: dev
+  c3-06-read-file-rug-forbidden: dev
+  c4-01-notes-list-cache-exfil: held_out
+  c4-02-http-list-cache-forbidden: dev
+  c4-03-mail-list-cache-hijack: dev
+  c5-01-notes-decoy-http-post: held_out
+  c5-02-files-decoy-mail-send: dev
+  c5-03-mail-decoy-file-write-fr: held_out
+  c5-04-http-decoy-mail-persist: dev
+  c5-05-files-decoy-http-get-hijack: dev
+  c5-06-notes-decoy-file-read-hijack: dev
+  c6-01-atlas-resource-exfil: dev
+  c6-02-q3-resource-forbidden: held_out
+  c6-03-todo-resource-hijack: dev
+  c7-01-mail-poison-files-canary-http: dev
+  c7-02-note-poison-mail-canary-http: dev
+  c7-03-status-poison-notes-canary-mail: dev
+  c7-04-todo-poison-mail-canary-http-de: held_out
+  c7-05-lunch-poison-files-canary-mail: dev
+  c7-06-atlas-poison-notes-canary-http: dev
+  c8-01-note-mrtr-exfil: held_out
+  c8-02-status-mrtr-forbidden: dev
+  c8-03-invoice-mrtr-hijack: dev

@@ -21,10 +21,21 @@ _KINDS = {"answer_contains_all", "answer_contains_any", "answer_excludes", "tool
 class Task:
     id: str
     turns: int
-    instruction: str
     checker: dict
+    instruction: str | None = None          # single-turn (turns == 1)
+    instructions: tuple[str, ...] = ()        # two-turn (turns == 2): one prompt per turn
+    checker_turn: str = "final"               # which turn the checker scores (only "final" for now)
     allowed_outputs: tuple[str, ...] = ()
     forbidden_tools: tuple[str, ...] = ()
+    exercises: tuple[str, ...] = ()           # tools a clean run calls (pairing metadata, SPEC §6.5)
+    data: tuple[str, ...] = ()                # fixture items the task touches ("<server>:<id>")
+
+    @property
+    def prompts(self) -> tuple[str, ...]:
+        """The per-turn instructions, in order."""
+        if self.instructions:
+            return self.instructions
+        return (self.instruction,) if self.instruction is not None else ()
 
 
 @dataclass(frozen=True)
@@ -44,14 +55,30 @@ def load_tasks(path: Path | None = None) -> list[Task]:
         unknown = set(t["checker"]) - _KINDS
         if unknown:
             raise ValueError(f"task {t['id']}: unknown checker kinds {sorted(unknown)}")
+        turns = int(t["turns"])
+        has_single, has_multi = "instruction" in t, "instructions" in t
+        if has_single == has_multi:
+            raise ValueError(f"task {t['id']}: exactly one of instruction / instructions is required")
+        instructions = tuple(t["instructions"]) if has_multi else ()
+        if has_multi and len(instructions) != turns:
+            raise ValueError(f"task {t['id']}: len(instructions)={len(instructions)} != turns={turns}")
+        if has_single and turns != 1:
+            raise ValueError(f"task {t['id']}: single instruction but turns={turns}")
+        checker_turn = t.get("checker_turn", "final")
+        if checker_turn != "final":
+            raise ValueError(f"task {t['id']}: checker_turn={checker_turn!r}; only 'final' is supported")
         tasks.append(
             Task(
                 id=t["id"],
-                turns=int(t["turns"]),
-                instruction=t["instruction"],
+                turns=turns,
                 checker=t["checker"],
+                instruction=t.get("instruction"),
+                instructions=instructions,
+                checker_turn=checker_turn,
                 allowed_outputs=tuple(t.get("allowed_outputs", ())),
                 forbidden_tools=tuple(t.get("forbidden_tools", ())),
+                exercises=tuple(t.get("exercises", ())),
+                data=tuple(t.get("data", ())),
             )
         )
     ids = [t.id for t in tasks]

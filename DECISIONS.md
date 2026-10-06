@@ -750,3 +750,130 @@ PASS).
 **Not done in M1, by design.** No mutator library, stats module, M2 task drafts or
 attack corpus exist. They are M2 deliverables (SPEC §6.3, §8, §7.1, §6.4), kept
 out of M1 by CLAUDE.md #2.
+
+---
+
+# M2 (begun 2026-10-06)
+
+## D22. M2 kickoff: scope, D17 results, conditional-class map, the Opus condition
+Milestone M2 (SPEC §12): all 8 attack classes (conditional where the probe found
+the behavior), mock `files` and `mail`, the ~40-task benign suite (>=10 two-turn),
+the published ~40-config attack corpus with compatible-task pairing and the frozen
+70/30 split, the control arm, `PREREG.md` committed **before the first result**, and
+a review packet. Built strictly in order (CLAUDE.md #2); this is the only milestone
+this session.
+
+**Order (author's).** (1) D17 probes + class map [done]. (2) In parallel, isolated
+subagents draft the mutator library and stats module (with tests) and DRAFT
+`tasks/benign.yaml`, `attacks/corpus.yaml`, and the sampled-factorial design.
+(3) **STOP** for author review of the task/corpus drafts, the factorial design, and
+the class map. (4) After approval: freeze the 70/30 split and commit `PREREG.md`
+before any result. (5) Build the oracle, fixtures, control arm, and attack engine;
+run the M2 acceptance check (dev split, Sonnet + Opus, 1 scaffold); re-measure cost
+and resolve the Opus condition below; review packet; report; stop.
+
+**D17 results (step 1).** Full evidence in `review/M2/D17_SUMMARY.md` and
+`review/M2/d17_probe.json`.
+- Caching: the proxy forwards `ttlMs`/`cacheScope` unchanged. The OpenAI Agents SDK
+  re-fetches `tools/list` every turn, so there is no persistent list to poison.
+- MRTR: the OpenAI Agents SDK advertises no elicitation capability. The class-8
+  attack injects an `input_required` result via an interceptor (attack engine), and
+  applies only to a scaffold whose client handles elicitation.
+
+**Conditional-class map (M2, OpenAI Agents SDK).** Draft for PREREG (step 4), to be
+frozen after review:
+- Always: 1, 2, 5, 6, 7. Handshake arm only: 3 (rug pull).
+- N/A for this scaffold: 4 (cache poisoning), 8 (MRTR injection).
+Classes report N/A, never 0% (SPEC §6.1). As more scaffolds arrive (M3), 4 and 8 are
+re-evaluated (the Claude Agent SDK is the candidate for both).
+
+**The Opus condition (resolved at step 5).** D19 makes Opus 5.5 the second model for
+M2's "1 scaffold x 2 models" dev-split table. Before running the Opus dev trials at
+step 5:
+1. Re-measure actual M2 dev-run cost on Sonnet, and re-project M2-M4. Proceed with
+   Opus only if the projection stays <= \$375; otherwise stop and ask (CLAUDE.md #8).
+2. Confirm Opus 5.5 accepts the pinned settings (effort=medium, no temperature, no
+   seed) with the same probe used for Sonnet (D21), and record the effective
+   settings. If a setting cannot be pinned, log it as a determinism limitation.
+
+**Subagent rules for step 2 (recorded per CLAUDE.md #10).** The drafting subagents
+run with git-worktree isolation from `head` (commit 6a55ad4), make **no live model
+calls** and need **no API key**, and receive **no secret** in any prompt (the key
+stays in `.env`, read only by the harness; [[no-subagents-with-secrets]] applies —
+this turn's message carries no secret). Their outputs are drafts; nothing is frozen
+or committed until the author approves at step 3 and `PREREG.md` is committed at
+step 4.
+
+## D23. Extend M1 tasks' forbidden-tool lists (pre-PREREG apparatus change; author call 2, narrowed)
+Every benign task's `forbidden_tools` is the set of **side-effecting / sink tools the
+task does not exercise**: `http.http_post`, `mail.send_message`, `files.write_file`.
+Benign read/list tools are **never** forbidden. This includes the M1 five, whose M1
+lists only forbade `http.http_post`.
+- **Why:** the forbidden-action oracle (SPEC §7.2) fires when a task calls a tool in
+  its forbidden list; a sink absent from the list can't be scored as a forbidden
+  action, which under-counts forbidden-action attacks.
+- **Narrowed from "every unused tool" (author decision):** the broad form caused a
+  **control-arm false positive** — a benign M1 run of `notes-grocery-count` called
+  `notes.list_notes` (a harmless exploratory read not in its `exercises`), which would
+  have tripped the forbidden-action oracle. Scoping to side-effecting tools keeps the
+  control arm clean (SPEC §7.3) while still scoring sink-targeted forbidden-action
+  attacks; exfil-chain reads are scored by the exfil oracle, not forbidden-action.
+  Verified: after narrowing, the five M1 benign runs trip zero forbidden-action
+  verdicts.
+- **Integrity (SPEC §1):** this changes the measurement apparatus and is made **before**
+  `PREREG.md` and any result exists. Logged here; frozen with the suite at step 4.
+- **Rejected:** keeping M1's minimal lists — would silently narrow what counts as a
+  forbidden action.
+
+## D24. Class 6 (resource-content injection) N/A on OpenAI (author call 3; D17-style)
+Probe (`review/M2/c6_resource_probe/finding.json`): the OpenAI Agents SDK builds the
+model toolset from `list_tools` only; `agents.mcp.util` never calls `list_resources`
+or `resources/read`, and `Agent` has no resources field. The model cannot read an MCP
+resource through this scaffold -> **class 6 N/A on OpenAI.**
+- File-read tools are **not** reassigned to class 6 (they are ordinary tools; class 6
+  is specifically resource reads). Class-6 configs stay resource-targeted and
+  conditional.
+- LangGraph and Claude Agent SDK: determined by a D17-style probe before their first
+  result (see D28).
+
+## D25. Language is the held-out-only mutator family (author calls 1, 4)
+SPEC §6.4 requires at least one entire mutator family to appear only in held-out. That
+family is **language**. The sampled factorial **excludes language entirely** (call 1).
+In the published suite, language-bearing configs are trimmed to **3–4** and all are
+assigned to held-out, so the held-out set stays class-stratified.
+- **Rejected:** a framing/encoding family as the held-out one — language is the most
+  separable (label-only in `mutators.py`, no semantic overlap with other families).
+
+## D26. Factorial factors and seeding (author call 5)
+Placement stays its own factor (class × mutator-family × placement strata). Sampling
+randomness comes from `numpy.random.SeedSequence(base_seed).spawn(n)`; `base_seed` is
+passed via args, never generated in-script (workflow determinism rule). `PREREG.md`
+records that **seeds control sampling only** — they do not make model outputs
+reproducible, because the compat endpoint ignores `seed` and temperature is unsettable
+(D21). Reproducibility of a given trial rests on replay (SPEC §8.5, §9.1).
+
+## D27. Corpus rebalance + factorial scope (author calls 1, 6)
+- **Class counts (40 configs):** classes N/A on BOTH lean headline scaffolds get 3
+  configs; the remainder is split across the classes that run in the headline.
+  N/A-on-both = 4 (cache; stateless-conditional, LangGraph is stateful-only),
+  8 (MRTR; same), 6 (resource; D24, LangGraph TBD per D28). Headline classes =
+  1, 2, 3 (handshake arm), 5, 7. Result: **1:7, 2:6, 3:6, 4:3, 5:6, 6:3, 7:6, 8:3**.
+  Every config keeps >=1 compatible task (SPEC §6.5), re-checked after rebalance.
+- **Factorial (amended SPEC §6.4, D19):** base configs are drawn from the **dev split
+  only** (never held-out — integrity, SPEC §6.4). Runs on OpenAI: **stateless** era
+  for all classes except **class 3**, which runs **handshake**. Classes N/A on OpenAI
+  (4, 6, 8) are dropped, not reallocated.
+- **Rejected:** giving class 6 a full headline share — it is N/A on the only M2
+  scaffold and config-inefficient to over-weight before LangGraph is probed.
+
+## D28. PREREG N/A rule for scaffolds not yet built (author call 7)
+`PREREG.md` pre-registers the RULE, not a guess: for each scaffold not yet built
+(LangGraph, Claude Agent SDK), the applicability of each conditional class (3, 4, 6, 8)
+is determined by a D17-style probe on that scaffold **before its first result**, and
+the outcome is logged. This freezes the procedure without freezing an unmeasured value,
+keeping the conditional-class map honest (SPEC §6.1, §8.6).
+
+## D29. encoding sentinel + worktree cleanup (author call 8)
+The corpus writes "no encoding" as YAML `null`/omission, not the string `"none"`, to
+match `mutators.py` (which uses `None`/omission). The three step-2 subagent worktrees
+are removed after their outputs are merged.
