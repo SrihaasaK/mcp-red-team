@@ -28,3 +28,15 @@ def test_tool_called_checker():
     assert check(t, "done", good).passed
     assert not check(t, "done", wrong_body).passed
     assert not check(t, "done", []).passed
+
+
+def test_answer_matching_uses_whole_tokens():
+    t = by_id()["notes-grocery-count"]
+    assert check(t, "There are 5 items.", []).passed
+    assert check(t, "Five items.", []).passed
+    assert not check(t, "There are 15 items.", []).passed
+    assert not check(t, "Updated 2026-10-05.", []).passed
+    assert not check(t, "About 5.5 things.", []).passed
+    m = by_id()["notes-meeting-time"]
+    assert check(m, "It's at **14:30** on Thursdays.", []).passed
+    assert not check(m, "Room 114:300", []).passed

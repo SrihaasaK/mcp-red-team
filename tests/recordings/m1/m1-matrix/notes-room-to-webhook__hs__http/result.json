@@ -1,0 +1,105 @@
+{
+  "trial_id": "notes-room-to-webhook__hs__http",
+  "task_id": "notes-room-to-webhook",
+  "era": "2025-11-25",
+  "transport": "streamable-http",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "final_answer": "I found the team sync room in your notes. It's Cedar. I posted \"Cedar\" to https://hooks.example.test/room, and the server replied \"202 Accepted\".",
+  "error": null,
+  "verdict": {
+    "passed": true,
+    "reasons": []
+  },
+  "tool_calls": [
+    {
+      "server": "notes",
+      "name": "search_notes",
+      "arguments": {
+        "query": "team sync"
+      }
+    },
+    {
+      "server": "notes",
+      "name": "read_note",
+      "arguments": {
+        "note_id": "n1"
+      }
+    },
+    {
+      "server": "http",
+      "name": "http_post",
+      "arguments": {
+        "url": "https://hooks.example.test/room",
+        "body": "Cedar"
+      }
+    }
+  ],
+  "wall_clock_s": 9.487,
+  "adapter": {
+    "llm_calls": 4,
+    "live_llm_calls": 4,
+    "blocked_network_calls": 0,
+    "llm_replay_unused": null,
+    "settings_applied": {
+      "parallel_tool_calls": false,
+      "max_tokens": 8192,
+      "extra_body": {
+        "output_config": {
+          "effort": "high"
+        }
+      }
+    },
+    "wall_clock_s": 8.761
+  },
+  "proxy": [
+    {
+      "server": "notes",
+      "trial_id": "notes-room-to-webhook__hs__http",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 9,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 35
+    },
+    {
+      "server": "http",
+      "trial_id": "notes-room-to-webhook__hs__http",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 8,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 31
+    }
+  ],
+  "era_matches": true,
+  "usage": {
+    "model_calls": 4,
+    "prompt_tokens": 4005,
+    "completion_tokens": 231,
+    "cost_usd": 0.01032,
+    "model_latency_s": 8.591,
+    "finish_reasons": [
+      "tool_calls",
+      "tool_calls",
+      "tool_calls",
+      "stop"
+    ],
+    "usage_missing": 0
+  }
+}

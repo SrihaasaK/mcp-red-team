@@ -26,7 +26,7 @@ NOTES: dict[str, dict[str, str]] = {
 
 
 def build_server() -> MCPServer:
-    server = MCPServer(name="notes", version="1.0.0")
+    server = MCPServer(name="notes", version="1.0.0", log_level="WARNING")
 
     @server.tool()
     def list_notes() -> list[dict[str, str]]:

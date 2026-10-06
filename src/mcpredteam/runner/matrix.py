@@ -18,7 +18,7 @@ from mcpredteam.proxy.http_app import HubServer, ProxyHub
 from mcpredteam.proxy.recording import canonical
 from mcpredteam.proxy.relay import HANDSHAKE, STATELESS
 from mcpredteam.runner.tasks import Task, load_tasks
-from mcpredteam.runner.trial import run_trial, tool_calls
+from mcpredteam.runner.trial import PRICES, run_trial, tool_calls
 from mcpredteam.scaffolds.contract import TrialSpec
 
 SERVERS = ["notes", "http"]
@@ -41,15 +41,19 @@ def _line(r: dict) -> str:
 async def run_matrix(*, run_id: str, tasks: list[Task], eras: list[str], transports: list[str],
                      scaffold: str, model: str, model_settings: dict, budget_usd: float,
                      out_root: Path | None = None) -> dict:
+    if model not in PRICES:  # refuse before any spend
+        raise ValueError(f"model {model!r} is not in the frozen manifest {sorted(PRICES)}")
     run_dir = (out_root or repo_root() / "runs") / run_id
+    if run_dir.exists():
+        raise FileExistsError(f"{run_dir} exists: a run never reuses a directory")
     api_key = anthropic_api_key()
-    results, spent, skipped = [], 0.0, []
+    results, spent, skipped, halted = [], 0.0, [], None
     async with HubServer(ProxyHub()) as hub:
         for transport in transports:
             for era in eras:
                 for task in tasks:
                     tid = trial_id(task.id, era, transport)
-                    if spent >= budget_usd:
+                    if spent >= budget_usd or halted:
                         skipped.append(tid)
                         continue
                     spec = TrialSpec(run_id=run_id, trial_id=tid, task_id=task.id, instruction=task.instruction,
@@ -58,6 +62,8 @@ async def run_matrix(*, run_id: str, tasks: list[Task], eras: list[str], transpo
                     r = await run_trial(spec, task, hub=hub, api_key=api_key)
                     spent += (r["usage"] or {}).get("cost_usd", 0.0)
                     results.append(r)
+                    if (r["usage"] or {}).get("usage_missing"):  # spend unknown: fail closed
+                        halted = f"{tid}: model reported no usage, so spend is unknown"
                     print(_line(r), flush=True)
     summary = {
         "run_id": run_id,
@@ -68,7 +74,8 @@ async def run_matrix(*, run_id: str, tasks: list[Task], eras: list[str], transpo
         "budget_usd": budget_usd,
         "spent_usd": round(spent, 6),
         "trials": len(results),
-        "skipped_for_budget": skipped,
+        "skipped": skipped,
+        "halted": halted,
         "passed": sum(r["verdict"]["passed"] for r in results),
         "errors": sum(r["error"] is not None for r in results),
         "era_mismatches": [r["trial_id"] for r in results if not r["era_matches"]],
@@ -94,21 +101,33 @@ def compare(rec_dir: Path, rep_dir: Path) -> dict:
         "zero_live_calls": zero_live,
         "llm_fully_replayed": adapter.get("llm_replay_unused") == 0,
         "era_matches": rec["era_matches"] and rep["era_matches"],
+        "recorded_error": rec["error"],
         "replay_error": rep["error"],
         "final_answer_equal": rec["final_answer"] == rep["final_answer"],
         "tool_calls": len(rep["tool_calls"]),
     }
+    # A recorded error replayed faithfully counts as equal; a new one never does.
     out["equal"] = (out["tool_sequence_equal"] and out["verdict_equal"] and out["zero_live_calls"]
-                    and out["llm_fully_replayed"] and out["era_matches"] and out["replay_error"] is None)
+                    and out["llm_fully_replayed"] and out["era_matches"]
+                    and out["replay_error"] == out["recorded_error"])
     return out
 
 
 async def replay_run(run_dir: Path, out_dir: Path | None = None) -> dict:
     run_dir = Path(run_dir).resolve()
-    out_dir = Path(out_dir or run_dir.parent / f"{run_dir.name}-replay").resolve()
+    stamp = datetime.datetime.now(datetime.UTC).strftime("%Y%m%dT%H%M%SZ")
+    out_dir = Path(out_dir or repo_root() / "runs" / f"{run_dir.name}-replay-{stamp}").resolve()
+    if out_dir == run_dir or run_dir in out_dir.parents:
+        raise ValueError("replay output must not be inside the recorded run")
+    if out_dir.exists() and any(out_dir.iterdir()):
+        raise FileExistsError(f"{out_dir} is not empty: replay never reuses a directory")
     tasks = {t.id: t for t in load_tasks()}
-    recorded = sorted(p.parent for p in run_dir.glob("*/result.json"))
-    comparisons = []
+    trial_dirs = sorted(p.parent for p in run_dir.glob("*/trial.json"))
+    if not trial_dirs:
+        raise FileNotFoundError(f"no recorded trials under {run_dir}")
+    recorded = [d for d in trial_dirs if (d / "result.json").is_file()]
+    comparisons = [{"trial_id": d.name, "equal": False, "replay_error": "recorded trial is incomplete (no result.json)"}
+                   for d in trial_dirs if d not in recorded]
     async with HubServer(ProxyHub()) as hub:
         for rec_dir in recorded:
             old = TrialSpec.read(rec_dir / "trial.json")

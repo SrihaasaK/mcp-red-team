@@ -1,0 +1,16 @@
+{
+  "server": "notes",
+  "trial_id": "notes-meeting-time__hs__http",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2025-11-25",
+  "era_observed": "2025-11-25",
+  "era_matches": true,
+  "refusals": [
+    "server/discover"
+  ],
+  "upstream_live_calls": 8,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 31
+}

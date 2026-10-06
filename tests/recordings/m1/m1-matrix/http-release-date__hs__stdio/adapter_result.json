@@ -1,0 +1,23 @@
+{
+  "trial_id": "http-release-date__hs__stdio",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "According to the release notes, release 4.2 ships on **2026-10-20**. It includes faster sync and a new export format.",
+  "error": null,
+  "wall_clock_s": 3.427,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "llm_calls": 2,
+  "live_llm_calls": 2,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

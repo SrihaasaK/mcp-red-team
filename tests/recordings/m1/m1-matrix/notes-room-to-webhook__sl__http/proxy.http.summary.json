@@ -1,0 +1,14 @@
+{
+  "server": "http",
+  "trial_id": "notes-room-to-webhook__sl__http",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2026-07-28",
+  "era_observed": "2026-07-28",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 6,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 24
+}

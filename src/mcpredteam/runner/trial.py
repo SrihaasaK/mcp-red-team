@@ -17,7 +17,7 @@ from pathlib import Path
 
 from mcpredteam.config import repo_root
 from mcpredteam.proxy.http_app import HubServer
-from mcpredteam.runner.tasks import Task, check
+from mcpredteam.runner.tasks import Task, Verdict, check
 from mcpredteam.scaffolds.contract import TrialSpec
 
 # Frozen manifest, USD per million tokens (input, output). DECISIONS.md D19.
@@ -62,8 +62,12 @@ def tool_calls(trial_dir: Path, servers: list[str]) -> list[dict]:
 
 
 def llm_usage(trial_dir: Path, model: str) -> dict:
+    """Spend from reported usage. Fails closed: a successful call without usage is
+    counted in `usage_missing`, and the runner stops when spend is unknown."""
+    if model not in PRICES:
+        raise ValueError(f"model {model!r} is not in the frozen manifest {sorted(PRICES)}")
     path = trial_dir / "llm.jsonl"
-    prompt = completion = calls = 0
+    prompt = completion = calls = missing = 0
     latency = 0.0
     finish = []
     for line in path.read_text().splitlines() if path.is_file() else []:
@@ -71,6 +75,8 @@ def llm_usage(trial_dir: Path, model: str) -> dict:
         calls += 1
         resp = rec.get("response") if isinstance(rec.get("response"), dict) else {}
         usage = resp.get("usage") or {}
+        if rec.get("status") == 200 and not usage:
+            missing += 1
         prompt += usage.get("prompt_tokens", 0)
         completion += usage.get("completion_tokens", 0)
         latency += rec.get("latency_s", 0.0)
@@ -83,12 +89,15 @@ def llm_usage(trial_dir: Path, model: str) -> dict:
         "cost_usd": round(prompt * price_in / 1e6 + completion * price_out / 1e6, 6),
         "model_latency_s": round(latency, 3),
         "finish_reasons": finish,
+        "usage_missing": missing,
     }
 
 
 async def run_trial(spec: TrialSpec, task: Task, *, hub: HubServer | None, api_key: str | None,
                     timeout_s: float = 600) -> dict:
     trial_dir = Path(spec.trial_dir)
+    if trial_dir.exists() and any(trial_dir.iterdir()):
+        raise FileExistsError(f"{trial_dir} is not empty: a trial never reuses a directory")
     for server in spec.servers:
         if spec.transport == "streamable-http":
             spec.mcp[server] = {"url": hub.url(spec.trial_id, server)}
@@ -117,7 +126,10 @@ async def run_trial(spec: TrialSpec, task: Task, *, hub: HubServer | None, api_k
         _, err = await proc.communicate()
         timed_out = True
     wall = round(time.monotonic() - t0, 3)
-    (trial_dir / "adapter.stderr.txt").write_bytes(err[-20000:])
+    stderr = err[-20000:].decode(errors="replace")
+    if api_key:
+        stderr = stderr.replace(api_key, "<redacted>")
+    (trial_dir / "adapter.stderr.txt").write_text(stderr)
     if spec.transport == "streamable-http":
         proxies = await hub.hub.close_trial(spec.trial_id)
     else:
@@ -126,8 +138,12 @@ async def run_trial(spec: TrialSpec, task: Task, *, hub: HubServer | None, api_k
     result_path = trial_dir / "adapter_result.json"
     adapter_out = json.loads(result_path.read_text()) if result_path.is_file() else {
         "final_answer": None, "error": "adapter wrote no result" + (" (timed out)" if timed_out else "")}
+    if timed_out and not adapter_out.get("error"):
+        adapter_out["error"] = f"adapter timed out after {timeout_s}s"
     calls = tool_calls(trial_dir, spec.servers)
     verdict = check(task, adapter_out.get("final_answer") or "", calls)
+    if adapter_out.get("error"):  # a trial that errored or timed out never passes
+        verdict = Verdict(False, (f"trial error: {adapter_out['error'][:200]}", *verdict.reasons))
     result = {
         "trial_id": spec.trial_id,
         "task_id": spec.task_id,

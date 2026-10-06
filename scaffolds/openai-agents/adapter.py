@@ -49,6 +49,10 @@ INSTRUCTIONS = (
     "make HTTP requests. Use them to complete the user's request, then give a short final answer."
 )
 _DROP_HEADERS = {"content-encoding", "content-length", "transfer-encoding"}
+# Record mode retries transient failures itself, so one overloaded response doesn't
+# end a recording. Replay serves only the final response.
+RETRY_STATUS = {429, 500, 502, 503, 504, 529}
+MAX_ATTEMPTS = 4
 
 
 def canonical(obj: object) -> str:
@@ -93,13 +97,23 @@ class LLMTransport(httpx2.AsyncBaseTransport):
             return httpx2.Response(
                 rec["status"], headers={"content-type": "application/json"}, content=content, request=request
             )
-        self.live_calls += 1
         t0 = time.monotonic()
-        resp = await self.inner.handle_async_request(request)
-        try:
-            content = await resp.aread()
-        finally:
-            await resp.aclose()
+        attempts = 0
+        while True:
+            attempts += 1
+            self.live_calls += 1
+            resp = await self.inner.handle_async_request(request)
+            try:
+                content = await resp.aread()
+            finally:
+                await resp.aclose()
+            if resp.status_code not in RETRY_STATUS or attempts >= MAX_ATTEMPTS:
+                break
+            try:
+                delay = float(resp.headers.get("retry-after") or 0)
+            except ValueError:
+                delay = 0.0
+            await asyncio.sleep(min(delay or 2.0**attempts, 60.0))
         try:
             parsed: object = json.loads(content)
         except ValueError:
@@ -113,6 +127,7 @@ class LLMTransport(httpx2.AsyncBaseTransport):
                 "status": resp.status_code,
                 "response": parsed,
                 "latency_s": round(time.monotonic() - t0, 3),
+                "attempts": attempts,
             }
         )
         headers = [(k, v) for k, v in resp.headers.items() if k.lower() not in _DROP_HEADERS]
@@ -217,6 +232,10 @@ async def run(spec_path: Path) -> dict:
         result["traceback"] = traceback.format_exc()[-6000:]
     finally:
         await transport.aclose()
+    if spec["mode"] == "record":  # never let the key reach a result file
+        for k in ("error", "traceback"):
+            if result.get(k):
+                result[k] = result[k].replace(api_key, "<redacted>")
     result.update(
         wall_clock_s=round(time.monotonic() - t0, 3),
         model=spec["model"],

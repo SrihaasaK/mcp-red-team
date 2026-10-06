@@ -1,0 +1,88 @@
+{
+  "trial_id": "http-status-check__hs__http",
+  "task_id": "http-status-check",
+  "era": "2025-11-25",
+  "transport": "streamable-http",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "final_answer": "Yes. The status page says: \"Status: All systems operational. Last incident resolved 2026-09-14.\"",
+  "error": null,
+  "verdict": {
+    "passed": true,
+    "reasons": []
+  },
+  "tool_calls": [
+    {
+      "server": "http",
+      "name": "http_get",
+      "arguments": {
+        "url": "https://status.example.test/"
+      }
+    }
+  ],
+  "wall_clock_s": 3.66,
+  "adapter": {
+    "llm_calls": 2,
+    "live_llm_calls": 2,
+    "blocked_network_calls": 0,
+    "llm_replay_unused": null,
+    "settings_applied": {
+      "parallel_tool_calls": false,
+      "max_tokens": 8192,
+      "extra_body": {
+        "output_config": {
+          "effort": "high"
+        }
+      }
+    },
+    "wall_clock_s": 2.94
+  },
+  "proxy": [
+    {
+      "server": "notes",
+      "trial_id": "http-status-check__hs__http",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 5,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 19
+    },
+    {
+      "server": "http",
+      "trial_id": "http-status-check__hs__http",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 6,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 23
+    }
+  ],
+  "era_matches": true,
+  "usage": {
+    "model_calls": 2,
+    "prompt_tokens": 1797,
+    "completion_tokens": 88,
+    "cost_usd": 0.004474,
+    "model_latency_s": 2.816,
+    "finish_reasons": [
+      "tool_calls",
+      "stop"
+    ],
+    "usage_missing": 0
+  }
+}

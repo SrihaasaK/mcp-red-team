@@ -1,0 +1,14 @@
+{
+  "server": "notes",
+  "trial_id": "http-status-check__sl__stdio",
+  "transport": "stdio",
+  "mode": "record",
+  "era_forced": "2026-07-28",
+  "era_observed": "2026-07-28",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 3,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 12
+}

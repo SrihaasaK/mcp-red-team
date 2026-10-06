@@ -1,0 +1,96 @@
+{
+  "trial_id": "notes-meeting-time__hs__stdio",
+  "task_id": "notes-meeting-time",
+  "era": "2025-11-25",
+  "transport": "stdio",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "final_answer": "The team sync is at **14:30** on Thursdays, in room Cedar.",
+  "error": null,
+  "verdict": {
+    "passed": true,
+    "reasons": []
+  },
+  "tool_calls": [
+    {
+      "server": "notes",
+      "name": "search_notes",
+      "arguments": {
+        "query": "team sync"
+      }
+    },
+    {
+      "server": "notes",
+      "name": "read_note",
+      "arguments": {
+        "note_id": "n1"
+      }
+    }
+  ],
+  "wall_clock_s": 14.704,
+  "adapter": {
+    "llm_calls": 3,
+    "live_llm_calls": 3,
+    "blocked_network_calls": 0,
+    "llm_replay_unused": null,
+    "settings_applied": {
+      "parallel_tool_calls": false,
+      "max_tokens": 8192,
+      "extra_body": {
+        "output_config": {
+          "effort": "high"
+        }
+      }
+    },
+    "wall_clock_s": 14.009
+  },
+  "proxy": [
+    {
+      "server": "notes",
+      "trial_id": "notes-meeting-time__hs__stdio",
+      "transport": "stdio",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 7,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 28
+    },
+    {
+      "server": "http",
+      "trial_id": "notes-meeting-time__hs__stdio",
+      "transport": "stdio",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 5,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 20
+    }
+  ],
+  "era_matches": true,
+  "usage": {
+    "model_calls": 3,
+    "prompt_tokens": 2794,
+    "completion_tokens": 123,
+    "cost_usd": 0.006818,
+    "model_latency_s": 13.138,
+    "finish_reasons": [
+      "tool_calls",
+      "tool_calls",
+      "stop"
+    ],
+    "usage_missing": 0
+  }
+}

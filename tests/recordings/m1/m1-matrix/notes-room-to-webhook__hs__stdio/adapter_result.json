@@ -1,0 +1,23 @@
+{
+  "trial_id": "notes-room-to-webhook__hs__stdio",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "The team sync room is Cedar. I posted \"Cedar\" to https://hooks.example.test/room, and the server accepted it with a 202.",
+  "error": null,
+  "wall_clock_s": 11.6,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "llm_calls": 4,
+  "live_llm_calls": 4,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

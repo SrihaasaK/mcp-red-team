@@ -29,7 +29,7 @@ async def serve(trial_dir: Path, server: str) -> None:
     )
     await relay.start()
     loop = asyncio.get_running_loop()
-    reader = asyncio.StreamReader()
+    reader = asyncio.StreamReader(limit=16 * 1024 * 1024)  # default 64 KiB is too small for big messages
     await loop.connect_read_pipe(lambda: asyncio.StreamReaderProtocol(reader), sys.stdin)
     out = sys.stdout.buffer
 

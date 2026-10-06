@@ -577,3 +577,176 @@ attack oracle (SPEC §7.2) arrives at M2 and joins the comparison then.
 adapter against a scripted OpenAI-compatible fake model, in both transports and
 both eras. It records, replays and asserts replay equality, with no API spend.
 It's a candidate for M3's CI.
+
+## D21. M1 results: key check, model settings, parity, acceptance, spend, review
+
+**Key check log (CLAUDE.md #8).**
+- 2026-10-06T17:41:41Z, `GET /v1/models`: HTTP 400. The first key supplied was
+  identity-linked (`sk-ant-usr-`): "This API key is not scoped to a workspace, so
+  this request must include the anthropic-workspace-id header." The author
+  replaced it with a workspace-scoped key.
+- 2026-10-06T18:14:54Z: HTTP 200, 13 models. `claude-sonnet-5-5` and
+  `claude-opus-5-5` are listed, which confirms D19's manifest ids live.
+
+**Model-settings probe.** Run with `probe/m1_model_settings.py` against
+Sonnet 5.5, costing \$0.018; raw output is in
+`review/M1/model_settings_probe.json`.
+- **Temperature.** `temperature=0` returns 400, "`temperature` is deprecated for
+  this model". This happens on the OpenAI-compatible endpoint and the native
+  Messages API alike, with or without a thinking setting.
+- **Thinking.**
+  - `{"type":"disabled"}` returns 400. The error points to `between_tools`: "The
+    model does not think before responding. The short updates it writes between
+    tool calls come back as thinking blocks."
+  - Explicit `{"type":"adaptive"}` returns 400 on the compatible endpoint
+    ("Adaptive thinking is not available via the OpenAI compatibility
+    endpoint"). The native API accepts it.
+  - `between_tools` is accepted on the compatible endpoint. It roughly halved
+    output tokens on a reasoning prompt (115 vs 237).
+- **Hidden thinking: none observed.** On both probe prompts the native API
+  returned only text blocks. Completion tokens on the compatible endpoint tracked
+  native output tokens: 237 vs 220 at default, 115 vs 121 with `between_tools`.
+- **Effort.** `output_config.effort` is accepted on the compatible endpoint
+  (`high`, `low`). No measurable change at n=1.
+- **Seed.** The compatible endpoint ignores it (Anthropic's docs).
+
+**Effective model settings.** This is an addendum to D19's manifest; D5 is left
+as written. For Sonnet 5.5 through the OpenAI-compatible endpoint:
+- Temperature is not sent; it can't be set.
+- Seed is not sent; it is ignored.
+- Thinking stays at the endpoint's default, which can't be named or pinned
+  there. The only pinnable choice is `between_tools`.
+- Effort is pinned to the documented default, `high`, via
+  `extra_body.output_config`.
+- `parallel_tool_calls=false` and `max_tokens=8192`.
+
+For Opus 5.5, effort is pinned to its documented default, `medium`. The same
+probe confirms this at M2.
+
+**Determinism limitation (for README §14 Limitations).** Temperature can't be
+set, seed is ignored, and thinking can't be pinned on the compatible endpoint.
+Live runs are therefore nondeterministic, and reproducibility rests on replay
+(SPEC §8.5, §9.1).
+
+**Open for the author at PREREG.** Pin thinking to `between_tools`, or keep the
+endpoint default? `between_tools` is a pinnable setting and costs about half the
+output tokens, but it changes behavior and so can move ASR. The native route
+(D13's LiteLLM option) would allow pinning adaptive thinking explicitly. See
+"Trigger (b)" below.
+
+**D13 gate: PASS.** Tool-calling parity holds on all 5 benign tasks, in both
+eras and both transports: 20/20 checker PASS in each of two live runs.
+
+**M1 acceptance (SPEC §12): PASS.** A recorded benign session replays with zero
+live calls and meets replay equality in each supported era.
+- Run `m1-final` has 20 trials: 5 tasks × 2 eras × 2 transports. Replay was 20/20
+  EQUAL across both eras and both transports. All 20 final answers were
+  byte-identical in replay.
+- It is committed as `tests/recordings/m1/m1-matrix`, exported by
+  `mcpredteam.runner.recordings`, and `tests/test_m1_acceptance.py` replays it
+  offline.
+- The full suite of 19 tests passes.
+
+**Measurements** (pooled over 40 live trials, Sonnet 5.5, OpenAI Agents SDK), per
+trial:
+- **Cost:** mean \$0.0070 (median \$0.0068, range \$0.0045–\$0.0103).
+- **Tokens:** mean 2,862 in / 131 out.
+- **Wall-clock:** mean 8.0 s (median 7.2 s, max 21.7 s), 85% of it model latency.
+
+HTTP and stdio trials were within a second of each other on average. No
+transient retries were needed.
+
+**Spend log (CLAUDE.md #8).** M1 spent \$0.306:
+
+| Item | Cost |
+|---|---|
+| Settings probe | \$0.018 |
+| Smoke trial | \$0.007 |
+| Run `m1-matrix` | \$0.141 |
+| Run `m1-final` | \$0.141 |
+
+Project total to date is about \$0.44, including M0's \$0.133 (D10).
+
+**Re-projection of M2–M4 (D19).** Trial counts follow D11 and D19's design:
+
+| Item | Sonnet, lean | Opus, lean | Claude Agent SDK |
+|---|---|---|---|
+| M2 dev tables + control arm (1 scaffold, 2 models, n=5) | 280 | 280 | – |
+| M2 iteration on Sonnet (+50%) | 140 | – | – |
+| M2 caching/MRTR probes (D17) | 20 | – | – |
+| Sampled factorial (D19) | 1,000 | – | – |
+| M3 benign suite (40 tasks) | 80 | 80 | 40 |
+| M4 mitigation design on dev (7 conditions) | 980 | – | – |
+| M4 held-out (Sonnet 7 conditions, Opus 4) + utility | 2,240 | 1,280 | – |
+| M4 Claude Agent SDK slice (baseline + combined, n=5) + utility | – | – | 200 |
+| **Total** | **4,740** | **1,640** | **240** |
+
+Assumptions:
+- The Sonnet per-trial cost is the measured \$0.0070, times 2 (base) or 4 (high)
+  for M2+ trials, which are longer attack and two-turn tasks.
+- Opus costs 2× Sonnet, at list prices.
+- The Claude Agent SDK slice costs \$0.133 per trial (base; the single M0
+  measurement) or \$0.30 (high).
+- No prompt caching: the compatible endpoint has none.
+
+Result: about **\$145 (base)** and **\$298 (high)**, both under the \$375 guard;
+the high case uses 79% of it. Per trial, that is 72% (base) and 44% (high) below
+D9's lean figure of \$0.05. Sequential runtime is about 15 h at M1 trial length,
+or about 30 h at twice that.
+
+**Trigger (b): not met.** The projection is under \$375 and below D9's lean
+figures, so per the author's condition the LiteLLM route to the native Messages
+API was not evaluated. It remains the option if M2's measured cost moves the
+projection past a trigger, or if the author wants adaptive thinking pinned and
+prompt caching. The biggest uncertainty is the Claude Agent SDK slice, which
+rests on one M0 query. D19 has it re-measured at M2, before PREREG.
+
+**Code review.**
+- **Method:** reviewers covered four dimensions (proxy, record/replay, adapter
+  and secrets, runner). Each finding went to three adversarial verifiers.
+- **Outcome:** 25 findings, 16 confirmed by majority, 9 refuted.
+- **Fixes:** every code defect was fixed before the final recording, with a
+  regression test (`tests/test_m1_fixes.py`, plus a whole-token test in
+  `tests/test_tasks.py`).
+
+The fixes:
+- **No reused directories.** Trials and replays never reuse a directory. The
+  runner refuses a non-empty trial directory and a replay output inside the
+  recorded run, refuses an empty recorded run, and counts an incomplete recorded
+  trial as a failure. Before, stale artifacts could give a false EQUAL or PASS,
+  and spend could be counted twice.
+- **Errors score FAIL.** A trial that errored or timed out is scored FAIL.
+- **Whole-token checkers.** Checker phrases match whole tokens: a "5" no longer
+  matches "15".
+- **Replay exit codes.** `mcpr replay` exits non-zero when it finds no trials or
+  any trial isn't equal. A recorded error that replays faithfully counts as equal.
+- **Upstream errors pass through.** Upstream session-level errors (`id: null`)
+  pass through with their real status and are logged. `terminate()` clears the
+  upstream session.
+- **stdio message size.** The stdio proxy accepts messages up to 16 MiB; the old
+  limit was 64 KiB.
+- **Adapter retries and redaction.** In record mode the adapter retries transient
+  model errors (429, 5xx, 529) and records the attempt count. The key is redacted
+  from error text, tracebacks and captured stderr, and the config loader rejects
+  a key containing whitespace.
+- **Spend fails closed.** An off-manifest model is refused before any spend, and
+  a run stops if a model call reports no usage.
+- **Sanitized exports.** Recordings are exported by code, which strips stderr and
+  absolute paths and refuses to finish if a home path or key material remains.
+  The default replay output goes to `runs/`, never `tests/`.
+
+**Operational finding (not code).** The workflow harness passes the user's latest
+message to every subagent, so a key pasted in the chat reached the review
+subagents' prompts. The author was advised to rotate the key after M1. Workflows
+are no longer launched in a turn whose user message holds a secret.
+
+**Measurement-apparatus change after results (SPEC §1 integrity rule).** The
+whole-token checker and the runner and adapter fixes landed after the first live
+run (`m1-matrix`). They are logged here, and the matrix was re-recorded on the
+final code (`m1-final`). The committed recording comes from that run.
+Re-scoring `m1-matrix` with the new checker leaves all 20 verdicts unchanged (all
+PASS).
+
+**Not done in M1, by design.** No mutator library, stats module, M2 task drafts or
+attack corpus exist. They are M2 deliverables (SPEC §6.3, §8, §7.1, §6.4), kept
+out of M1 by CLAUDE.md #2.

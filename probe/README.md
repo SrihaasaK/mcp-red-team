@@ -17,3 +17,8 @@ whether it re-fetches `tools/list`, and how it handles input-required (MRTR).
 Era classification from a log: an `initialize` request or an `mcp-session-id`
 header ⇒ stateful (2025-11-25); an `mcp-method` header or a `server/discover`
 request with no `initialize` ⇒ stateless (2026-07-28).
+
+`m1_model_settings.py` (M1) sends tiny prompts to Sonnet 5.5 through the
+OpenAI-compatible endpoint and the native Messages API to see which temperature
+and thinking settings are accepted and whether hidden thinking is billed.
+Results: `review/M1/model_settings_probe.json`; summary in DECISIONS.md D21.

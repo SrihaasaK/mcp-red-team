@@ -1,0 +1,23 @@
+{
+  "run_id": "m1-final",
+  "finished_at": "2026-10-06T18:50:38+00:00",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "model_settings": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "budget_usd": 5.0,
+  "spent_usd": 0.14071,
+  "trials": 20,
+  "skipped": [],
+  "halted": null,
+  "passed": 20,
+  "errors": 0,
+  "era_mismatches": []
+}

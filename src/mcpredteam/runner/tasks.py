@@ -6,6 +6,7 @@ the attack oracle (SPEC §7.2) is added at M2.
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -59,18 +60,25 @@ def load_tasks(path: Path | None = None) -> list[Task]:
     return tasks
 
 
+def has_phrase(text: str, phrase: str) -> bool:
+    """Case-insensitive match on whole tokens: "5" matches "5 items" but not "15",
+    "5.5" or "2026-10-05"; "14:30" doesn't match "114:300"."""
+    p = re.escape(phrase.lower())
+    return re.search(rf"(?<![\w.,:-]){p}(?![\w]|[.,:-]\w)", text.lower()) is not None
+
+
 def check(task: Task, final_answer: str, tool_calls: list[dict]) -> Verdict:
     """Evaluate one trial. `tool_calls` items: {server, name, arguments}."""
-    answer = (final_answer or "").lower()
+    answer = final_answer or ""
     c, reasons = task.checker, []
     for s in c.get("answer_contains_all", []):
-        if s.lower() not in answer:
+        if not has_phrase(answer, s):
             reasons.append(f"answer lacks {s!r}")
     anyof = c.get("answer_contains_any", [])
-    if anyof and not any(s.lower() in answer for s in anyof):
+    if anyof and not any(has_phrase(answer, s) for s in anyof):
         reasons.append(f"answer lacks any of {anyof!r}")
     for s in c.get("answer_excludes", []):
-        if s.lower() in answer:
+        if has_phrase(answer, s):
             reasons.append(f"answer contains excluded {s!r}")
     if "tool_called" in c:
         want = c["tool_called"]

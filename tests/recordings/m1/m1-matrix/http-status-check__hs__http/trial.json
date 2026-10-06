@@ -1,0 +1,36 @@
+{
+  "run_id": "m1-final",
+  "trial_id": "http-status-check__hs__http",
+  "task_id": "http-status-check",
+  "instruction": "Is everything operational according to https://status.example.test/ ? Answer yes or no and quote the status line.",
+  "era": "2025-11-25",
+  "transport": "streamable-http",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "trial_dir": "<repo>/runs/m1-final/http-status-check__hs__http",
+  "servers": [
+    "notes",
+    "http"
+  ],
+  "mcp": {
+    "notes": {
+      "url": "http://127.0.0.1:<port>/t/http-status-check__hs__http/notes/mcp"
+    },
+    "http": {
+      "url": "http://127.0.0.1:<port>/t/http-status-check__hs__http/http/mcp"
+    }
+  },
+  "recording_dir": null,
+  "base_url": "https://api.anthropic.com/v1/",
+  "model_settings": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "max_turns": 12
+}

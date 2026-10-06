@@ -1,0 +1,102 @@
+{
+  "trial_id": "notes-grocery-count__hs__stdio",
+  "task_id": "notes-grocery-count",
+  "era": "2025-11-25",
+  "transport": "stdio",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "final_answer": "5",
+  "error": null,
+  "verdict": {
+    "passed": true,
+    "reasons": []
+  },
+  "tool_calls": [
+    {
+      "server": "notes",
+      "name": "search_notes",
+      "arguments": {
+        "query": "grocery"
+      }
+    },
+    {
+      "server": "notes",
+      "name": "list_notes",
+      "arguments": {}
+    },
+    {
+      "server": "notes",
+      "name": "read_note",
+      "arguments": {
+        "note_id": "n2"
+      }
+    }
+  ],
+  "wall_clock_s": 12.581,
+  "adapter": {
+    "llm_calls": 4,
+    "live_llm_calls": 4,
+    "blocked_network_calls": 0,
+    "llm_replay_unused": null,
+    "settings_applied": {
+      "parallel_tool_calls": false,
+      "max_tokens": 8192,
+      "extra_body": {
+        "output_config": {
+          "effort": "high"
+        }
+      }
+    },
+    "wall_clock_s": 11.886
+  },
+  "proxy": [
+    {
+      "server": "notes",
+      "trial_id": "notes-grocery-count__hs__stdio",
+      "transport": "stdio",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 9,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 36
+    },
+    {
+      "server": "http",
+      "trial_id": "notes-grocery-count__hs__stdio",
+      "transport": "stdio",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 6,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 24
+    }
+  ],
+  "era_matches": true,
+  "usage": {
+    "model_calls": 4,
+    "prompt_tokens": 3882,
+    "completion_tokens": 124,
+    "cost_usd": 0.009004,
+    "model_latency_s": 11.017,
+    "finish_reasons": [
+      "tool_calls",
+      "tool_calls",
+      "tool_calls",
+      "stop"
+    ],
+    "usage_missing": 0
+  }
+}

@@ -198,11 +198,20 @@ class Relay:
             return Reply(500, body)
         response = next((r for r in responses if r.get("id") == out["id"]), None)
         if response is None:
-            body = jsonrpc_error(message["id"], -32603, "mcpr: upstream sent no response for this id")
-            self.errors.append(f"no response for {method}")
-            self.log.write("s2c", "out", body, status=502, proxy_error=True)
-            return Reply(502, body)
-        self.log.write("s2c", "in", response, status=status)
+            # Session-level rejections from the upstream (404 "Session not found", 400
+            # "Missing session ID", 503 ...) carry id:null. Pass one through with its real
+            # status, re-ided to this request as the mcp client itself does.
+            nulls = [r for r in responses if r.get("id") is None and "error" in r]
+            if len(nulls) != 1:
+                self.log.write("s2c", "in", responses, status=status, unmatched=True)
+                body = jsonrpc_error(message["id"], -32603, "mcpr: upstream sent no response for this id")
+                self.errors.append(f"no response for {method} (upstream status {status})")
+                self.log.write("s2c", "out", body, status=502, proxy_error=True)
+                return Reply(502, body)
+            self.log.write("s2c", "in", nulls[0], status=status, upstream_id_null=True)
+            response = {**copy.deepcopy(nulls[0]), "id": out["id"]}
+        else:
+            self.log.write("s2c", "in", response, status=status)
         response = await self._intercept_response(out, response)
         self._observe(out, response)
         self.log.write("s2c", "out", response, status=status)
@@ -215,6 +224,8 @@ class Relay:
         if self.upstream and self.upstream_session:
             await self.upstream.send("DELETE", self._upstream_headers({"method": "DELETE"}))
         self.agent_session = None
+        self.upstream_session = None
+        self.handshake_version = None
 
     def note_get(self) -> None:
         self.log.write("c2s", "in", {"http": "GET"}, answered=405)

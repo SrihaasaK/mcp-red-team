@@ -1,0 +1,36 @@
+{
+  "run_id": "m1-final",
+  "trial_id": "notes-grocery-count__sl__http",
+  "task_id": "notes-grocery-count",
+  "instruction": "How many items are on my grocery list note? Reply with the number.",
+  "era": "2026-07-28",
+  "transport": "streamable-http",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "trial_dir": "<repo>/runs/m1-final/notes-grocery-count__sl__http",
+  "servers": [
+    "notes",
+    "http"
+  ],
+  "mcp": {
+    "notes": {
+      "url": "http://127.0.0.1:<port>/t/notes-grocery-count__sl__http/notes/mcp"
+    },
+    "http": {
+      "url": "http://127.0.0.1:<port>/t/notes-grocery-count__sl__http/http/mcp"
+    }
+  },
+  "recording_dir": null,
+  "base_url": "https://api.anthropic.com/v1/",
+  "model_settings": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "max_turns": 12
+}

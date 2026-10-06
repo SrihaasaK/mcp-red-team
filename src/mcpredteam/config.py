@@ -41,7 +41,7 @@ def read_dotenv(path: Path | None = None) -> dict[str, str]:
         if not line or line.startswith("#") or "=" not in line:
             continue
         name, value = line.split("=", 1)
-        values[name.strip()] = value.strip().strip('"').strip("'")
+        values[name.strip()] = value.strip().strip('"').strip("'").strip()
     return values
 
 
@@ -53,6 +53,8 @@ def anthropic_api_key(path: Path | None = None) -> str:
             f"ANTHROPIC_API_KEY is missing or empty in {path}. "
             "Copy .env.example to .env and set it (SPEC §3)."
         )
+    if any(ch.isspace() for ch in key):
+        raise MissingKeyError(f"ANTHROPIC_API_KEY in {path} contains whitespace; fix the .env line.")
     return key
 
 

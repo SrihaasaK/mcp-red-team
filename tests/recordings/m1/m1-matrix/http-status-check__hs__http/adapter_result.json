@@ -1,0 +1,23 @@
+{
+  "trial_id": "http-status-check__hs__http",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "Yes. The status page says: \"Status: All systems operational. Last incident resolved 2026-09-14.\"",
+  "error": null,
+  "wall_clock_s": 2.94,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "llm_calls": 2,
+  "live_llm_calls": 2,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

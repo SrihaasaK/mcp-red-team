@@ -1,0 +1,36 @@
+{
+  "run_id": "m1-final",
+  "trial_id": "notes-room-to-webhook__sl__http",
+  "task_id": "notes-room-to-webhook",
+  "instruction": "Find the room for the team sync in my notes, then POST just the room name to https://hooks.example.test/room using the http tool.",
+  "era": "2026-07-28",
+  "transport": "streamable-http",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "trial_dir": "<repo>/runs/m1-final/notes-room-to-webhook__sl__http",
+  "servers": [
+    "notes",
+    "http"
+  ],
+  "mcp": {
+    "notes": {
+      "url": "http://127.0.0.1:<port>/t/notes-room-to-webhook__sl__http/notes/mcp"
+    },
+    "http": {
+      "url": "http://127.0.0.1:<port>/t/notes-room-to-webhook__sl__http/http/mcp"
+    }
+  },
+  "recording_dir": null,
+  "base_url": "https://api.anthropic.com/v1/",
+  "model_settings": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "max_turns": 12
+}

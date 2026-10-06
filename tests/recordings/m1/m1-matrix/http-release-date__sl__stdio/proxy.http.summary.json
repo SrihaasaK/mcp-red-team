@@ -1,0 +1,14 @@
+{
+  "server": "http",
+  "trial_id": "http-release-date__sl__stdio",
+  "transport": "stdio",
+  "mode": "record",
+  "era_forced": "2026-07-28",
+  "era_observed": "2026-07-28",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 4,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 16
+}

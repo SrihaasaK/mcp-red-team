@@ -1,0 +1,23 @@
+{
+  "trial_id": "notes-grocery-count__sl__http",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "5",
+  "error": null,
+  "wall_clock_s": 6.475,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "llm_calls": 4,
+  "live_llm_calls": 4,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

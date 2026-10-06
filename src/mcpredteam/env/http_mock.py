@@ -25,7 +25,7 @@ def _lookup(url: str) -> str | None:
 
 
 def build_server() -> MCPServer:
-    server = MCPServer(name="http", version="1.0.0")
+    server = MCPServer(name="http", version="1.0.0", log_level="WARNING")
 
     @server.tool()
     def http_get(url: str) -> str:

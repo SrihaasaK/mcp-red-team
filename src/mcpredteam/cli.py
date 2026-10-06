@@ -22,8 +22,19 @@ app = typer.Typer(
     add_completion=False,
 )
 
-# M1 harness settings for the OpenAI Agents SDK adapter (DECISIONS.md D20).
+# Harness model settings for the OpenAI Agents SDK adapter (DECISIONS.md D20, D21).
+# Temperature is rejected by these models and seed is ignored, so neither is sent.
+# Effort is pinned to each model's documented default; thinking stays at the
+# OpenAI-compatible endpoint's default (adaptive is not available there).
 DEFAULT_MODEL_SETTINGS = {"parallel_tool_calls": False, "max_tokens": 8192}
+PINNED_EFFORT = {"claude-sonnet-5-5": "high", "claude-opus-5-5": "medium"}
+
+
+def model_settings(model: str) -> dict:
+    settings = dict(DEFAULT_MODEL_SETTINGS)
+    if model in PINNED_EFFORT:
+        settings["extra_body"] = {"output_config": {"effort": PINNED_EFFORT[model]}}
+    return settings
 
 
 @app.command()
@@ -49,7 +60,6 @@ def run(
     transport: list[str] = typer.Option(None, "--transport", help="stdio and/or streamable-http; default both."),
     model: str = typer.Option("claude-sonnet-5-5", "--model"),
     scaffold: str = typer.Option("openai-agents", "--scaffold"),
-    temperature: float = typer.Option(None, "--temperature", help="Sent only if given."),
     budget: float = typer.Option(5.0, "--budget", help="Stop starting trials once this much USD is spent."),
     run_id: str = typer.Option(None, "--run-id"),
 ) -> None:
@@ -61,9 +71,7 @@ def run(
     from mcpredteam.runner.tasks import load_tasks
 
     tasks = [t for t in load_tasks() if not task or t.id in task]
-    settings = dict(DEFAULT_MODEL_SETTINGS)
-    if temperature is not None:
-        settings["temperature"] = temperature
+    settings = model_settings(model)
     rid = run_id or "m1-" + datetime.datetime.now(datetime.UTC).strftime("%Y%m%dT%H%M%SZ")
     summary = asyncio.run(run_matrix(
         run_id=rid, tasks=tasks, eras=era or list(ERAS),
@@ -83,7 +91,7 @@ def replay(
 
     summary = asyncio.run(replay_run(run_dir, out))
     typer.echo(json.dumps({k: v for k, v in summary.items() if k != "comparisons"}, indent=2))
-    if summary["equal"] != summary["trials"]:
+    if summary["trials"] == 0 or summary["equal"] != summary["trials"]:
         raise typer.Exit(code=1)
 
 

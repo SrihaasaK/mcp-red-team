@@ -1,0 +1,98 @@
+{
+  "trial_id": "notes-grocery-count__sl__stdio",
+  "task_id": "notes-grocery-count",
+  "era": "2026-07-28",
+  "transport": "stdio",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "final_answer": "5",
+  "error": null,
+  "verdict": {
+    "passed": true,
+    "reasons": []
+  },
+  "tool_calls": [
+    {
+      "server": "notes",
+      "name": "search_notes",
+      "arguments": {
+        "query": "grocery"
+      }
+    },
+    {
+      "server": "notes",
+      "name": "list_notes",
+      "arguments": {}
+    },
+    {
+      "server": "notes",
+      "name": "read_note",
+      "arguments": {
+        "note_id": "n2"
+      }
+    }
+  ],
+  "wall_clock_s": 13.149,
+  "adapter": {
+    "llm_calls": 4,
+    "live_llm_calls": 4,
+    "blocked_network_calls": 0,
+    "llm_replay_unused": null,
+    "settings_applied": {
+      "parallel_tool_calls": false,
+      "max_tokens": 8192,
+      "extra_body": {
+        "output_config": {
+          "effort": "high"
+        }
+      }
+    },
+    "wall_clock_s": 12.456
+  },
+  "proxy": [
+    {
+      "server": "notes",
+      "trial_id": "notes-grocery-count__sl__stdio",
+      "transport": "stdio",
+      "mode": "record",
+      "era_forced": "2026-07-28",
+      "era_observed": "2026-07-28",
+      "era_matches": true,
+      "refusals": [],
+      "upstream_live_calls": 8,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 32
+    },
+    {
+      "server": "http",
+      "trial_id": "notes-grocery-count__sl__stdio",
+      "transport": "stdio",
+      "mode": "record",
+      "era_forced": "2026-07-28",
+      "era_observed": "2026-07-28",
+      "era_matches": true,
+      "refusals": [],
+      "upstream_live_calls": 5,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 20
+    }
+  ],
+  "era_matches": true,
+  "usage": {
+    "model_calls": 4,
+    "prompt_tokens": 3882,
+    "completion_tokens": 124,
+    "cost_usd": 0.009004,
+    "model_latency_s": 11.588,
+    "finish_reasons": [
+      "tool_calls",
+      "tool_calls",
+      "tool_calls",
+      "stop"
+    ],
+    "usage_missing": 0
+  }
+}

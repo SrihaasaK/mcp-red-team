@@ -1,0 +1,92 @@
+{
+  "trial_id": "notes-meeting-time__sl__http",
+  "task_id": "notes-meeting-time",
+  "era": "2026-07-28",
+  "transport": "streamable-http",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "final_answer": "The team sync is at **14:30** on Thursdays, in room Cedar.",
+  "error": null,
+  "verdict": {
+    "passed": true,
+    "reasons": []
+  },
+  "tool_calls": [
+    {
+      "server": "notes",
+      "name": "search_notes",
+      "arguments": {
+        "query": "team sync"
+      }
+    },
+    {
+      "server": "notes",
+      "name": "read_note",
+      "arguments": {
+        "note_id": "n1"
+      }
+    }
+  ],
+  "wall_clock_s": 5.759,
+  "adapter": {
+    "llm_calls": 3,
+    "live_llm_calls": 3,
+    "blocked_network_calls": 0,
+    "llm_replay_unused": null,
+    "settings_applied": {
+      "parallel_tool_calls": false,
+      "max_tokens": 8192,
+      "extra_body": {
+        "output_config": {
+          "effort": "high"
+        }
+      }
+    },
+    "wall_clock_s": 5.037
+  },
+  "proxy": [
+    {
+      "server": "notes",
+      "trial_id": "notes-meeting-time__sl__http",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2026-07-28",
+      "era_observed": "2026-07-28",
+      "era_matches": true,
+      "refusals": [],
+      "upstream_live_calls": 6,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 24
+    },
+    {
+      "server": "http",
+      "trial_id": "notes-meeting-time__sl__http",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2026-07-28",
+      "era_observed": "2026-07-28",
+      "era_matches": true,
+      "refusals": [],
+      "upstream_live_calls": 4,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 16
+    }
+  ],
+  "era_matches": true,
+  "usage": {
+    "model_calls": 3,
+    "prompt_tokens": 2794,
+    "completion_tokens": 123,
+    "cost_usd": 0.006818,
+    "model_latency_s": 4.907,
+    "finish_reasons": [
+      "tool_calls",
+      "tool_calls",
+      "stop"
+    ],
+    "usage_missing": 0
+  }
+}
