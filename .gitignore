@@ -1,0 +1,22 @@
+# secrets / env
+.env
+.env.*
+!.env.example
+
+# python / uv
+.venv/
+__pycache__/
+*.py[cod]
+.ruff_cache/
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+
+# local data / ruflo tooling (not part of this project)
+*.db
+ruvector.db
+.claude-flow/
+.swarm/
+probe/_logs/
+probe/.venv-*/

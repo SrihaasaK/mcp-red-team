@@ -1,0 +1,42 @@
+[project]
+name = "mcpredteam"
+version = "0.1.0"
+description = "Dynamic red-team harness for MCP agents: a transparent proxy that injects attacks, measures attack success rate, and ships an information-flow mitigation layer."
+readme = "README.md"
+requires-python = ">=3.12"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "Srihaasa Karyampudi" }]
+keywords = ["mcp", "red-team", "security", "prompt-injection", "agents", "llm"]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Security",
+]
+dependencies = [
+    "mcp>=2.3,<3",
+    "pydantic>=2",
+    "typer>=0.12",
+]
+
+[project.scripts]
+mcpr = "mcpredteam.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.23,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["probe"]  # throwaway M0 measurement scripts (not shipped)
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

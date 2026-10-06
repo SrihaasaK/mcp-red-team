@@ -1,0 +1,6 @@
+langchain-mcp-adapters: 0.3.2
+mcp: 1.30.0
+SUPPORTED_PROTOCOL_VERSIONS: ['2024-11-05', '2025-03-26', '2025-06-18', '2025-11-25']
+LATEST_PROTOCOL_VERSION: 2025-11-25
+note: v2-only module mcp.types.version is absent on this mcp 1.x install
+=> LangGraph scaffold speaks STATEFUL 2025-11-25 only (no 2026-07-28)
