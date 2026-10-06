@@ -166,7 +166,9 @@ Composable: encoding (base64, zero-width, homoglyph, HTML/MD comment); framing
 - **Published suite:** a fixed ~40 attack configs (each class × 4–5
   representative mutator combinations), versioned in `attacks/corpus.yaml`.
   Frontier-model numbers come only from this suite.
-- **Full factorial:** every class × mutator × placement, run **only on Ollama**.
+- **Full factorial (amended 2026-10-06, DECISIONS.md D19):** a sampled design
+  of ~1,000 trials over class × mutator × placement, run on Sonnet 5.5. The
+  sampling scheme is proposed in `DECISIONS.md` at M2 and frozen in `PREREG.md`.
 - **Splits:** before any mitigation code exists, split the published suite
   **70/30 dev/held-out**, stratified by class, with at least one entire mutator
   family appearing **only** in held-out. Freeze by committing the split and

@@ -1,0 +1,13 @@
+[project]
+name = "mcpr-openai-adapter"
+version = "0.1.0"
+description = "MCP Red Team scaffold adapter: OpenAI Agents SDK. Independent uv project (DECISIONS.md D12)."
+requires-python = ">=3.12"
+dependencies = [
+    "openai-agents==0.23.1",
+    "mcp>=2.3,<3",
+    "httpx>=0.27",
+]
+
+[tool.uv]
+package = false

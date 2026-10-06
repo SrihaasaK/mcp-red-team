@@ -20,3 +20,7 @@ ruvector.db
 .swarm/
 probe/_logs/
 probe/.venv-*/
+scaffolds/*/.venv/
+runs/
+# ruflo AgentDB store (local tooling, not part of this project)
+agentdb.rvf*

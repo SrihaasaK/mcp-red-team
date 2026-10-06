@@ -417,3 +417,163 @@ Notes:
   absent report N/A, never 0%.
 - **Rejected:** freezing D8 as documented. Classes (4) and (8) would then rest on
   documentation instead of measured behavior.
+
+---
+
+# M1 (begun 2026-10-06)
+
+## D18. qwen3:14b via Ollama as M2's second model (author decision; superseded by D19 before taking effect)
+- **As given:** M2's second model is `qwen3:14b` through Ollama's
+  OpenAI-compatible endpoint, on the same `OpenAIChatCompletionsModel` path as
+  D13. It also runs the held-out sweep for the two lean scaffolds at no API cost.
+  Sonnet 5.5 stays the frontier headline model, and the Claude Agent SDK slice is
+  Sonnet-only. To go into `PREREG.md` at M2. During M1, per-trial wall-clock was
+  to be measured for both models, with a sampled design proposed if the Ollama
+  runtime projection exceeded 48 hours.
+- **Status:** superseded by D19 the same day, before any of it was implemented.
+  Ollama was never installed.
+
+## D19. Budget change: \$375 guard, Ollama dropped, Opus as second model (author decision)
+Supersedes D18 and the Opus/Ollama parts of D11.
+- **Spend guard** raised from \$150 to \$375 for this project (CLAUDE.md #8
+  updated). About \$125 of the author's \$500 in API credits (expiring in about
+  six months) is reserved for other projects and is never assumed available here.
+- **Ollama is dropped.** Nothing is installed.
+- **Models.** Sonnet 5.5 runs the held-out sweep under all 7 conditions. Opus 5.5
+  is M2's second model and runs the held-out sweep on the two lean scaffolds
+  under 4 conditions (baseline, coarse taint, fine taint, combined). The Claude
+  Agent SDK slice stays Sonnet-only. D11 decision 3 still applies to Sonnet's
+  seven conditions: pinning and spotlighting run only against their target
+  classes.
+- **SPEC §6.4 amended:** the full factorial becomes a sampled design of about
+  1,000 trials on Sonnet 5.5. The sampling scheme is proposed here at M2 and
+  frozen in `PREREG.md`. `docs/SPEC.md` §6.4 now says so.
+- **Manifest (supersedes D5's iteration tier):** there is no local tier;
+  iteration runs on Sonnet 5.5. The frontier ids and prices are unchanged:
+  `claude-sonnet-5-5` (\$2 in / \$10 out per Mtok) and `claude-opus-5-5`
+  (\$4 / \$20). D5 is left as written (this file is append-only); this entry is
+  the current manifest.
+- **Cost measurement.** Real per-trial cost is measured during M1 and M2. M2–M4
+  is re-projected before `PREREG.md` is frozen, and work stops for an author
+  decision if the projection exceeds \$375.
+- **Key handling.** The harness alone reads the API key from `.env`
+  (`src/mcpredteam/config.py`). It is never exported to a shell or passed to
+  Claude Code itself. Scaffold subprocesses receive it from the runner in their
+  own environment only.
+- **Interpretation (CLAUDE.md #10).** SPEC §6.4 says "Frontier-model numbers come
+  only from this suite" (the published suite). The sampled factorial now runs on
+  a frontier model, so that sentence is read as *headline* numbers: factorial
+  results are exploratory and never quoted as findings (SPEC §8.3).
+- **Open for PREREG:** D11's resume line names one model (`<<MODEL>>`). With Opus
+  now on the held-out sweep, whether the headline names both models is decided
+  when `PREREG.md` is frozen.
+
+## D20. M1 design: proxy, era forcing, record/replay, adapter
+Built and tested before any live model call. Each choice has its rejected
+alternative.
+
+**Proxy shape.** A JSON-RPC message-level relay (`src/mcpredteam/proxy/relay.py`),
+one `Relay` per (trial, upstream server). The agent-facing transport ends at the
+proxy: a Streamable HTTP hub at `/t/<trial>/<server>/mcp`
+(`proxy/http_app.py`), or one stdio subprocess per server (`proxy/stdio.py`).
+Upstream mocks run in-process as fresh `MCPServer` apps with `json_response=True`,
+reached over Streamable HTTP via `httpx2.ASGITransport`.
+- *Rejected:* a byte-level HTTP reverse proxy, which would not work for stdio
+  and would make interceptors parse framing. Also rejected: mirroring tools
+  through a high-level `MCPServer`, which would let the SDK re-negotiate and
+  hide the wire from the log.
+
+**Era forcing (implements D16).**
+- In a handshake-only run, `server/discover` is refused with HTTP 404 /
+  JSON-RPC `-32601`. The mcp 2.3.0 negotiator treats any such error as "fall
+  back to `initialize`" (`mcp/client/_probe.py`).
+- In a stateless-only run, `initialize` is refused the same way. A client that
+  falls back therefore fails to connect instead of changing era.
+- Each connection records the era it actually negotiated. A trial passes the era
+  check only if every connection negotiated exactly the forced era.
+- *Rejected:* refusing with `-32022`. With an empty or modern-only `supported`
+  list it aborts the connect outright, so it can't force a fallback.
+
+**Wire details.**
+- Upstream headers are rebuilt from the message body rather than copied, so an
+  interceptor that renames a tool can't create a header/body mismatch (`-32020`).
+- GET gets 405: the mocks never push messages, and the client gives up after two
+  retries.
+- DELETE ends the upstream session. Notifications get 202. JSON-RPC batches are
+  refused.
+- *Limitation:* `Mcp-Param-*` headers are not forwarded. The mocks have no
+  `x-mcp-header` tools; revisit at M2 if an attack needs them.
+
+**Logging.** `proxy.<server>.jsonl` holds every message, keyed by run and trial.
+`dir` is `c2s` or `s2c`; `stage` is `in` (as received) or `out` (as forwarded,
+after interceptors). Tool calls for scoring are read from `c2s`/`in`, which is
+what the agent issued.
+
+**Upstream record/replay.** `upstream.<server>.jsonl` holds request, responses
+and HTTP status.
+- Replay matches by (method, params without `_meta`) in recorded order, rewrites
+  response ids, and returns the recorded status.
+- Unmatched requests raise `ReplayDivergence`.
+- In replay mode no upstream object is created at all.
+
+**Model record/replay.** The adapter's `httpx2` transport wraps the model client
+and writes `llm.jsonl` with request and response bodies only. No headers are
+stored, so the API key can't reach a recording.
+- Replay serves model calls in order and refuses any request whose canonical
+  body differs from the recording.
+- A socket guard in the replay adapter refuses every non-loopback connection or
+  DNS lookup and counts attempts.
+- Agents SDK tracing, which would POST to OpenAI, is disabled four ways: the
+  env var, `set_tracing_disabled`, `set_trace_processors([])`, and
+  `RunConfig(tracing_disabled=True)`.
+
+**Replay equality (SPEC §9.1).** The criteria:
+- same tool-call sequence, as (server, tool, canonical arguments) in arrival
+  order
+- same verdict
+- zero live calls: no model call left the adapter, the socket guard blocked
+  nothing, and no proxy reached an upstream
+- every recorded model call served
+- the era check passes in both runs
+
+Final-answer equality is reported but not required. That is the SPEC's own
+definition.
+
+**M1 verdict (interpretation, CLAUDE.md #10).** The "oracle verdict" in §9.1 is,
+at M1, the benign task's deterministic checker (`tasks/benign.yaml`). The
+attack oracle (SPEC §7.2) arrives at M2 and joins the comparison then.
+
+**Adapter (OpenAI Agents SDK 0.23.1, `scaffolds/openai-agents/`).**
+- `OpenAIChatCompletionsModel` with `AsyncOpenAI(base_url=Anthropic's
+  OpenAI-compatible endpoint, max_retries=0)`. The D13 path; the LiteLLM extra
+  is not needed.
+- `cache_tools_list=False`, fixed server names, and a fixed system instruction
+  (in `adapter.py`).
+- `failure_error_function=None`, so a proxy or MCP fault aborts the trial
+  loudly instead of becoming a generic tool error. Revisit at M2, where
+  mitigations block calls.
+- The key reaches the adapter only as `MCPR_ANTHROPIC_API_KEY` in a scrubbed
+  subprocess environment, with no `OPENAI_*` variables.
+
+**Model settings.**
+- `parallel_tool_calls=false`. Tool calls are sequential, so arrival order
+  across servers is deterministic and comparable. *Rejected:* the default
+  parallel calls. Cross-server arrival order could then vary between record and
+  replay.
+- `max_tokens=8192`. Hidden thinking counts toward it, and the compat endpoint's
+  default is undocumented.
+- `seed` can't be fixed: Anthropic ignores it (SPEC §5.2 item 4 requires
+  reporting this).
+- Whether `temperature=0` is accepted is settled by a live check in D21.
+
+**Interceptor chain (SPEC §5.1).**
+- Request and response hooks run in list order. `on_discover` receives the full
+  discover result.
+- `on_final_answer` will be called by the runner at M2, since it sees the final
+  answer and the proxy does not.
+- The chain is empty at M1. The plumbing is exercised when attacks land.
+
+**Offline pipeline test.** `tests/test_pipeline_fake_model.py` runs the real
+adapter against a scripted OpenAI-compatible fake model, in both transports and
+both eras. It records, replays and asserts replay equality, with no API spend.
+It's a candidate for M3's CI.

@@ -26,7 +26,8 @@ that override everything else.
 7. **Attacks run only against mock servers in this repo.** Canaries are
    synthetic. Secrets live only in `.env`, which is gitignored.
 8. **Spend guard.** Log model spend per run. If projected frontier spend exceeds
-   $150, stop and ask.
+   \$375, stop and ask. About \$125 of the author's API credits is reserved for
+   other projects; never assume it is available here (DECISIONS.md D19).
 9. **`DECISIONS.md` is append-only and mandatory.** Every architectural choice,
    its rationale, and the rejected alternative, in the same commit.
 10. **Scope guard:** no GUI, no auth story, at most 3 scaffolds. On ambiguity,

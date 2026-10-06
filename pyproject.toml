@@ -15,8 +15,10 @@ classifiers = [
     "Topic :: Security",
 ]
 dependencies = [
+    "httpx>=0.27",
     "mcp>=2.3,<3",
     "pydantic>=2",
+    "pyyaml>=6",
     "typer>=0.12",
 ]
 
@@ -40,3 +42,7 @@ extend-exclude = ["probe"]  # throwaway M0 measurement scripts (not shipped)
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.ruff.lint.flake8-bugbear]
+# Typer declares CLI options as default values; these calls are not mutable state.
+extend-immutable-calls = ["typer.Option", "typer.Argument"]
