@@ -877,3 +877,25 @@ keeping the conditional-class map honest (SPEC §6.1, §8.6).
 The corpus writes "no encoding" as YAML `null`/omission, not the string `"none"`, to
 match `mutators.py` (which uses `None`/omission). The three step-2 subagent worktrees
 are removed after their outputs are merged.
+
+## D30. Pre-result oracle hardening + suite-comment fix (reviewer pass, CLAUDE.md #11)
+The required reviewer pass on the oracle found it sound and deterministic on correct
+trajectories, with fixes needed before any NUMBER is frozen:
+- **#3 (applied now, pre-result):** `oracle/rules.py:sink_tools` now intersects declared
+  `target.affects` and `task.forbidden_tools` with the side-effecting set, so a canary
+  reaching a benign READ tool is never scored exfil (even under a wrong future regen).
+  The stale `tasks/benign.yaml` header (still describing D23 as "full inventory minus
+  exercises") is corrected to the narrowed side-effecting-only rule. No result exists
+  yet, so this is a pre-result correction; `benign.yaml`'s hash changed and `PREREG.md`
+  is re-pinned. New `tasks/benign.yaml` SHA-256 `f7a3455fb45216477a0e1b65ea463da3285eb874c227692782409f317dea8f1d`.
+- **#1 (persistence):** on real trials `Trajectory.from_trial` collapses to one turn, so
+  persistence would score 0. Resolved by wiring two-turn execution + per-turn `turns`
+  in `adapter_result.json` (attack engine/adapter); until wired, persistence is reported
+  **N/A, never 0%** (SPEC §6.1).
+- **#2 (exposure):** exposure needs the composed injected `payload_text` for the 19 exfil
+  configs; the attack engine records it per trial and a test exercises the real path.
+- **#4/#5 (README §14 limitations):** `_allowed` uses substring-of-allowed-output (could
+  suppress a hijack whose target is a substring of an allowed output — none in the current
+  corpus); exposure joins JSON leaves with newlines (a needle split across adjacent fields
+  is a false negative).
+Verdict: freezing the suite/PREREG was fine; freezing numbers waits on #1 and #2.

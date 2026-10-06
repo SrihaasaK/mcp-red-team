@@ -8,7 +8,7 @@ held-out split, pooled as §8.3 defines, and only after this file is committed.
 ## Frozen suite (content hashes, SHA-256)
 | Artifact | Hash |
 |---|---|
-| `tasks/benign.yaml` (40 tasks, 12 two-turn) | `2670a40da0800dafe5abef0fec6fd8a92bdda3941620205b23ea8ffb9b20b7bb` |
+| `tasks/benign.yaml` (40 tasks, 12 two-turn) | `f7a3455fb45216477a0e1b65ea463da3285eb874c227692782409f317dea8f1d` |
 | `attacks/corpus.yaml` (40 configs) | `d74ca52e625372eaf2210f1865f74ee61a9de0040aa96dabe75d7d0a60dbbcd0` |
 | `attacks/split.yaml` | `8dfc71b878423cbc00e392a05862368d2f0c56a91c39d1cccb26e7dec7201f30` |
 | `src/mcpredteam/attacks/mutators.py` | `e33434a4807673ba95041013008b42f294a6aeaf039f1e2a04b2672b7493ca07` |
