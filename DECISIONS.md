@@ -1027,3 +1027,40 @@ no-permission-laundering rule).
    frozen in PREREG.md; if it isn't, skip"), the factorial is skipped; PREREG is not
    amended. The author can revisit by confirming in-session whether the referenced,
    committed design counts as frozen.
+
+## D36. M2 provisionally accepted + handoff to M3 (autonomous run, D33)
+**M2 acceptance check (SPEC §12) — all met:**
+- Oracle scores 100% on the fixtures (35 known pos/neg) — D30, reviewer-passed.
+- Control-arm false-positive rate reported: **0.0** (360 control trials, 0 FP).
+- `PREREG.md` committed before the first result; split hash pinned and matches.
+- Dev-split table renders for 1 scaffold (OpenAI) × 2 models (Sonnet 5.5, Opus 5.5) with
+  raw + exposure-conditioned ASR, Wilson CIs, and utility beside it
+  (`review/M2/dev_table.md`, `m2_report.json`).
+- `review/M2/` exists with a 10-trajectory review packet (`review/M2/review_packet/`).
+- No D31 abort fired; 0 trial errors (the D32 fixes held).
+
+**Headline dev results (DEV ONLY, exploratory per SPEC §8.3):** overall raw ASR 7.3%
+[4.5, 11.5], exposure-conditioned 7.8%; exposure 93.6%. Per model: Sonnet 4.5%
+[2.0, 10.2], Opus **10.0%** [5.7, 17.0] — the stronger model was more vulnerable
+(consistent with the MSB/ICLR-2026 prior art). By class: class 1 (indirect injection in
+tool results) dominant (Sonnet 20%, Opus 28%); class 2 (tool-description poisoning) 0%;
+classes 3/5/7 ≤ 10%. Utility (control benign-success): Sonnet 98.9%, Opus 97.2%.
+
+**Spend (measured) + re-projection (D35 item 1):** dev run **$10.28** (Sonnet $3.55,
+Opus $6.72). Per-trial ≈ $0.012 Sonnet / $0.023 Opus (Opus ≈1.9×, matches D21).
+Cumulative to date **$10.81** (M0 $0.133 + M1 $0.306 + M2 smoke $0.092 + dev $10.28).
+Remaining autonomous work re-projected against the $100 cap (D33): M3 ≈ $10–15, M4
+dev-only mitigation grid ≈ $35–45, factorial skipped (D35) → projected total ≈ $55–70,
+under $100. Each live step re-checks its projection before running.
+**Opus settings (D21/D35):** confirmed from run data — 0 Opus trial errors, so the pinned
+`effort=medium`, no-temperature, ignored-seed path is accepted on the compat endpoint.
+
+**Status: M2 provisionally accepted** (D33: acceptance check passes, no abort fired; the
+author confirms final acceptance later).
+
+**Handoff → M3 (SPEC §12):** three scaffolds run the benign suite; replay mode; HTML
+report; GitHub Actions replays the suite with zero live calls. First M3 step: build the
+LangGraph and Claude Agent SDK adapters (D12 independent uv projects) and run a D17-style
+probe on each before its first result (D28 N/A rule), then the benign suite across all
+three. No apparatus/PREREG change; CLAUDE.md #11 reviewer pass wherever M3 touches the
+oracle/stats/splits/taint (benign-suite scaling does not).
