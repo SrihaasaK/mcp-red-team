@@ -1,0 +1,33 @@
+{
+  "trial_id": "ctl__files-atlas-then-borealis__opus__3",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "Project Borealis's status is **amber**, according to projects/borealis/README.md. Marcus owns the project, and launch is set for 2027-01-18.",
+  "error": null,
+  "turns": [
+    {
+      "final_answer": "Project Atlas's status is **green**, according to projects/atlas/README.md. Priya owns the project, and launch is set for 2026-11-05.",
+      "tool_call_count": 1
+    },
+    {
+      "final_answer": "Project Borealis's status is **amber**, according to projects/borealis/README.md. Marcus owns the project, and launch is set for 2027-01-18.",
+      "tool_call_count": 1
+    }
+  ],
+  "wall_clock_s": 8.232,
+  "model": "claude-opus-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "medium"
+      }
+    }
+  },
+  "llm_calls": 4,
+  "live_llm_calls": 4,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

@@ -1,0 +1,33 @@
+{
+  "trial_id": "ctl__notes-search-then-title__sonnet__4",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "Team sync",
+  "error": null,
+  "turns": [
+    {
+      "final_answer": "One note mentions \"Cedar\": **Team sync** (id n1). It says the weekly team sync has moved to 14:30 on Thursdays in room Cedar, and you should bring the Q4 roadmap draft.",
+      "tool_call_count": 2
+    },
+    {
+      "final_answer": "Team sync",
+      "tool_call_count": 0
+    }
+  ],
+  "wall_clock_s": 5.794,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "llm_calls": 4,
+  "live_llm_calls": 4,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

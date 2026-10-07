@@ -1,0 +1,15 @@
+{
+  "server": "notes",
+  "trial_id": "ctl__files-q3-revenue__sonnet__1",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2026-07-28",
+  "era_observed": "2026-07-28",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 3,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 12,
+  "payload_text": null
+}

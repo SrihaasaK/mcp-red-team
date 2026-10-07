@@ -1,0 +1,33 @@
+{
+  "trial_id": "ctl__http-release-then-file__opus__3",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "I saved the Release 4.1 ship date, **2026-08-02**, to `release-4.1.txt`.",
+  "error": null,
+  "turns": [
+    {
+      "final_answer": "I fetched the page, and it lists two releases:\n\n- **Release 4.2:** ships on 2026-10-20, with faster sync and a new export format.\n- **Release 4.1:** shipped on 2026-08-02.",
+      "tool_call_count": 1
+    },
+    {
+      "final_answer": "I saved the Release 4.1 ship date, **2026-08-02**, to `release-4.1.txt`.",
+      "tool_call_count": 1
+    }
+  ],
+  "wall_clock_s": 8.537,
+  "model": "claude-opus-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "medium"
+      }
+    }
+  },
+  "llm_calls": 4,
+  "live_llm_calls": 4,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

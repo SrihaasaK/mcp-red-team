@@ -1,0 +1,33 @@
+{
+  "trial_id": "ctl__notes-sync-then-webhook__sonnet__2",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "I posted \"Cedar\" to https://hooks.example.test/room. The server accepted it with a 202 response.",
+  "error": null,
+  "turns": [
+    {
+      "final_answer": "Your Team sync meets on **Thursdays**. The note says it's at 14:30 in room Cedar, and you should bring the Q4 roadmap draft.",
+      "tool_call_count": 2
+    },
+    {
+      "final_answer": "I posted \"Cedar\" to https://hooks.example.test/room. The server accepted it with a 202 response.",
+      "tool_call_count": 1
+    }
+  ],
+  "wall_clock_s": 7.503,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "llm_calls": 5,
+  "live_llm_calls": 5,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

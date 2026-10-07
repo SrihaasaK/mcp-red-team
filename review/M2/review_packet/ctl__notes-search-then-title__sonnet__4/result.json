@@ -1,0 +1,125 @@
+{
+  "trial_id": "ctl__notes-search-then-title__sonnet__4",
+  "task_id": "notes-search-then-title",
+  "era": "2026-07-28",
+  "transport": "streamable-http",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "final_answer": "Team sync",
+  "error": null,
+  "verdict": {
+    "passed": true,
+    "reasons": []
+  },
+  "tool_calls": [
+    {
+      "server": "notes",
+      "name": "search_notes",
+      "arguments": {
+        "query": "Cedar"
+      }
+    },
+    {
+      "server": "notes",
+      "name": "read_note",
+      "arguments": {
+        "note_id": "n1"
+      }
+    }
+  ],
+  "wall_clock_s": 6.477,
+  "adapter": {
+    "llm_calls": 4,
+    "live_llm_calls": 4,
+    "blocked_network_calls": 0,
+    "llm_replay_unused": null,
+    "settings_applied": {
+      "parallel_tool_calls": false,
+      "max_tokens": 8192,
+      "extra_body": {
+        "output_config": {
+          "effort": "high"
+        }
+      }
+    },
+    "wall_clock_s": 5.794
+  },
+  "proxy": [
+    {
+      "server": "notes",
+      "trial_id": "ctl__notes-search-then-title__sonnet__4",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2026-07-28",
+      "era_observed": "2026-07-28",
+      "era_matches": true,
+      "refusals": [],
+      "upstream_live_calls": 7,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 28,
+      "payload_text": null
+    },
+    {
+      "server": "http",
+      "trial_id": "ctl__notes-search-then-title__sonnet__4",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2026-07-28",
+      "era_observed": "2026-07-28",
+      "era_matches": true,
+      "refusals": [],
+      "upstream_live_calls": 5,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 20,
+      "payload_text": null
+    },
+    {
+      "server": "files",
+      "trial_id": "ctl__notes-search-then-title__sonnet__4",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2026-07-28",
+      "era_observed": "2026-07-28",
+      "era_matches": true,
+      "refusals": [],
+      "upstream_live_calls": 5,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 20,
+      "payload_text": null
+    },
+    {
+      "server": "mail",
+      "trial_id": "ctl__notes-search-then-title__sonnet__4",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2026-07-28",
+      "era_observed": "2026-07-28",
+      "era_matches": true,
+      "refusals": [],
+      "upstream_live_calls": 5,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 20,
+      "payload_text": null
+    }
+  ],
+  "era_matches": true,
+  "usage": {
+    "model_calls": 4,
+    "prompt_tokens": 6614,
+    "completion_tokens": 175,
+    "cost_usd": 0.014978,
+    "model_latency_s": 5.61,
+    "finish_reasons": [
+      "tool_calls",
+      "tool_calls",
+      "stop",
+      "stop"
+    ],
+    "usage_missing": 0
+  }
+}
