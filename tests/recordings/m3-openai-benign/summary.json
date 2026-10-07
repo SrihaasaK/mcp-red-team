@@ -1,0 +1,59 @@
+{
+  "run_id": "m3-openai-benign",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "era": "2025-11-25",
+  "transports": [
+    "stdio",
+    "streamable-http"
+  ],
+  "model_settings": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "planned": 80,
+  "ran": 80,
+  "skipped": 0,
+  "errors": 0,
+  "benign_success": 80,
+  "ran_ok": 80,
+  "utility": 1.0,
+  "utility_ci": [
+    0.9542,
+    1.0
+  ],
+  "by_transport": {
+    "stdio": {
+      "trials": 40,
+      "passed": 40,
+      "rate": 1.0
+    },
+    "streamable-http": {
+      "trials": 40,
+      "passed": 40,
+      "rate": 1.0
+    }
+  },
+  "by_turns": {
+    "single": {
+      "trials": 56,
+      "passed": 56,
+      "rate": 1.0
+    },
+    "two_turn": {
+      "trials": 24,
+      "passed": 24,
+      "rate": 1.0
+    }
+  },
+  "era_mismatches": [],
+  "spent_usd": 0.965748,
+  "budget_usd": 2.0,
+  "halted": null,
+  "wall_clock_total_s": 481.9
+}

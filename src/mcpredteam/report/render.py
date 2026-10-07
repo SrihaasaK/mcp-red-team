@@ -24,13 +24,15 @@ HELD_OUT_PLACEHOLDERS = ("<<X>>", "<<Y>>", "<<U>>", "<<MODEL>>", "<<N>>")
 # The committed, dev+benign ONLY data sources. No held-out path appears here.
 SOURCES = {
     "m2": "review/M2/m2_report.json",
+    "openai_benign": "tests/recordings/m3-openai-benign/summary.json",
     "langgraph": "tests/recordings/m3-langgraph/summary.json",
     "claude_agent_sdk": "tests/recordings/m3-claude-agent-sdk/summary.json",
     "prereg": "PREREG.md",
 }
 
 # Spend ledger (USD), each entry recorded in DECISIONS.md; the cumulative total reconciles
-# EXACTLY with DECISIONS.md D42 ($11.883959) -- asserted by tests/test_report.py.
+# EXACTLY with the latest DECISIONS.md ledger entry (D51: $12.849707) -- asserted by
+# tests/test_report.py.
 LEDGER = [
     ("M0", "compatibility probe (Claude Agent SDK, D10)", 0.133251),
     ("M1", "settings probe + smoke + m1-matrix + m1-final (D21)", 0.306),
@@ -38,9 +40,11 @@ LEDGER = [
     ("M2 dev", "dev run 580 trials (D36; review/M2/m2_report.json)", 10.2753),
     ("M3-T1", "LangGraph benign suite (D38)", 0.822),
     ("M3-T2", "Claude Agent SDK benign $0.232130 + native-path smokes $0.023278 (D40, D42)", 0.255408),
+    ("M3-T4", "OpenAI Agents full benign suite, 40x2 (D51)", 0.965748),
 ]
-# Cumulative total that must match DECISIONS.md D42; kept as a constant for the reconciliation test.
-LEDGER_TOTAL_D42 = 11.883959
+# Cumulative total that must match the latest DECISIONS.md ledger entry (D51); a constant
+# for the reconciliation test.
+LEDGER_TOTAL_USD = 12.849707
 
 
 def _rate_cell(succ: int, n: int) -> str:
@@ -87,6 +91,7 @@ def build_report(root: Path | None = None) -> str:
     root = root or repo_root()
     src = {k: (root / v) for k, v in SOURCES.items()}
     m2 = json.loads(src["m2"].read_text())
+    oa = json.loads(src["openai_benign"].read_text())
     lg = json.loads(src["langgraph"].read_text())
     cas = json.loads(src["claude_agent_sdk"].read_text())
     prereg = src["prereg"].read_text()
@@ -106,8 +111,10 @@ def build_report(root: Path | None = None) -> str:
     openai_ctl_n = m2["pooled"]["control_trials"]
     openai_ctl_succ = round(m2["pooled"]["control_benign_success"] * openai_ctl_n)
     benign_rows = [
-        ("openai-agents", "sonnet+opus (M2 control arm, pooled)", "2025-11-25 / 2026-07-28",
-         "stdio + http", openai_ctl_succ, openai_ctl_n, False),
+        ("openai-agents", "sonnet, full benign suite (40 tasks x 2 transports)", oa["era"],
+         "stdio + http", oa["benign_success"], oa["ran_ok"], False),
+        ("openai-agents", "M2 control arm -- 36/40 tasks x10 (reference, not the benign suite)",
+         "2025-11-25 / 2026-07-28", "stdio + http", openai_ctl_succ, openai_ctl_n, False),
         ("langgraph", lg["model"].replace("claude-", ""), lg["era"], "stdio + http",
          lg["benign_success"], lg["ran_ok"], False),
         ("claude-agent-sdk", cas["model"].replace("claude-", ""), cas["era"], "http",

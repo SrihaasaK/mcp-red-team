@@ -1461,3 +1461,40 @@ unchanged — `trajectory_equal` is arm-agnostic and is already exercised on two
 committed langgraph/cas benign recordings, and the full m2-dev replay covers all 120 real two-turn
 controls. **Re-verification** (full suite, full replays with the per-turn checker, fresh-clone
 re-proof) is in the rework-r2 commit message and the D33 report.
+
+## D51. M3-T4 — OpenAI Agents full benign suite; corrects D47's "all three ran the benign suite" (autonomous, D33; task M3-T4)
+D47 counted OpenAI's benign coverage via the M2 control arm, but that arm ran only **36 of the 40**
+tasks (10 trials each): `files-write-summary`, `http-changelog-404`, `mail-inbox-count` and
+`notes-count` were never run on openai-agents (not in m1-final, m2-smoke, or m2-dev — they have no
+compatible dev attack config). SPEC §12 M3 requires all three scaffolds to run the benign SUITE, so
+openai-agents now runs the full 40-task benign suite like LangGraph (D38) and the Claude Agent SDK
+(D40).
+Run `runs/m3-openai-benign` via `review/M3/run_benign.py` (no scaffold/proxy/oracle change): 40 tasks
+x 2 transports (stdio + streamable-http), claude-sonnet-5-5, **era 2025-11-25** (mirrors LangGraph
+for a directly comparable utility). 80 planned, **80 ran, 0 errors, 0 skipped**, `era_mismatches []`,
+all 40 tasks present on both transports (incl. the 4 above). **Utility 80/80 = 1.000, Wilson 95% CI
+[0.9542, 1.0]** (stdio 40/40, http 40/40; single 56/56, two-turn 24/24). Spend **\$0.965748** (cap
+\$2; projection after 10 trials \$0.76). Replay -> **80/80 EQUAL** with the per-turn checker, zero live.
+**Report:** `review/M3/report.html` gains an "openai-agents, full benign suite" row (80/80, CI) and
+keeps the M2-control-arm row labelled a 36/40-task reference (not the benign suite). A sample
+(single + two-turn x both transports) + the full summary are committed under
+`tests/recordings/m3-openai-benign/` (secret-clean; no cli_*/.venv/.db) for a reproducible report
+source and CI replay.
+**Ledger:** M3-T4 = \$0.965748. Cumulative **\$11.883959 -> \$12.849707** (D42 + M3-T4). The report
+LEDGER and the `test_report.py` reconciliation test are updated to **\$12.849707**.
+**Correction to D47:** "all three scaffolds run the benign suite" is now TRUE for the full 40-task
+suite (OpenAI m3-openai-benign, LangGraph D38, Claude Agent SDK D40). D47 is left unchanged (append-only).
+
+## D52. M3 milestone-boundary handoff (SPEC §12)
+**M3 complete.** All three scaffolds ran the full 40-task benign suite: **OpenAI Agents 80/80 =
+1.000** (D51), **LangGraph 76/80 = 0.950** (D38), **Claude Agent SDK 40/40 = 1.000** (D40, separate
+confirmatory slice, never pooled; A1). Replay across the suite with the per-turn attack + FP checker,
+zero live calls: m2-dev 580/580, OpenAI 80/80, LangGraph 80/80, cas 40/40, m1-final 20/20. HTML report
+`review/M3/report.html`; CI (`.github/workflows/replay.yml`, macos-14) replays the committed set with
+zero live calls, proven from a fresh clone. Commits: M3-T1 `b261cc6`, M3-T2 `bd68db4`, M3-T3 `43e8f69`
++ rework `eb158b3` + `78e6ace`, M3-T4 (this commit).
+**Spend:** M3 live total = M3-T1 \$0.822 + M3-T2 \$0.255408 + M3-T4 \$0.965748 = \$2.043156 (M3-T3 \$0).
+Cumulative **\$12.849707**. Inside D33's \$100.
+**Open author decisions** (M3 does not block the offline M4 build; only M4's dev EVALUATION waits on
+D37): D37 (exfil-oracle validity), D48 (stdio-relay concurrency fix), D38 (LangGraph class-3 per-turn
+refetch), D46 (push to a remote). **Next: M4-T1 — build the three mitigations offline (\$0), per D33.**

@@ -67,7 +67,8 @@ utility (control benign) 98.1% [96.0%, 99.1%] (353/360); FP rate
 <h2>Benign utility — all three scaffolds</h2>
 <table><thead><tr><th>scaffold</th><th>model</th><th>era</th><th>transports</th>
   <th>benign success [95% CI] (passed/n)</th></tr></thead>
-<tbody><tr><td>openai-agents</td><td>sonnet+opus (M2 control arm, pooled)</td><td>2025-11-25 / 2026-07-28</td><td>stdio + http</td><td>98.1% [96.0%, 99.1%] (353/360)</td></tr>
+<tbody><tr><td>openai-agents</td><td>sonnet, full benign suite (40 tasks x 2 transports)</td><td>2025-11-25</td><td>stdio + http</td><td>100.0% [95.4%, 100.0%] (80/80)</td></tr>
+<tr><td>openai-agents</td><td>M2 control arm -- 36/40 tasks x10 (reference, not the benign suite)</td><td>2025-11-25 / 2026-07-28</td><td>stdio + http</td><td>98.1% [96.0%, 99.1%] (353/360)</td></tr>
 <tr><td>langgraph</td><td>sonnet-5-5</td><td>2025-11-25</td><td>stdio + http</td><td>95.0% [87.8%, 98.0%] (76/80)</td></tr>
 <tr><td>claude-agent-sdk <span class="sep">confirmatory slice &mdash; not pooled (A1)</span></td><td>sonnet-5-5</td><td>2026-07-28</td><td>http</td><td>100.0% [91.2%, 100.0%] (40/40)</td></tr></tbody></table>
 <p class="note">Claude Agent SDK ran on the native Messages API with effective thinking {&quot;display&quot;: &quot;updates&quot;, &quot;type&quot;: &quot;adaptive&quot;} and prompt caching (cache-read 270011 tokens across 40 trials).</p>
@@ -124,7 +125,8 @@ Conditions (author call):
 <tr><td>M2 smoke</td><td>smoke-gate before the dev run (D32, D36)</td><td>$0.092000</td><td>$0.531251</td></tr>
 <tr><td>M2 dev</td><td>dev run 580 trials (D36; review/M2/m2_report.json)</td><td>$10.275300</td><td>$10.806551</td></tr>
 <tr><td>M3-T1</td><td>LangGraph benign suite (D38)</td><td>$0.822000</td><td>$11.628551</td></tr>
-<tr><td>M3-T2</td><td>Claude Agent SDK benign $0.232130 + native-path smokes $0.023278 (D40, D42)</td><td>$0.255408</td><td>$11.883959</td></tr></tbody></table>
+<tr><td>M3-T2</td><td>Claude Agent SDK benign $0.232130 + native-path smokes $0.023278 (D40, D42)</td><td>$0.255408</td><td>$11.883959</td></tr>
+<tr><td>M3-T4</td><td>OpenAI Agents full benign suite, 40x2 (D51)</td><td>$0.965748</td><td>$12.849707</td></tr></tbody></table>
 
 <h2>Held-out headline (pending)</h2>
 <p class="note">Pooled held-out ASR over OpenAI Agents + LangGraph (the Claude Agent SDK is a

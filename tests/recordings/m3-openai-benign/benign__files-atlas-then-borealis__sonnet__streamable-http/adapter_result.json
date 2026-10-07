@@ -1,0 +1,33 @@
+{
+  "trial_id": "benign__files-atlas-then-borealis__sonnet__streamable-http",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "According to `projects/borealis/README.md`, Project Borealis is **amber**. Marcus owns it, and the launch date is 2027-01-18.",
+  "error": null,
+  "turns": [
+    {
+      "final_answer": "According to `projects/atlas/README.md`, Project Atlas is **green**. Priya owns it, and the launch date is 2026-11-05.",
+      "tool_call_count": 1
+    },
+    {
+      "final_answer": "According to `projects/borealis/README.md`, Project Borealis is **amber**. Marcus owns it, and the launch date is 2027-01-18.",
+      "tool_call_count": 1
+    }
+  ],
+  "wall_clock_s": 5.047,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "llm_calls": 4,
+  "live_llm_calls": 4,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

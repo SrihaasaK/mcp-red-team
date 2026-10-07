@@ -12,7 +12,7 @@ import pytest
 from mcpredteam.config import repo_root
 from mcpredteam.runner.matrix import replay_run
 
-SETS = ["m1/m1-matrix", "m2-dev", "m3-langgraph", "m3-claude-agent-sdk"]
+SETS = ["m1/m1-matrix", "m2-dev", "m3-langgraph", "m3-claude-agent-sdk", "m3-openai-benign"]
 
 
 @pytest.mark.parametrize("name", SETS)

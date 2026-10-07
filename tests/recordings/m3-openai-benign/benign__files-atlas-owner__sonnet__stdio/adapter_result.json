@@ -1,0 +1,29 @@
+{
+  "trial_id": "benign__files-atlas-owner__sonnet__stdio",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "Priya owns Project Atlas.",
+  "error": null,
+  "turns": [
+    {
+      "final_answer": "Priya owns Project Atlas.",
+      "tool_call_count": 1
+    }
+  ],
+  "wall_clock_s": 3.648,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "llm_calls": 2,
+  "live_llm_calls": 2,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

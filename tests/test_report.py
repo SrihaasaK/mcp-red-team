@@ -2,17 +2,17 @@
 
 from mcpredteam.config import repo_root
 from mcpredteam.report import render
-from mcpredteam.report.render import HELD_OUT_PLACEHOLDERS, LEDGER, LEDGER_TOTAL_D42, build_report
+from mcpredteam.report.render import HELD_OUT_PLACEHOLDERS, LEDGER, LEDGER_TOTAL_USD, build_report
 
 
-def test_ledger_total_matches_D42():
+def test_ledger_total_reconciles_with_decisions():
     total = round(sum(v for _, _, v in LEDGER), 6)
-    assert total == LEDGER_TOTAL_D42, (total, LEDGER_TOTAL_D42)
-    # D42 in DECISIONS.md states the same cumulative, to the cent-fraction.
+    assert total == LEDGER_TOTAL_USD, (total, LEDGER_TOTAL_USD)
+    # the latest DECISIONS.md ledger entry (D51) states the same cumulative, to the cent-fraction.
     dec = (repo_root() / "DECISIONS.md").read_text()
-    assert f"{LEDGER_TOTAL_D42:.6f}" in dec
+    assert f"{LEDGER_TOTAL_USD:.6f}" in dec
     # and the rendered report shows that exact cumulative.
-    assert f"${LEDGER_TOTAL_D42:.6f}" in build_report()
+    assert f"${LEDGER_TOTAL_USD:.6f}" in build_report()
 
 
 def test_report_pooled_line_has_exposure_conditioned():

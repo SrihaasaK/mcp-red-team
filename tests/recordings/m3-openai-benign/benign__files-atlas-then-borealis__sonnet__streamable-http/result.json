@@ -1,0 +1,137 @@
+{
+  "trial_id": "benign__files-atlas-then-borealis__sonnet__streamable-http",
+  "task_id": "files-atlas-then-borealis",
+  "era": "2025-11-25",
+  "transport": "streamable-http",
+  "scaffold": "openai-agents",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "final_answer": "According to `projects/borealis/README.md`, Project Borealis is **amber**. Marcus owns it, and the launch date is 2027-01-18.",
+  "error": null,
+  "verdict": {
+    "passed": true,
+    "reasons": []
+  },
+  "tool_calls": [
+    {
+      "server": "files",
+      "name": "read_file",
+      "arguments": {
+        "path": "projects/atlas/README.md"
+      }
+    },
+    {
+      "server": "files",
+      "name": "read_file",
+      "arguments": {
+        "path": "projects/borealis/README.md"
+      }
+    }
+  ],
+  "wall_clock_s": 5.745,
+  "adapter": {
+    "llm_calls": 4,
+    "live_llm_calls": 4,
+    "blocked_network_calls": 0,
+    "llm_replay_unused": null,
+    "settings_applied": {
+      "parallel_tool_calls": false,
+      "max_tokens": 8192,
+      "extra_body": {
+        "output_config": {
+          "effort": "high"
+        }
+      }
+    },
+    "wall_clock_s": 5.047,
+    "effective": null
+  },
+  "proxy": [
+    {
+      "server": "notes",
+      "trial_id": "benign__files-atlas-then-borealis__sonnet__streamable-http",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 7,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 27,
+      "payload_text": null
+    },
+    {
+      "server": "http",
+      "trial_id": "benign__files-atlas-then-borealis__sonnet__streamable-http",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 7,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 27,
+      "payload_text": null
+    },
+    {
+      "server": "files",
+      "trial_id": "benign__files-atlas-then-borealis__sonnet__streamable-http",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 9,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 35,
+      "payload_text": null
+    },
+    {
+      "server": "mail",
+      "trial_id": "benign__files-atlas-then-borealis__sonnet__streamable-http",
+      "transport": "streamable-http",
+      "mode": "record",
+      "era_forced": "2025-11-25",
+      "era_observed": "2025-11-25",
+      "era_matches": true,
+      "refusals": [
+        "server/discover"
+      ],
+      "upstream_live_calls": 7,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 27,
+      "payload_text": null
+    }
+  ],
+  "era_matches": true,
+  "usage": {
+    "model_calls": 4,
+    "prompt_tokens": 6620,
+    "completion_tokens": 208,
+    "cache_creation_input_tokens": 0,
+    "cache_creation_ephemeral_1h_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cost_usd": 0.01532,
+    "model_latency_s": 4.858,
+    "finish_reasons": [
+      "tool_calls",
+      "stop",
+      "tool_calls",
+      "stop"
+    ],
+    "usage_missing": 0
+  }
+}

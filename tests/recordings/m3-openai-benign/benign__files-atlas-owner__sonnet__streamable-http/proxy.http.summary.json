@@ -1,0 +1,17 @@
+{
+  "server": "http",
+  "trial_id": "benign__files-atlas-owner__sonnet__streamable-http",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2025-11-25",
+  "era_observed": "2025-11-25",
+  "era_matches": true,
+  "refusals": [
+    "server/discover"
+  ],
+  "upstream_live_calls": 5,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 19,
+  "payload_text": null
+}
