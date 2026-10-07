@@ -222,11 +222,19 @@ async def run(spec_path: Path) -> dict:
                 model=model,
                 model_settings=ModelSettings(**spec["model_settings"]),
             )
-            res = await Runner.run(
-                agent, spec["instruction"], max_turns=spec["max_turns"],
-                run_config=RunConfig(tracing_disabled=True),
-            )
-            result["final_answer"] = str(res.final_output)
+            prompts = spec.get("prompts") or [spec["instruction"]]
+            turns, prev = [], None
+            for i, prompt in enumerate(prompts):
+                agent_input = prompt if i == 0 else prev.to_input_list() + [{"role": "user", "content": prompt}]
+                res = await Runner.run(
+                    agent, agent_input, max_turns=spec["max_turns"],
+                    run_config=RunConfig(tracing_disabled=True),
+                )
+                n_calls = sum(1 for it in getattr(res, "new_items", []) if it.__class__.__name__ == "ToolCallItem")
+                turns.append({"final_answer": str(res.final_output), "tool_call_count": n_calls})
+                prev = res
+            result["turns"] = turns
+            result["final_answer"] = turns[-1]["final_answer"]
     except Exception as exc:  # noqa: BLE001 - recorded in the result, never swallowed
         result["error"] = f"{type(exc).__name__}: {exc}"
         result["traceback"] = traceback.format_exc()[-6000:]

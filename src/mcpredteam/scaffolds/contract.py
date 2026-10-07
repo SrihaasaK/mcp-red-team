@@ -35,6 +35,8 @@ class TrialSpec:
     base_url: str = "https://api.anthropic.com/v1/"
     model_settings: dict = field(default_factory=dict)
     max_turns: int = 12
+    attack_config: dict | None = None  # frozen corpus config to inject; None = control (no-attack) arm
+    prompts: list[str] = field(default_factory=list)  # per-turn instructions; falls back to [instruction]
 
     def __post_init__(self) -> None:
         if self.mode not in MODES:

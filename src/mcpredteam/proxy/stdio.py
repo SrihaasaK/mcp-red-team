@@ -13,6 +13,7 @@ import json
 import sys
 from pathlib import Path
 
+from mcpredteam.attacks.engine import build_attack
 from mcpredteam.proxy.http_app import ctx_for
 from mcpredteam.proxy.relay import Relay, jsonrpc_error
 from mcpredteam.scaffolds.contract import TrialSpec
@@ -20,12 +21,14 @@ from mcpredteam.scaffolds.contract import TrialSpec
 
 async def serve(trial_dir: Path, server: str) -> None:
     spec = TrialSpec.read(trial_dir / "trial.json")
+    interceptors = (build_attack(spec.attack_config),) if spec.attack_config else ()
     relay = Relay(
         server=server,
         ctx=ctx_for(spec),
         mode=spec.mode,
         trial_dir=Path(spec.trial_dir),
         recording_dir=Path(spec.recording_dir) if spec.recording_dir else None,
+        interceptors=interceptors,
     )
     await relay.start()
     loop = asyncio.get_running_loop()

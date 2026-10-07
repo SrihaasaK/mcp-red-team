@@ -20,6 +20,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
+from mcpredteam.attacks.engine import build_attack
 from mcpredteam.proxy.interfaces import TrialCtx
 from mcpredteam.proxy.relay import Relay, jsonrpc_error
 from mcpredteam.scaffolds.contract import TrialSpec
@@ -53,12 +54,14 @@ class ProxyHub:
         async with self._lock:
             key = (trial_id, server)
             if key not in self.relays:
+                interceptors = (build_attack(spec.attack_config),) if spec.attack_config else ()
                 relay = Relay(
                     server=server,
                     ctx=ctx_for(spec),
                     mode=spec.mode,
                     trial_dir=Path(spec.trial_dir),
                     recording_dir=Path(spec.recording_dir) if spec.recording_dir else None,
+                    interceptors=interceptors,
                 )
                 await relay.start()
                 self.relays[key] = relay

@@ -325,6 +325,7 @@ class Relay:
             "replay_unused": self.replayer.unused() if self.replayer else [],
             "proxy_errors": self.errors,
             "messages_logged": self.log.seq,
+            "payload_text": self.ctx.state.get("payload_text"),
         }
 
     async def close(self) -> dict:
