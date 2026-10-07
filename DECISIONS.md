@@ -1437,3 +1437,27 @@ Rework of 43e8f69 on the orchestrator's findings (item 1 is D48).
   precise scope (no behavior change; a future multi-turn attack/control arm would compare per-turn
   answers). Re-verification (full suite + full replays with the new checker + fresh-clone re-proof)
   is recorded in the rework commit message and the D33 report.
+
+## D50. Correction to D49 — replay equality now covers EVERY turn (M3-T3 rework r2, item 4)
+D49 (and the narrowed D48/matrix.py comment) claimed every attack-corpus and control-arm trial runs
+the single-turn openai scaffold, so last-turn `final_answer_equal` pins the control-arm FP verdict.
+**That premise was false** (orchestrator, round 2). The openai-agents adapter emits multi-turn
+`turns`, and runs/m2-dev has **120 two-turn control trials** (240 single) and **86 two-turn attack**
+(134 single). On a two-turn trial `Trajectory.from_trial` yields 2 turns and turn 1's answer !=
+result.json's final_answer (the last turn) — e.g. `ctl__files-atlas-then-borealis__opus__0`. So
+`final_answer_equal` did NOT pin the per-turn false-positive verdict for the 120 two-turn controls: a
+turn-1 answer change that flips an FP would still have passed as equal. **The reviewer's LOW note
+(D49) was valid and I wrongly dismissed it on that false premise.**
+**Fix:** `matrix.compare()` now requires `trajectory_equal` — the full PER-TURN trajectory (each
+turn's tool_calls + final_answer, via `Trajectory.from_trial`) must match on both sides. The oracle
+is a pure function of that trajectory, so equal trajectories pin every verdict for every arm,
+including the control arm's per-turn FP check (SPEC §9.1). The attack verdict is still re-scored
+directly (reusing the same trajectories); `final_answer_equal` is kept as a harmless subset. Test
+`test_two_turn_control_turn1_flip_fails_equality`: a two-turn control with an altered turn-1 answer
+(last turn unchanged) reconstructs eb158b3's `equal` formula and shows it would have PASSED
+(final_answer_equal True), while the new `trajectory_equal` is False so the new checker FAILS it. The
+matrix.py comment is corrected; D49 is left unchanged (append-only). The committed CI set is
+unchanged — `trajectory_equal` is arm-agnostic and is already exercised on two-turn trials by the
+committed langgraph/cas benign recordings, and the full m2-dev replay covers all 120 real two-turn
+controls. **Re-verification** (full suite, full replays with the per-turn checker, fresh-clone
+re-proof) is in the rework-r2 commit message and the D33 report.

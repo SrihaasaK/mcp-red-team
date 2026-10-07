@@ -116,32 +116,39 @@ def compare(rec_dir: Path, rep_dir: Path) -> dict:
         "final_answer_equal": rec["final_answer"] == rep["final_answer"],
         "tool_calls": len(rep["tool_calls"]),
     }
-    # SPEC §9.1: an attack-arm trial replays equally only if the ATTACK oracle verdict
-    # (success + rule) also matches, recomputed from each side's trajectory with the same
-    # config. This CALLS the oracle (no oracle change). Benign/control trials carry no
-    # attack_config, so attack_verdict_equal is vacuously True.
+    # The oracle is a pure function of the TRAJECTORY -- each turn's (tool_calls, final_answer).
+    # So replay equality requires the full PER-TURN trajectory to match (M3-T3 rework r2, D50):
+    # that pins every oracle verdict for every arm -- the benign check, the attack verdict, AND
+    # the control arm's per-turn false-positive check -- including the 120 two-turn control trials
+    # where an intermediate-turn answer could flip a verdict while the last answer is unchanged
+    # (SPEC §9.1 "identical oracle verdict"). final_answer_equal (last turn only) is kept as a
+    # harmless subset check; trajectory_equal is the guarantee.
+    rec_traj = Trajectory.from_trial(rec_dir)
+    rep_traj = Trajectory.from_trial(rep_dir)
+
+    def turn_sig(traj: Trajectory) -> list:
+        return [[t.final_answer, [[c.server, c.name, canonical(c.arguments)] for c in t.tool_calls]]
+                for t in traj.turns]
+
+    out["trajectory_equal"] = turn_sig(rec_traj) == turn_sig(rep_traj)
+    # An attack-arm trial additionally re-scores the ATTACK oracle verdict on both sides (direct and
+    # legible). This CALLS the oracle (no oracle change). Benign/control trials carry no
+    # attack_config, so attack_verdict_equal is vacuously True (their equality rests on
+    # trajectory_equal above).
     spec = json.loads((rec_dir / "trial.json").read_text())
     attack_cfg = spec.get("attack_config")
     out["attack_verdict_equal"] = True
     if attack_cfg:
         task = _task_map()[spec["task_id"]]
-        rv = score(Trajectory.from_trial(rec_dir), attack_cfg, task)
-        pv = score(Trajectory.from_trial(rep_dir), attack_cfg, task)
+        rv = score(rec_traj, attack_cfg, task)
+        pv = score(rep_traj, attack_cfg, task)
         out["attack_verdict_equal"] = (rv.success == pv.success and rv.rule == pv.rule)
         out["attack_verdict"] = {"recorded": [rv.success, rv.rule], "replayed": [pv.success, pv.rule]}
     # A recorded error replayed faithfully counts as equal; a new one never does.
-    # final_answer_equal is required too (M3-T3 item 4). The oracle scores each turn's
-    # (tool_calls, final_answer). Every attack-corpus and control-arm trial runs the single-turn
-    # openai-agents scaffold, whose trajectory is ONE turn and whose result.json final_answer IS
-    # that turn's answer -- so tool_sequence_equal + final_answer_equal pin the oracle verdict,
-    # including the control arm's false-positive check (SPEC §9.1 "identical oracle verdict"). The
-    # multi-turn scaffolds (langgraph, claude-agent-sdk) appear only as benign-suite trials (no FP
-    # check); attack-arm equality is additionally enforced by attack_verdict_equal above. A future
-    # multi-turn ATTACK or control arm would need a per-turn answer comparison here (reviewer note, D49).
-    # Every existing equal trial already satisfies final_answer_equal, so this weakens nothing.
     out["equal"] = (out["tool_sequence_equal"] and out["verdict_equal"] and out["zero_live_calls"]
                     and out["llm_fully_replayed"] and out["era_matches"]
                     and out["attack_verdict_equal"] and out["final_answer_equal"]
+                    and out["trajectory_equal"]
                     and out["replay_error"] == out["recorded_error"])
     return out
 
