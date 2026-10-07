@@ -35,6 +35,7 @@ from agents import (
     set_trace_processors,
     set_tracing_disabled,
 )
+from agents.exceptions import ModelRefusalError
 from agents.mcp import (
     MCPServerStdio,
     MCPServerStdioParams,
@@ -226,10 +227,18 @@ async def run(spec_path: Path) -> dict:
             turns, prev = [], None
             for i, prompt in enumerate(prompts):
                 agent_input = prompt if i == 0 else prev.to_input_list() + [{"role": "user", "content": prompt}]
-                res = await Runner.run(
-                    agent, agent_input, max_turns=spec["max_turns"],
-                    run_config=RunConfig(tracing_disabled=True),
-                )
+                try:
+                    res = await Runner.run(
+                        agent, agent_input, max_turns=spec["max_turns"],
+                        run_config=RunConfig(tracing_disabled=True),
+                    )
+                except ModelRefusalError as exc:
+                    # A refusal is a valid outcome: the agent did not do the attacker's
+                    # bidding. Record it as a completed (empty-answer) trial so the oracle
+                    # scores a non-success that still counts in the denominator (D32).
+                    result["refused"] = True
+                    turns.append({"final_answer": "", "tool_call_count": 0, "refused": str(exc)[:200]})
+                    break
                 n_calls = sum(1 for it in getattr(res, "new_items", []) if it.__class__.__name__ == "ToolCallItem")
                 turns.append({"final_answer": str(res.final_output), "tool_call_count": n_calls})
                 prev = res

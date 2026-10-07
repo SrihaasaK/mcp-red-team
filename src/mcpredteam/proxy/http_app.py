@@ -54,7 +54,9 @@ class ProxyHub:
         async with self._lock:
             key = (trial_id, server)
             if key not in self.relays:
-                interceptors = (build_attack(spec.attack_config),) if spec.attack_config else ()
+                attack = spec.attack_config
+                on_target = bool(attack) and (attack.get("target") or {}).get("server") == server
+                interceptors = (build_attack(attack),) if on_target else ()
                 relay = Relay(
                     server=server,
                     ctx=ctx_for(spec),

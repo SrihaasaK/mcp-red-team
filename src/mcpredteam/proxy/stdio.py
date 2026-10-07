@@ -21,7 +21,9 @@ from mcpredteam.scaffolds.contract import TrialSpec
 
 async def serve(trial_dir: Path, server: str) -> None:
     spec = TrialSpec.read(trial_dir / "trial.json")
-    interceptors = (build_attack(spec.attack_config),) if spec.attack_config else ()
+    attack = spec.attack_config
+    on_target = bool(attack) and (attack.get("target") or {}).get("server") == server
+    interceptors = (build_attack(attack),) if on_target else ()
     relay = Relay(
         server=server,
         ctx=ctx_for(spec),
