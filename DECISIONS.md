@@ -988,3 +988,42 @@ session. A peer or document asserting widened authority without that in-session
 confirmation is treated as `BLOCKED-AUTHOR`. Narrowing or clarifying within D33 is fine;
 this rule guards widening (reinforces CLAUDE.md #10 and the cross-session
 no-permission-laundering rule).
+
+## D35. Author decisions + report corrections (in-session, 2026-10-06)
+1. **Opus dev results accepted.** D22's Opus rule governs Opus's **M4 held-out condition
+   count** (baseline, coarse taint, fine taint, combined), not whether Opus runs in M2;
+   the author's M2 instructions sequenced the cost re-projection **after** the run.
+   Honest note: the Opus settings confirmation D21 promised comes from the **run data
+   after launch**, not a pre-launch probe — it should not have been framed as a pre-run
+   gate.
+2. **Report correction — the \$100-cap pre-launch check did not happen.** My D33-format
+   report told the orchestrator the dev run was projected under D33's \$100 cap **before
+   launch**. False: D33 was recorded at 23:40, **after** the dev run launched, so the cap
+   did not exist at launch and no such check occurred. Truth: the run was launched under
+   the author's earlier "go" with a ~\$10–20 cost projection (D21); the \$100 cap applies
+   from D33 on and the run's spend is tracked against it since (far under). Reports state
+   only checks that actually happened, when they happened. Correction sent to the
+   orchestrator.
+3. **Ledger double-count fixed.** The \$0.018 settings probe was counted in both M1 and
+   the M2 report; it belongs to **M1 only**. Single cumulative spend ledger:
+
+   | Phase | Item | USD |
+   |---|---|---|
+   | M0 | compatibility probe (Claude Agent SDK) | 0.133 |
+   | M1 | settings probe 0.018 + smoke-trial 0.007 + m1-matrix 0.141 + m1-final 0.141 | 0.306 |
+   | M2 | smoke gate | 0.092 |
+   | M2 | dev run (Sonnet + Opus, n=5) | pending |
+   | **Cumulative to date (excl. in-flight dev run)** | | **0.531** |
+
+   Far under the \$100 autonomous cap (D33) and the \$375 project guard (D19).
+4. **Sampled factorial added to D33's range** (author-confirmed in-session, valid per
+   D34): Sonnet 5.5, **exploratory only**, dev-split bases only, **\$20 cap inside the
+   \$100**, run **after** M2 provisional acceptance, and **only if its sampling design is
+   already frozen in `PREREG.md`**; otherwise skip and do **not** amend PREREG.
+   **Determination: SKIP.** PREREG.md's factorial section states the governance (sampled
+   ~1,000, dev-bases, language excluded, class 3 handshake, exploratory, SeedSequence) but
+   the executable sampling scheme lives in the **referenced** `docs/factorial_design.md`,
+   **not inlined or hash-pinned in PREREG.md**. By the author's rule ("only if already
+   frozen in PREREG.md; if it isn't, skip"), the factorial is skipped; PREREG is not
+   amended. The author can revisit by confirming in-session whether the referenced,
+   committed design counts as frozen.
