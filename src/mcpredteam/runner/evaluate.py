@@ -252,3 +252,98 @@ async def run_dev(run_id, models, n, out_root, *, api_key, base_url=None,
     (run_dir / "records.jsonl").write_text("\n".join(json.dumps(r.to_dict()) for r in records) + "\n")
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
     return summary
+
+
+async def run_benign(run_id, tasks_list, transports, *, scaffold, model, era, api_key,
+                     budget_usd, out_root, base_url=None, projection_after=10):
+    """Benign (no-attack) suite for one scaffold (SPEC §5.2, M3): utility + wall-clock + spend.
+
+    Runs every task once per transport with NO attack config (the control-arm shape, but the
+    headline is utility, not a false-positive check). Era is forced by the caller (LangGraph is
+    stateful-only, D6). Honors a hard spend cap: it stops starting trials once `spent` reaches
+    `budget_usd`, and after `projection_after` trials it projects the full cost and halts early if
+    the projection would exceed the cap (CLAUDE.md #8). No attack corpus is touched here.
+    """
+    import json
+
+    from mcpredteam.proxy.http_app import HubServer, ProxyHub
+
+    run_dir = Path(out_root) / run_id
+    if run_dir.exists():
+        raise FileExistsError(f"{run_dir} exists: a run never reuses a directory")
+    planned = len(tasks_list) * len(transports)
+    ms = model_settings(model)
+    records: list[dict] = []
+    spent, done, halted = 0.0, 0, None
+    async with HubServer(ProxyHub()) as hub:
+        for transport in transports:
+            for task in tasks_list:
+                tid = f"benign__{task.id}__{model_tag(model)}__{transport}"
+                if halted or spent >= budget_usd:
+                    halted = halted or f"spend ${spent:.4f} reached cap ${budget_usd}"
+                    records.append({"trial_id": tid, "task_id": task.id, "transport": transport,
+                                    "turns": task.turns, "skipped": True})
+                    continue
+                extra = {"base_url": base_url} if base_url else {}
+                spec = TrialSpec(
+                    run_id=run_id, trial_id=tid, task_id=task.id,
+                    instruction=task.prompts[0], prompts=list(task.prompts), era=era,
+                    transport=transport, scaffold=scaffold, model=model, mode="record",
+                    trial_dir=str(run_dir / tid), servers=list(SERVERS), attack_config=None,
+                    model_settings=ms, **extra)
+                result = await run_trial(spec, task, hub=hub, api_key=api_key)
+                trial_dir = Path(spec.trial_dir)
+                usage = result.get("usage") or {}
+                cost = usage.get("cost_usd", 0.0)
+                spent += cost
+                done += 1
+                rec = {"trial_id": tid, "task_id": task.id, "transport": transport,
+                       "turns": task.turns, "error": result.get("error"),
+                       "benign_pass": _benign_pass(trial_dir, task, result),
+                       "tool_calls": len(result.get("tool_calls") or []),
+                       "era_matches": result.get("era_matches"),
+                       "wall_clock_s": result.get("wall_clock_s"),
+                       "cost_usd": cost, "usage_missing": usage.get("usage_missing", 0)}
+                records.append(rec)
+                print(f"  {tid:<46} {'PASS' if rec['benign_pass'] else 'FAIL'}  "
+                      f"era_ok={rec['era_matches']!s:<5} calls={rec['tool_calls']} "
+                      f"wall={rec['wall_clock_s']:>6.1f}s ${cost:.4f}"
+                      + (f"  ERROR {rec['error'][:80]}" if rec["error"] else ""), flush=True)
+                if rec["usage_missing"]:  # spend unknown: fail closed (matches run_matrix)
+                    halted = f"{tid}: model reported no usage, so spend is unknown"
+                if done == projection_after:
+                    projected = spent / done * planned
+                    print(f"  [projection] after {done} trials: spent ${spent:.4f}, "
+                          f"projected ${projected:.2f} for {planned} (cap ${budget_usd})", flush=True)
+                    if projected > budget_usd:
+                        halted = f"projection ${projected:.2f} after {done} trials exceeds cap ${budget_usd}"
+
+    ran = [r for r in records if not r.get("skipped")]
+    ok = [r for r in ran if not r["error"]]
+    passed = sum(r["benign_pass"] for r in ok)
+    lo, hi = stats.wilson_ci(passed, len(ok)) if ok else (0.0, 0.0)
+
+    def group(pred) -> dict:
+        g = [r for r in ok if pred(r)]
+        p = sum(r["benign_pass"] for r in g)
+        return {"trials": len(g), "passed": p, "rate": round(p / len(g), 4) if g else None}
+
+    summary = {
+        "run_id": run_id, "scaffold": scaffold, "model": model, "era": era,
+        "transports": transports, "model_settings": ms,
+        "planned": planned, "ran": len(ran), "skipped": len(records) - len(ran),
+        "errors": len(ran) - len(ok),
+        "benign_success": passed, "ran_ok": len(ok),
+        "utility": round(passed / len(ok), 4) if ok else None,
+        "utility_ci": [round(lo, 4), round(hi, 4)],
+        "by_transport": {t: group(lambda r, t=t: r["transport"] == t) for t in transports},
+        "by_turns": {"single": group(lambda r: r["turns"] == 1),
+                     "two_turn": group(lambda r: r["turns"] == 2)},
+        "era_mismatches": [r["trial_id"] for r in ok if not r["era_matches"]],
+        "spent_usd": round(spent, 6), "budget_usd": budget_usd, "halted": halted,
+        "wall_clock_total_s": round(sum(r["wall_clock_s"] or 0 for r in ran), 1),
+    }
+    run_dir.mkdir(parents=True, exist_ok=True)
+    (run_dir / "records.jsonl").write_text("\n".join(json.dumps(r) for r in records) + "\n")
+    (run_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    return summary

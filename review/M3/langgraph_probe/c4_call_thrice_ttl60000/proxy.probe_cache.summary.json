@@ -1,0 +1,15 @@
+{
+  "server": "probe_cache",
+  "trial_id": "c4_call_thrice_ttl60000",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2025-11-25",
+  "era_observed": "2025-11-25",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 23,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 72,
+  "payload_text": null
+}

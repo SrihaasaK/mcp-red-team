@@ -22,7 +22,7 @@ from mcpredteam.scaffolds.contract import TrialSpec
 
 # Frozen manifest, USD per million tokens (input, output). DECISIONS.md D19.
 PRICES = {"claude-sonnet-5-5": (2.0, 10.0), "claude-opus-5-5": (4.0, 20.0)}
-ADAPTERS = {"openai-agents": "scaffolds/openai-agents"}
+ADAPTERS = {"openai-agents": "scaffolds/openai-agents", "langgraph": "scaffolds/langgraph"}
 
 
 def adapter_python(scaffold: str) -> Path:

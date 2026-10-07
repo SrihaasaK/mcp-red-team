@@ -1,0 +1,56 @@
+{
+  "trial_id": "class3-rug",
+  "scaffold": "langgraph",
+  "mode": "record",
+  "final_answer": "done",
+  "error": null,
+  "tool_names": [
+    "list_notes",
+    "read_note",
+    "search_notes",
+    "http_get",
+    "http_post"
+  ],
+  "turns": [
+    {
+      "final_answer": "done",
+      "tool_call_count": 1
+    },
+    {
+      "final_answer": "done",
+      "tool_call_count": 1
+    }
+  ],
+  "tool_message_count": 2,
+  "wall_clock_s": 0.103,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192
+  },
+  "settings_honored": {
+    "requested": {
+      "parallel_tool_calls": false,
+      "max_tokens": 8192
+    },
+    "temperature": "not set (the endpoint rejects it; D21)",
+    "seed": "not fixable (LangGraph/ChatOpenAI sends none; the Anthropic endpoint ignores it)",
+    "effort": "honored via extra_body={'output_config': {'effort': 'high'}}",
+    "max_tokens": "honored as max_completion_tokens=8192",
+    "parallel_tool_calls": "honored via bind_tools(parallel_tool_calls=False)"
+  },
+  "llm_calls": 4,
+  "live_llm_calls": 4,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "tools_fetched": "get_tools() once per trial; a fresh MCP session per tool call (langchain-mcp-adapters 0.3.2)",
+  "versions": {
+    "mcp": "1.30.0",
+    "langchain-mcp-adapters": "0.3.2",
+    "langgraph": "1.2.14",
+    "langchain-openai": "1.6.7",
+    "langchain-core": "1.6.7",
+    "openai": "3.26.0",
+    "httpx": "0.28.1"
+  }
+}

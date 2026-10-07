@@ -18,7 +18,7 @@ from mcpredteam.proxy.http_app import HubServer, ProxyHub
 from mcpredteam.proxy.recording import canonical
 from mcpredteam.proxy.relay import HANDSHAKE, STATELESS
 from mcpredteam.runner.tasks import Task, load_tasks
-from mcpredteam.runner.trial import PRICES, run_trial, tool_calls
+from mcpredteam.runner.trial import PRICES, run_trial
 from mcpredteam.scaffolds.contract import TrialSpec
 
 SERVERS = ["notes", "http"]
@@ -88,15 +88,17 @@ def compare(rec_dir: Path, rep_dir: Path) -> dict:
     rec = json.loads((rec_dir / "result.json").read_text())
     rep = json.loads((rep_dir / "result.json").read_text())
 
-    def seq(d: Path) -> list[list[str]]:
-        return [[c["server"], c["name"], canonical(c["arguments"])] for c in tool_calls(d, SERVERS)]
+    def seq(r: dict) -> list[list[str]]:
+        # From result.json's tool_calls (every server the trial used, in arrival order) rather than
+        # a re-scan of a fixed server list, so files/mail calls are compared too, not silently dropped.
+        return [[c["server"], c["name"], canonical(c["arguments"])] for c in r["tool_calls"]]
 
     adapter = rep["adapter"]
     zero_live = (adapter.get("live_llm_calls") == 0 and adapter.get("blocked_network_calls") == 0
                  and all(p["upstream_live_calls"] == 0 for p in rep["proxy"]))
     out = {
         "trial_id": rec["trial_id"],
-        "tool_sequence_equal": seq(rec_dir) == seq(rep_dir),
+        "tool_sequence_equal": seq(rec) == seq(rep),
         "verdict_equal": rec["verdict"] == rep["verdict"],
         "zero_live_calls": zero_live,
         "llm_fully_replayed": adapter.get("llm_replay_unused") == 0,
@@ -136,7 +138,11 @@ async def replay_run(run_dir: Path, out_dir: Path | None = None) -> dict:
                              scaffold=old.scaffold, model=old.model, mode="replay",
                              trial_dir=str(out_dir / old.trial_id), servers=old.servers,
                              recording_dir=str(rec_dir), model_settings=old.model_settings,
-                             max_turns=old.max_turns)
+                             max_turns=old.max_turns,
+                             # Carry the per-turn prompts (else a two-turn trial replays only turn 1)
+                             # and the attack config (the proxy rebuilds the same interceptor in replay,
+                             # so the mutated request/response match the recording).
+                             prompts=old.prompts, attack_config=old.attack_config)
             await run_trial(spec, tasks[old.task_id], hub=hub, api_key=None)
             c = compare(rec_dir, out_dir / old.trial_id)
             comparisons.append(c)

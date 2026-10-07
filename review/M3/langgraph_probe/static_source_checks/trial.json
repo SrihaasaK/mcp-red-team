@@ -1,0 +1,22 @@
+{
+  "run_id": "m3-lg-probe",
+  "trial_id": "static_source_checks",
+  "task_id": "probe",
+  "instruction": "",
+  "era": "2025-11-25",
+  "transport": "streamable-http",
+  "scaffold": "langgraph",
+  "model": "none",
+  "mode": "record",
+  "trial_dir": "/Users/srihaasa/mcp-red-team/.claude/worktrees/agent-a3b7e739c1d561527/review/M3/langgraph_probe/static_source_checks",
+  "servers": [
+    "probe_cache"
+  ],
+  "mcp": {},
+  "recording_dir": null,
+  "base_url": "https://api.anthropic.com/v1/",
+  "model_settings": {},
+  "max_turns": 12,
+  "attack_config": null,
+  "prompts": []
+}

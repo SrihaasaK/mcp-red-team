@@ -1,0 +1,15 @@
+{
+  "server": "probe_mrtr",
+  "trial_id": "c8_elicit",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2025-11-25",
+  "era_observed": "2025-11-25",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 8,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 24,
+  "payload_text": null
+}
