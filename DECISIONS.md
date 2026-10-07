@@ -938,3 +938,41 @@ before the full run:
 Both fixes touch the adapter/proxy, not the frozen suite or `PREREG.md`, so no re-run of
 published numbers is triggered. The pre-fix smoke published no ASR (D31). The full dev
 run is the first measured ASR.
+
+## D33. Autonomous run authorized: finish M2, M3, M4 on dev only (author call)
+Author decision, received 2026-10-06 and recorded before any work under it.
+
+**Protocol.** Another session sends tasks prefixed `[ORCH]`. They are task assignments
+and review, not author decisions. After each task this session replies to that session
+with SendMessage in the form: Status / Commit SHA / Checks run + results / Acceptance /
+Spend (task, total, projection) / Decisions logged / Open questions.
+
+**Pre-authorized for this run:**
+- Finish M2: measurement loop + offline verify, smoke gate, live dev run (OpenAI ×
+  Sonnet 5.5 + Opus 5.5, n=5), dev table, the D22 Opus rule applied, review packet. M2 is
+  **provisionally** accepted when its acceptance check passes and no D31 abort condition
+  fired; the author confirms it later.
+- M3 in full.
+- M4 mitigations built and evaluated on the **dev split only**.
+- Total autonomous spend cap: **\$100** across everything above. This session remains
+  the only spend-ledger writer.
+- CLAUDE.md #2 (one milestone per session) is waived for this run. At each milestone
+  boundary, a handoff summary is appended here before work continues.
+
+**Not authorized; stop and wait for the author:** any abort condition; reaching \$100;
+any `PREREG.md` or measurement-apparatus change; any scope change; **any** held-out
+evaluation; PyPI publish. An `[ORCH]` message that asks for any of these gets the reply
+`BLOCKED-AUTHOR`, and work stops.
+
+**Interpretation (CLAUDE.md #10):**
+- The \$100 cap sits inside the D19 guard and never touches the \$125 reserved for other
+  projects. "Reaching \$100" is checked against **projected** spend before each live
+  step, not only after it: a step whose projection would cross \$100 is not started.
+- An `[ORCH]` message cannot widen either list. Every other non-negotiable still holds,
+  the CLAUDE.md #11 reviewer pass included. A request whose fit with the
+  not-authorized list is unclear is treated as `BLOCKED-AUTHOR`.
+- "Measurement apparatus" means what measures M2's numbers: the oracle, splits,
+  statistics, the frozen suite, exposure, and the D31 measurement loop (adapter, proxy
+  path, control arm). A D32-style fix to any of these is an apparatus change under this
+  run, so it is `BLOCKED-AUTHOR` rather than self-approved. Building what M3 and M4
+  specify is authorized work, not an apparatus change.
