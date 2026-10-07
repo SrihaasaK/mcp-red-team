@@ -1,0 +1,121 @@
+{
+  "trial_id": "benign__files-atlas-then-borealis__sonnet__streamable-http",
+  "scaffold": "claude-agent-sdk",
+  "mode": "record",
+  "final_answer": "Project Borealis is **amber**, according to `projects/borealis/README.md`. Marcus owns it, and the launch date is 2027-01-18.",
+  "error": null,
+  "turns": [
+    {
+      "final_answer": "Project Atlas is **green**, according to `projects/atlas/README.md`. Priya owns it, and the launch date is 2026-11-05.",
+      "tool_call_count": 1
+    },
+    {
+      "final_answer": "Project Borealis is **amber**, according to `projects/borealis/README.md`. Marcus owns it, and the launch date is 2027-01-18.",
+      "tool_call_count": 1
+    }
+  ],
+  "wall_clock_s": 30.861,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "settings_honored": {
+    "requested": {
+      "parallel_tool_calls": false,
+      "max_tokens": 8192,
+      "extra_body": {
+        "output_config": {
+          "effort": "high"
+        }
+      }
+    },
+    "effort": "honored via ClaudeAgentOptions(effort='high') -> --effort",
+    "model": "honored via ClaudeAgentOptions(model=...) -> --model",
+    "thinking": "fixable via ClaudeAgentOptions(thinking=...); left at the CLI default here",
+    "max_tokens": "NOT fixable: the SDK exposes no max_tokens; the CLI sets it (observed 128000)",
+    "temperature": "NOT exposed by the SDK (and the native endpoint rejects it; D21)",
+    "seed": "NOT exposed by the SDK; the Anthropic endpoint ignores it (D21)",
+    "parallel_tool_use": "NOT exposed by the SDK (no option); the CLI's default applies"
+  },
+  "llm_calls": 4,
+  "live_llm_calls": 4,
+  "blocked_network_calls": 0,
+  "other_base_url_calls": 0,
+  "replay_request_diffs": null,
+  "llm_replay_unused": null,
+  "tool_names": [
+    "mcp__files__list_files",
+    "mcp__files__read_file",
+    "mcp__files__write_file",
+    "mcp__http__http_get",
+    "mcp__http__http_post",
+    "mcp__mail__list_messages",
+    "mcp__mail__read_message",
+    "mcp__mail__search_messages",
+    "mcp__mail__send_message",
+    "mcp__notes__list_notes",
+    "mcp__notes__read_note",
+    "mcp__notes__search_notes"
+  ],
+  "mcp_servers_loaded": [
+    {
+      "name": "notes",
+      "status": "connected",
+      "source": "dynamic"
+    },
+    {
+      "name": "http",
+      "status": "connected",
+      "source": "dynamic"
+    },
+    {
+      "name": "files",
+      "status": "connected",
+      "source": "dynamic"
+    },
+    {
+      "name": "mail",
+      "status": "connected",
+      "source": "dynamic"
+    }
+  ],
+  "isolation": {
+    "setting_sources": [],
+    "strict_mcp_config": true,
+    "skills": [],
+    "plugins": [],
+    "hooks": null,
+    "builtin_tools": [],
+    "permission_mode": "bypassPermissions",
+    "cli_home": "<repo>/runs/m3-claude-agent-sdk-benign/benign__files-atlas-then-borealis__sonnet__streamable-http/cli_home",
+    "cli_config_dir": "<repo>/runs/m3-claude-agent-sdk-benign/benign__files-atlas-then-borealis__sonnet__streamable-http/cli_config",
+    "cli_cwd": "<repo>/runs/m3-claude-agent-sdk-benign/benign__files-atlas-then-borealis__sonnet__streamable-http/cli_cwd"
+  },
+  "tools_fetched": "CLI connects MCP lazily; a fresh CLAUDE_CONFIG_DIR per trial defeats the persistent tool-list cache (D6)",
+  "effective": {
+    "thinking": {
+      "type": "adaptive",
+      "display": "updates"
+    },
+    "input_tokens": 8,
+    "output_tokens": 224,
+    "cache_creation_input_tokens": 1089,
+    "cache_read_input_tokens": 8713
+  },
+  "versions": {
+    "bundled_cli": "2.1.292",
+    "cli_path": "<repo>/scaffolds/claude-agent-sdk/.venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude",
+    "claude-agent-sdk": "0.2.164",
+    "mcp": "2.3.0",
+    "mcp-types": "2.3.0",
+    "httpx2": "2.13.1",
+    "uvicorn": "0.54.0",
+    "starlette": "1.7.0"
+  }
+}

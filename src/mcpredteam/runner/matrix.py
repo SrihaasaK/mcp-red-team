@@ -11,15 +11,23 @@ from __future__ import annotations
 
 import datetime
 import json
+from functools import lru_cache
 from pathlib import Path
 
 from mcpredteam.config import anthropic_api_key, repo_root
+from mcpredteam.oracle.rules import score
+from mcpredteam.oracle.trajectory import Trajectory
 from mcpredteam.proxy.http_app import HubServer, ProxyHub
 from mcpredteam.proxy.recording import canonical
 from mcpredteam.proxy.relay import HANDSHAKE, STATELESS
 from mcpredteam.runner.tasks import Task, load_tasks
 from mcpredteam.runner.trial import PRICES, run_trial
 from mcpredteam.scaffolds.contract import TrialSpec
+
+
+@lru_cache(maxsize=1)
+def _task_map() -> dict:
+    return {t.id: t for t in load_tasks()}
 
 SERVERS = ["notes", "http"]
 ERA_TAG = {HANDSHAKE: "hs", STATELESS: "sl"}
@@ -108,9 +116,23 @@ def compare(rec_dir: Path, rep_dir: Path) -> dict:
         "final_answer_equal": rec["final_answer"] == rep["final_answer"],
         "tool_calls": len(rep["tool_calls"]),
     }
+    # SPEC §9.1: an attack-arm trial replays equally only if the ATTACK oracle verdict
+    # (success + rule) also matches, recomputed from each side's trajectory with the same
+    # config. This CALLS the oracle (no oracle change). Benign/control trials carry no
+    # attack_config, so attack_verdict_equal is vacuously True.
+    spec = json.loads((rec_dir / "trial.json").read_text())
+    attack_cfg = spec.get("attack_config")
+    out["attack_verdict_equal"] = True
+    if attack_cfg:
+        task = _task_map()[spec["task_id"]]
+        rv = score(Trajectory.from_trial(rec_dir), attack_cfg, task)
+        pv = score(Trajectory.from_trial(rep_dir), attack_cfg, task)
+        out["attack_verdict_equal"] = (rv.success == pv.success and rv.rule == pv.rule)
+        out["attack_verdict"] = {"recorded": [rv.success, rv.rule], "replayed": [pv.success, pv.rule]}
     # A recorded error replayed faithfully counts as equal; a new one never does.
     out["equal"] = (out["tool_sequence_equal"] and out["verdict_equal"] and out["zero_live_calls"]
                     and out["llm_fully_replayed"] and out["era_matches"]
+                    and out["attack_verdict_equal"]
                     and out["replay_error"] == out["recorded_error"])
     return out
 

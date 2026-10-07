@@ -1266,3 +1266,118 @@ PREREG headline, or any recorded M2/M3-T1 number.
 
 **Ledger:** M3-T2 live spend = **\$0.232** (benign) + ~\$0.023 (two native-path smokes) = **~\$0.255**;
 the probe is \$0. Cumulative **\$11.63 -> ~\$11.89**. Well inside the A1/D39 \$15 cap and D33's \$100.
+
+## D41. Claude Agent SDK built-in tools disabled (autonomous, D33; task M3-T3 step 1a)
+The Claude Agent SDK adapter runs the CLI with `tools=[]` (`scaffolds/claude-agent-sdk/adapter.py`),
+so only the proxy's MCP tools are available — no built-in Bash/file/web tools.
+**Rationale:** CLAUDE.md #7 — attacks run only against the mock servers in this repo. The CLI's
+default built-ins (Bash, file I/O, web fetch) would give an injected agent host access outside the
+threat model and invisible to the oracle's sink set (`SIDE_EFFECTING_TOOLS` over the mocks), so an
+"attack success" could be neither scored nor bounded.
+**Rejected alternative:** the SDK's default built-in tool set — rejected: it puts real host
+side-effects in reach, off-model from the mock-only measurement and uncomparable with the
+OpenAI/LangGraph scaffolds (which expose only the proxy's MCP tools).
+**Consequence:** this scaffold's attack surface is MCP-only, comparable with the other two; stated
+in the README limitations. (Previously noted only in `review/M3/claude_agent_sdk.md`; logged here
+per CLAUDE.md #9.)
+
+## D42. Exact M3-T2 spend + cumulative ledger (M3-T3 step 1b)
+Recomputed from the recorded usage (no "~"): m3-cas-smoke grocery **\$0.005989** + meeting
+**\$0.008638**; m3-cas-smoke2 meeting **\$0.008651** + grocery **\$0.000000** (DNS failure, never
+reached the API); m3-claude-agent-sdk-benign **\$0.232130**. **M3-T2 total = \$0.255408.**
+Cumulative = M0 0.133251 + M1 0.306 + M2 smoke 0.092 + M2 dev 10.2753 + M3-T1 0.822 + M3-T2 0.255408
+= **\$11.883959**. (Orchestrator's independent recompute: benign \$0.232132 from raw totals vs
+\$0.232130 ledgered — a \$0.000002 rounding difference — and ~\$11.8842 cumulative; the ~\$0.0002 gap
+is historical sub-cent rounding of the M1/smoke entries. Immaterial; no reported number moved.)
+
+## D43. 1-hour prompt-cache cost guard (M3-T3 step 1c)
+`runner.trial.llm_usage` now prices Anthropic cache WRITES by TTL: 5-minute at 1.25x and 1-hour at
+2x the base input price (reads stay 0.1x). The 1h share is read from
+`cache_creation.ephemeral_1h_input_tokens` (captured by the adapter's `_usage_from_sse`); the 5m
+share is the remainder; it raises `ValueError` if the 1h share exceeds the write total.
+**Rationale:** the prior code hard-coded 1.25x, which undercounts any 1-hour cache write and makes
+the spend cap unsafe. The M3-T2 benign run had zero 1h tokens (orchestrator-confirmed), so no
+recorded cost changes; this guards future runs. **Rejected alternative:** fail loudly on any 1h
+token rather than pricing it — rejected: pricing it at 2x keeps a run going honestly rather than
+aborting, and the fail-loud guard is kept only for the impossible (1h > total) case.
+Test `tests/test_cost_cache_pricing.py` asserts the exact dollar for a synthetic
+input/output/5m-write/1h-write/read block, the all-5m default, the guard, and the no-cache
+OpenAI-compatible path (unchanged). Additive; no OpenAI/LangGraph cost changes.
+
+## D44. stdio + stateless "no tools/list" is CLI-side, not the proxy (M3-T3 step 2)
+Offline diagnosis (\$0) from committed wire logs. Claude Agent SDK over stdio + the stateless
+(`server/discover`) era: the CLI sent `server/discover` (proxy returned a result) then
+`subscriptions/listen`, and **never issued `tools/list`**, so no tools loaded
+(`review/M3/claude_agent_sdk_probe/era_stdio_stateless_2turn/proxy.notes.jsonl`). The **OpenAI Agents
+SDK over the SAME proxy stdio+stateless path loaded tools every time** (`server/discover` →
+`tools/list` → `tools/call`, 1–3 calls; e.g. `tests/recordings/m1/m1-matrix/notes-grocery-count__sl__stdio`,
+3 tool calls). **Conclusion: the proxy's stdio stateless path is correct; the bundled Claude Code
+CLI does not issue `tools/list` over stdio + `server/discover` — CLI-side.** No proxy change (that
+would be an apparatus change); the cas benign suite ran on streamable-http (D40). Not BLOCKED-AUTHOR.
+
+## D45. CI recording set selection (M3-T3 step 4)
+Committed under `tests/recordings/` (runs/ is gitignored); total **5.1 MB** (budget 25 MB):
+`m1/m1-matrix` (openai-agents, both eras, both transports, benign; pre-existing); `m2-dev` — **all
+16 M2 attack successes** (so CI checks attack verdicts) + 1 class-2 attack trial (class 2 had no
+success; covers the 5th class) + 2 controls (19 trials); `m3-langgraph` — single + two-turn × stdio
++ http (era 2025-11-25; 4 trials); `m3-claude-agent-sdk` — single + two-turn × streamable-http (era
+2026-07-28; 2 trials). **Coverage:** all three scaffolds; both eras (openai hs+sl, m2 class-3 hs +
+others sl, langgraph hs, cas sl); both transports where each scaffold ran them (cas is http-only,
+the D44 anomaly); single + two-turn; all five attack classes; all 16 successes. **Selection is
+deterministic** (all successes; first-sorted for the class-2, control, and single/two-turn picks) —
+no RNG, no seed needed. `runner.recordings.export_run` extended: optional name filter; skips
+per-trial subdirectories (cas `cli_*`) and stray `*.db` (a ruflo `ruvector.db` had landed in one
+trial); binary-safe (surrogateescape) so a non-UTF-8 recorded body round-trips; still aborts on a
+`/Users/`, `/home/`, or `sk-ant-` leak. Secret scan
+(`grep -rniE 'sk-ant-|authorization|x-api-key|/Users/|srihaasa|@gmail|bearer '`): **no matches**; no
+`cli_*`/`.venv`/`.db`/stderr present.
+
+## D46. CI replay workflow + runner platform (M3-T3 step 5)
+`.github/workflows/replay.yml` (push / PR / manual): `uv sync --frozen` the root + all three
+scaffold projects, `uv run pytest -q`, then `uv run mcpr replay` over each committed set. It
+references **no secrets** and sets `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` empty, so a live model call
+is impossible (replay is offline by construction: socket guard + recorded SSE, SPEC §9.1).
+**Runner = `macos-14` (Apple silicon / arm64).** The `claude-agent-sdk` wheel ships a
+platform-specific bundled CLI binary; the lock resolves on every platform (macOS arm64/x86_64,
+manylinux x86_64/aarch64, win_amd64), so ubuntu-latest would also resolve — but the recordings were
+made on darwin/arm64 and the fresh-clone proof was run on this darwin/arm64 machine, so the runner
+is pinned to match the recording + proof platform (cross-platform replay is unverified and not
+claimed). **No push:** publishing the workflow/commit to a remote is outward-facing and the author's
+call (a pending author decision, not done here).
+
+## D47. M3-T3 complete + M3 milestone-boundary handoff (autonomous, D33; task M3-T3)
+**Replay checker (step 3).** `matrix.compare()` now requires the ATTACK oracle verdict
+(success + rule), recomputed from each side's trajectory with the trial's `attack_config`, to match
+for an attack-arm trial — on top of tool sequence, arguments and benign verdict (SPEC §9.1). It
+CALLS the oracle; the oracle is unchanged (`git diff b261cc6 -- src/mcpredteam/oracle/` empty). Test
+`tests/test_replay_attack_verdict.py` (a flipped attack verdict fails equality). Full replays with
+the attack verdict and zero live calls: **m2-dev 580/580, LangGraph 80/80, Claude Agent SDK 40/40,
+m1-final 20/20** — all EQUAL.
+**Report (step 6).** `mcpr report` -> `review/M3/report.html` (`report/render.py`), rendered offline
+from committed dev+benign records (`review/M2/m2_report.json` + the committed benign `summary.json`s).
+Wilson CIs recomputed via `report.stats` — verified to reproduce the committed `m2_report.json` CIs
+exactly (24/24); no second Wilson, no statistics code changed (so CLAUDE.md #11's reviewer trigger
+did not fire). Held-out placeholders `<<X>>/<<Y>>/<<U>>/<<MODEL>>/<<N>>` left unfilled; no held-out
+record is read (fixed dev+benign sources only); the Claude Agent SDK is a separate confirmatory
+slice (never pooled, A1); conditional classes shown N/A (never 0%), cas class 8 "capability present,
+pending live"; the D37 exfil caveat is inline on the DEV table.
+
+**M3 milestone (SPEC §12) — delivered.** All three scaffolds ran the benign suite: OpenAI Agents
+(M2 control arm, D36; 353/360), LangGraph (D38; 76/80 = 0.950), Claude Agent SDK (D40; 40/40 = 1.000,
+separate slice). Replay with zero live calls across the suite (above). HTML report present. CI
+(`.github/workflows/replay.yml`, macos-14) runs the frozen sync + pytest + `mcpr replay` over the
+committed set with no secrets; **proven by a fresh clone of the M3-T3 commit on this darwin/arm64
+machine with `ANTHROPIC_API_KEY`/`OPENAI_API_KEY` unset.** Commits: M3-T1 `b261cc6`, M3-T2 `bd68db4`,
+M3-T3 (this commit).
+
+**Spend.** M3-T3 = **\$0** (offline). M3 live total = M3-T1 \$0.822 + M3-T2 \$0.255408 = \$1.077408.
+Cumulative **\$11.883959** (D42). Inside D33's \$100.
+**Regression.** Full suite **154 passed** (143 at bd68db4; +4 cost-pricing, +3 attack-verdict,
++4 committed-recording replay; nothing weakened or deleted). `oracle/` diff vs b261cc6 empty;
+corpus/split/tasks/mutators unchanged vs b261cc6; PREREG unchanged in M3-T3; DECISIONS and PREREG
+append-only (byte-prefix of bd68db4).
+
+**Open author items at the M3 boundary:** (a) **D37** exfil-validity fix (BLOCKED-AUTHOR; the report
+carries the inline caveat); (b) LangGraph class-3 per-turn-refetch (D38); (c) whether to **push** the
+repo + CI workflow to a remote (D46; outward-facing, author's call). **M4** (the three mitigations on
+dev, then held-out at n=10; SPEC §12) is the next milestone and needs the D37 call first.

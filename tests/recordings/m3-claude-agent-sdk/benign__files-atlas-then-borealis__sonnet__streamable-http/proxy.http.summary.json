@@ -1,0 +1,15 @@
+{
+  "server": "http",
+  "trial_id": "benign__files-atlas-then-borealis__sonnet__streamable-http",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2026-07-28",
+  "era_observed": "2026-07-28",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 7,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 22,
+  "payload_text": null
+}

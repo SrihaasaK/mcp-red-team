@@ -13,6 +13,7 @@ from pathlib import Path
 
 import typer
 
+from mcpredteam.config import repo_root
 from mcpredteam.proxy.relay import ERAS
 
 app = typer.Typer(
@@ -96,10 +97,18 @@ def replay(
 
 
 @app.command()
-def report() -> None:
-    """Render ASR / exposure / utility tables and fill <<...>> (M2+, SPEC §8)."""
-    typer.secho("not implemented yet — lands at M2 (SPEC §12).", fg=typer.colors.YELLOW, err=True)
-    raise typer.Exit(code=1)
+def report(
+    out: Path = typer.Option(Path("review/M3/report.html"), "--out", help="Where to write the HTML report."),
+) -> None:
+    """Render the M3 report HTML from committed dev+benign records (SPEC §8).
+
+    Zero live calls; held-out headline placeholders stay unfilled and no held-out
+    record is read (filling them is reserved for a held-out run; SPEC §12, CLAUDE.md #12).
+    """
+    from mcpredteam.report.render import write_report
+
+    path = write_report(out if out.is_absolute() else repo_root() / out)
+    typer.echo(f"wrote {path}")
 
 
 def main() -> None:

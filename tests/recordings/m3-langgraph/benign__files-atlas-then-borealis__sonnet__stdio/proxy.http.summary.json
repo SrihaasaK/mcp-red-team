@@ -1,0 +1,15 @@
+{
+  "server": "http",
+  "trial_id": "benign__files-atlas-then-borealis__sonnet__stdio",
+  "transport": "stdio",
+  "mode": "record",
+  "era_forced": "2025-11-25",
+  "era_observed": "2025-11-25",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 3,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 10,
+  "payload_text": null
+}

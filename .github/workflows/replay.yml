@@ -1,0 +1,47 @@
+name: replay
+
+# Reproducibility gate (SPEC §9.1): sync frozen, run the offline unit suite, then replay
+# the committed recordings with ZERO live model calls. No secrets are referenced and no
+# model keys are set, so a model call cannot succeed even if one were attempted.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  replay:
+    # macos-14 is Apple silicon (arm64). The claude-agent-sdk wheel ships a platform-specific
+    # bundled CLI binary and the recordings were made on darwin/arm64; this runner matches both
+    # (and the fresh-clone proof was run on the same platform). See DECISIONS.md D46.
+    runs-on: macos-14
+    env:
+      # Replay is offline. Leave the model keys unset so a live call is impossible.
+      ANTHROPIC_API_KEY: ""
+      OPENAI_API_KEY: ""
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv (pinned Python 3.12)
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Sync root + each scaffold project (frozen)
+        run: |
+          uv sync --frozen
+          uv sync --frozen --project scaffolds/openai-agents
+          uv sync --frozen --project scaffolds/langgraph
+          uv sync --frozen --project scaffolds/claude-agent-sdk
+
+      - name: Unit suite (offline; keys unset)
+        run: uv run pytest -q
+
+      - name: Replay committed recordings — zero live calls (SPEC §9.1)
+        run: |
+          uv run mcpr replay tests/recordings/m1/m1-matrix        --out "$RUNNER_TEMP/rep-m1"
+          uv run mcpr replay tests/recordings/m2-dev              --out "$RUNNER_TEMP/rep-m2"
+          uv run mcpr replay tests/recordings/m3-langgraph        --out "$RUNNER_TEMP/rep-lg"
+          uv run mcpr replay tests/recordings/m3-claude-agent-sdk --out "$RUNNER_TEMP/rep-cas"

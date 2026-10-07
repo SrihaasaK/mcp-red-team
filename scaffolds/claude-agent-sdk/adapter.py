@@ -119,6 +119,10 @@ def _usage_from_sse(sse: str) -> dict:
             usage["prompt_tokens"] = u.get("input_tokens", 0)
             usage["cache_creation_input_tokens"] = u.get("cache_creation_input_tokens", 0)
             usage["cache_read_input_tokens"] = u.get("cache_read_input_tokens", 0)
+            # 1-hour cache writes are billed at 2x vs 1.25x for the 5-minute TTL; keep the
+            # 1h share so runner.trial.llm_usage can price it correctly (the rest is 5m).
+            cc = u.get("cache_creation") or {}
+            usage["cache_creation_ephemeral_1h_input_tokens"] = cc.get("ephemeral_1h_input_tokens", 0)
         elif t == "message_delta":
             u = ev.get("usage") or {}
             if "output_tokens" in u:

@@ -69,7 +69,7 @@ def llm_usage(trial_dir: Path, model: str) -> dict:
         raise ValueError(f"model {model!r} is not in the frozen manifest {sorted(PRICES)}")
     path = trial_dir / "llm.jsonl"
     prompt = completion = calls = missing = 0
-    cache_creation = cache_read = 0
+    cache_creation = cache_creation_1h = cache_read = 0
     latency = 0.0
     finish = []
     for line in path.read_text().splitlines() if path.is_file() else []:
@@ -82,22 +82,30 @@ def llm_usage(trial_dir: Path, model: str) -> dict:
         prompt += usage.get("prompt_tokens", 0)
         completion += usage.get("completion_tokens", 0)
         cache_creation += usage.get("cache_creation_input_tokens", 0)
+        cache_creation_1h += usage.get("cache_creation_ephemeral_1h_input_tokens", 0)
         cache_read += usage.get("cache_read_input_tokens", 0)
         latency += rec.get("latency_s", 0.0)
         finish += [c.get("finish_reason") for c in resp.get("choices", [])]
     price_in, price_out = PRICES[model]
-    # Anthropic prompt-caching multipliers (ephemeral 5-min cache): a cache WRITE is
-    # 1.25x and a cache READ 0.1x the base input price. Both fields are absent on the
-    # OpenAI-compatible endpoint (no caching; PREREG), so these terms are 0 there and
-    # the OpenAI/LangGraph cost is unchanged. They ARE priced for the Claude Agent SDK
-    # native endpoint (PREREG Amendment A1, D39) so the spend cap sees the real cost.
+    # Anthropic prompt caching: a cache READ is 0.1x the base input price; a cache WRITE is
+    # 1.25x for the 5-minute TTL and 2x for the 1-hour TTL. cache_creation_input_tokens is
+    # the write TOTAL; ephemeral_1h_input_tokens (<= total) is the 1h share (priced 2x), the
+    # remainder is 5m (priced 1.25x). All cache fields are absent on the OpenAI-compatible
+    # endpoint (no caching; PREREG), so these terms are 0 there and the OpenAI/LangGraph cost
+    # is unchanged; they are priced for the Claude Agent SDK native endpoint (A1, D39) so the
+    # spend cap sees the real cost.
+    if cache_creation_1h > cache_creation:
+        raise ValueError(f"1h cache-write tokens {cache_creation_1h} exceed the write total {cache_creation}")
+    cache_5m = cache_creation - cache_creation_1h
     cost = (prompt * price_in + completion * price_out
-            + cache_creation * price_in * 1.25 + cache_read * price_in * 0.1) / 1e6
+            + cache_5m * price_in * 1.25 + cache_creation_1h * price_in * 2.0
+            + cache_read * price_in * 0.1) / 1e6
     return {
         "model_calls": calls,
         "prompt_tokens": prompt,
         "completion_tokens": completion,
         "cache_creation_input_tokens": cache_creation,
+        "cache_creation_ephemeral_1h_input_tokens": cache_creation_1h,
         "cache_read_input_tokens": cache_read,
         "cost_usd": round(cost, 6),
         "model_latency_s": round(latency, 3),
