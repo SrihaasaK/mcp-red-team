@@ -125,6 +125,11 @@ class HubServer:
         return self
 
     async def __aexit__(self, *exc: object) -> None:
+        # Force a hard stop. By teardown every trial has been closed and recorded, but a
+        # client that holds a long-lived stream open (e.g. the Claude Agent SDK CLI's
+        # `subscriptions/listen` SSE) stalls uvicorn's graceful drain indefinitely. The
+        # OpenAI/LangGraph clients open no such stream, so force_exit is a no-op for them.
         self.server.should_exit = True
+        self.server.force_exit = True
         if self._task:
             await self._task

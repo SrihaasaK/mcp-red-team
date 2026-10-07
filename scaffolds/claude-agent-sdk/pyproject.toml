@@ -1,0 +1,13 @@
+[project]
+name = "mcpr-claude-agent-sdk-adapter"
+version = "0.1.0"
+description = "MCP Red Team scaffold adapter: Claude Agent SDK (wraps the Claude Code CLI). Independent uv project (DECISIONS.md D12, D15)."
+requires-python = ">=3.12"
+dependencies = [
+    "claude-agent-sdk",
+    "uvicorn>=0.30",
+    "starlette>=0.37",
+]
+
+[tool.uv]
+package = false

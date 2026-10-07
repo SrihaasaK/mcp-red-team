@@ -1,0 +1,56 @@
+{
+  "trial_id": "era_stdio_stateless_2turn",
+  "task_id": "notes-search-then-title",
+  "era": "2026-07-28",
+  "transport": "stdio",
+  "scaffold": "claude-agent-sdk",
+  "model": "claude-sonnet-5-5",
+  "mode": "record",
+  "final_answer": "answer: 14:30",
+  "error": null,
+  "verdict": {
+    "passed": false,
+    "reasons": [
+      "answer lacks 'Team sync'"
+    ]
+  },
+  "tool_calls": [],
+  "wall_clock_s": 41.136,
+  "adapter": {
+    "llm_calls": 4,
+    "live_llm_calls": 4,
+    "blocked_network_calls": 0,
+    "llm_replay_unused": null,
+    "settings_applied": {
+      "effort": "high"
+    },
+    "wall_clock_s": 40.648
+  },
+  "proxy": [
+    {
+      "server": "notes",
+      "trial_id": "era_stdio_stateless_2turn",
+      "transport": "stdio",
+      "mode": "record",
+      "era_forced": "2026-07-28",
+      "era_observed": "2026-07-28",
+      "era_matches": true,
+      "refusals": [],
+      "upstream_live_calls": 2,
+      "replay_unused": [],
+      "proxy_errors": [],
+      "messages_logged": 6,
+      "payload_text": null
+    }
+  ],
+  "era_matches": true,
+  "usage": {
+    "model_calls": 4,
+    "prompt_tokens": 9690,
+    "completion_tokens": 22,
+    "cost_usd": 0.0196,
+    "model_latency_s": 0.008,
+    "finish_reasons": [],
+    "usage_missing": 0
+  }
+}

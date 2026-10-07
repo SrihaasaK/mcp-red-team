@@ -1158,3 +1158,111 @@ corpus, tasks, split, mutators, PREREG, or any recorded M2 number.
 
 **Ledger:** cumulative **\$10.81 → \$11.63**. M3-T2 (Claude Agent SDK) / M3-T3 held per the
 orchestrator's task ordering.
+
+## D39. Author call — Claude Agent SDK endpoint (PREREG Amendment A1) + live-run authorization (in-session, 2026-10-07)
+M3-T2 raised an endpoint/manifest question: the frozen manifest names one endpoint
+(Anthropic's OpenAI-compatible API, D13), but the Claude Agent SDK's bundled CLI speaks the
+**native Anthropic Messages API** (`/v1/messages`, streaming SSE) and has no
+OpenAI-compatible path. The author resolved it in-session — an author call; a peer could not
+grant it (D34).
+
+**Decision (PREREG Amendment A1, appended to `PREREG.md`; the D13 endpoint line is NOT
+edited).** The Claude Agent SDK scaffold uses the native Messages API, recorded through the
+D15 proxy at `ANTHROPIC_BASE_URL`. **Scope: this scaffold only; no existing result depends on
+it, so no re-run** (CLAUDE.md allows a PREREG change afterward with a logged reason — logged
+here and in A1).
+
+**Conditions (author):**
+1. Claude Agent SDK results are a **separate confirmatory slice**, reported on their own and
+   **never pooled** with the two lean scaffolds; the **headline pooled ASR covers OpenAI
+   Agents + LangGraph only**. This narrows §8.3 reporting; it moves no number.
+2. Record the scaffold's **effective thinking mode and caching per trial**; the README
+   limitations state it ran on a different endpoint with different thinking/caching behavior.
+3. The Claude Agent SDK **live benign run is authorized under a \$15 cap inside D33's \$100**.
+   This **lifts the M3-T2 \$0 / no-live-call block for this one benign run only.** All other
+   BLOCKED-AUTHOR conditions stand: no PREREG/manifest change beyond A1, no apparatus change,
+   headline still only from the frozen held-out split.
+
+**Rejected alternative:** amend the manifest endpoint line itself (option b of the M3-T2
+question) — rejected: it edits a frozen line and implies a re-run, whereas an append-only
+amendment scoped to this scaffold records the same fact without touching any result.
+
+**Consequence for M3-T2:** the deferred live benign run is now in scope; the scaffold build +
+offline probe (zero live calls) and that benign run are recorded next in D40.
+
+## D40. M3-T2 — Claude Agent SDK scaffold built, probed, live benign suite run (autonomous, D33; task M3-T2)
+Third and final scaffold (D11; scope-3 limit, CLAUDE.md #10). Review packet:
+`review/M3/claude_agent_sdk.md`; probe evidence: `review/M3/claude_agent_sdk_probe/`. Dev-only,
+no held-out, no attack corpus — benign suite only. The **separate confirmatory slice** (A1/D39),
+never pooled with OpenAI + LangGraph.
+
+**Scaffold.** `scaffolds/claude-agent-sdk/` (own uv project): `claude-agent-sdk 0.2.164`, bundled
+Claude Code CLI **2.1.292**, `mcp 2.3.0`, httpx2. The model leg is architecturally different (D15):
+the SDK drives the bundled CLI, which speaks the **native Messages API** and makes the HTTP call
+itself, so the LLM wrap is a loopback **recording server** at `ANTHROPIC_BASE_URL` (record forwards
++ records bodies only; replay serves recorded SSE by sequence index behind a socket guard).
+**Dual-era** — first scaffold to speak the stateless `2026-07-28` natively (`server/discover`),
+falling back to `initialize` for handshake `2025-11-25`; both `era_matches` on streamable-http.
+
+**Conditional classes (D28 probe, offline, zero live calls) — N/A never 0% / pending live (SPEC §6.1):**
+- **3 rug pull = N/A by construction** — one `tools/list` per connection, so the `after_calls=1`
+  mutation is never re-served; `model_saw_poisoned = [false x4]`. Not model resistance.
+- **4 list caching = N/A** — one `tools/list` per connection; no cross-turn cache to poison.
+- **6 resource->model = N/A (benign); pending live** — `resources/list`+`prompts/list` on connect,
+  but tool-only mocks expose no content.
+- **8 elicitation/MRTR = capability-PRESENT (handshake); pending live** — the `2025-11-25`
+  `initialize` advertises `elicitation:{form,url}`; the stateless connect carries none. NOT N/A.
+- Tool-search does not withhold (tool defs sent to the model directly; classes 2/5 reach it).
+
+**stdio+stateless anomaly (flagged, not fixed).** Over stdio + `server/discover` the probe saw only
+`server/discover`+`subscriptions/listen` and NO `tools/list` — tools never loaded. streamable-http
+loaded tools in both eras, so the benign suite ran on **streamable-http** (an honest apparatus
+limitation of this scaffold+era+transport combo, recorded, not worked around).
+
+**Benign utility (SPEC §8.4), n=1 per task, streamable-http, era 2026-07-28, Sonnet effort high:**
+40 ran, 0 errors, 0 skipped, not halted, `era_mismatches: []`. **Overall 40/40 = 1.000, Wilson 95%
+CI [0.9124, 1.0]** (single 28/28, two-turn 12/12). A confirmatory slice, never pooled; for reference
+OpenAI control was 0.981 and LangGraph 0.950.
+
+**Effective thinking + caching per trial (A1/D39 condition 2).** Effective thinking was
+`{type: adaptive, display: updates}` on every trial (the CLI default under effort=high). All 40
+trials used prompt caching (cache-read 270,011 vs cache-creation 43,347 and 256 uncached input
+tokens). Recorded per trial (`records.jsonl` `effective`/`cache_*`) and in
+`summary.json.native_endpoint`; the README limitations will state the different endpoint + thinking
++ caching behaviour.
+
+**Replay (SPEC §9.1):** `mcpr replay runs/m3-claude-agent-sdk-benign` -> **40/40 EQUAL, zero live
+calls**, era 2026-07-28 (12 two-turn trials + files/mail exercised).
+
+**Shared-code changes (additive; regression-guarded; no M2/M3-T1 number altered):**
+(1) `trial.py` `ADAPTERS["claude-agent-sdk"]`; `llm_usage` prices Anthropic caching (write x1.25,
+read x0.1) + returns cache totals — **0-effect where cache fields are absent** (OpenAI/LangGraph), so
+the spend cap sees real native cost; `result["adapter"]` passes `effective`. (2) `evaluate.run_benign`
+surfaces per-trial caching + `effective` and a `native_endpoint` summary block (only when emitted).
+(3) `http_app.HubServer.__aexit__` sets `force_exit=True` so a client holding a long-lived
+`subscriptions/listen` SSE cannot deadlock uvicorn's graceful drain at teardown (no-op for the
+OpenAI/LangGraph clients). (4) `adapter.py` retries a transient upstream 5xx/DNS/connect failure and,
+if it persists, records a 502 and marks the **trial an error** (excluded from utility, never a benign
+miss) — this preserves honest utility when the real network blips; it also captures `effective`.
+(5) `review/M3/run_benign.py` gains `--base-url` (claude-agent-sdk defaults to the native API) and
+`--limit` (smoke); the LangGraph invocation is unchanged.
+
+**Probe-harness fixes (teardown robustness; no measured data changed).** The probe deadlocked before
+emitting `probe.json`: root cause was a `KeyError` (`req["descriptions"]` vs the recorded
+`tool_descriptions`) whose unhandled exception propagated into the hub's graceful drain, which then
+blocked on the CLI's long-lived `subscriptions/listen` SSE. Fixed the key; made the native stub's
+`__aexit__` non-blocking (cancel, no await); wrapped the probe `main()` in try/finally with a hub
+`force_exit` and an `os._exit(0)` after all artifacts are written, so teardown can never deadlock.
+
+**Regression guard:** full suite **143 passed**; `runs/m1-final` replay **20/20**; offline
+record->replay contract test passes (now also asserts the `effective` capture); ruff clean on all
+changed files. Pre-existing ruff debt in `attacks/gen_corpus.py` and `review/M2/sample_review_packet.py`
+(M2 files, untouched) is left as-is. No change touched the oracle, corpus, tasks, split, mutators,
+PREREG headline, or any recorded M2/M3-T1 number.
+
+**M3-T1 miss-characterization correction folded in.** `review/M3/langgraph_benign.md` now records that
+3 of LangGraph's 4 benign misses were provider `content_filter` refusals (refused=true), not
+"answered without acting"; utility is unchanged at 0.950 — only the characterization was refined.
+
+**Ledger:** M3-T2 live spend = **\$0.232** (benign) + ~\$0.023 (two native-path smokes) = **~\$0.255**;
+the probe is \$0. Cumulative **\$11.63 -> ~\$11.89**. Well inside the A1/D39 \$15 cap and D33's \$100.

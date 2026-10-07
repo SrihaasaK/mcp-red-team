@@ -303,7 +303,12 @@ async def run_benign(run_id, tasks_list, transports, *, scaffold, model, era, ap
                        "tool_calls": len(result.get("tool_calls") or []),
                        "era_matches": result.get("era_matches"),
                        "wall_clock_s": result.get("wall_clock_s"),
-                       "cost_usd": cost, "usage_missing": usage.get("usage_missing", 0)}
+                       "cost_usd": cost, "usage_missing": usage.get("usage_missing", 0),
+                       # Native-endpoint caching + effective thinking per trial (D39/A1);
+                       # 0 / None on the OpenAI-compatible scaffolds, which don't emit them.
+                       "cache_creation_input_tokens": usage.get("cache_creation_input_tokens", 0),
+                       "cache_read_input_tokens": usage.get("cache_read_input_tokens", 0),
+                       "effective": (result.get("adapter") or {}).get("effective")}
                 records.append(rec)
                 print(f"  {tid:<46} {'PASS' if rec['benign_pass'] else 'FAIL'}  "
                       f"era_ok={rec['era_matches']!s:<5} calls={rec['tool_calls']} "
@@ -343,6 +348,18 @@ async def run_benign(run_id, tasks_list, transports, *, scaffold, model, era, ap
         "spent_usd": round(spent, 6), "budget_usd": budget_usd, "halted": halted,
         "wall_clock_total_s": round(sum(r["wall_clock_s"] or 0 for r in ran), 1),
     }
+    # Native-endpoint (Claude Agent SDK) effective thinking + caching, surfaced for the
+    # README limitations and D39/A1. Present only when the scaffold emits `effective`.
+    eff = [r["effective"] for r in ok if r.get("effective")]
+    if eff:
+        summary["native_endpoint"] = {
+            "thinking_modes_seen": sorted({json.dumps(e.get("thinking"), sort_keys=True) for e in eff}),
+            "trials_with_cache_read": sum(1 for r in ok if r.get("cache_read_input_tokens", 0) > 0),
+            "cache_creation_input_tokens": sum(r.get("cache_creation_input_tokens", 0) for r in ok),
+            "cache_read_input_tokens": sum(r.get("cache_read_input_tokens", 0) for r in ok),
+            "input_tokens": sum((e.get("input_tokens") or 0) for e in eff),
+            "output_tokens": sum((e.get("output_tokens") or 0) for e in eff),
+        }
     run_dir.mkdir(parents=True, exist_ok=True)
     (run_dir / "records.jsonl").write_text("\n".join(json.dumps(r) for r in records) + "\n")
     (run_dir / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")

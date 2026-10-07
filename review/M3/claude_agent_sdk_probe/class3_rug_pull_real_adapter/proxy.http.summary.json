@@ -1,0 +1,17 @@
+{
+  "server": "http",
+  "trial_id": "class3_rug_pull_real_adapter",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2025-11-25",
+  "era_observed": "2025-11-25",
+  "era_matches": true,
+  "refusals": [
+    "server/discover"
+  ],
+  "upstream_live_calls": 5,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 21,
+  "payload_text": null
+}

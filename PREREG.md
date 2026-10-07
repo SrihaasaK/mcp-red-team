@@ -94,3 +94,20 @@ Honest numbers over good numbers. Attacks, the oracle, tasks, splits, and statis
 are never changed to move a result. Any post-result change to the measurement
 apparatus is logged with its reason and triggers a full re-run of the published
 numbers.
+
+## Amendment A1 (author, in-session 2026-10-07; logged in DECISIONS.md D39)
+Append-only; the endpoint line above (D13) is unchanged. The **Claude Agent SDK**
+scaffold speaks the **native Anthropic Messages API**, recorded through the D15
+proxy at `ANTHROPIC_BASE_URL` (its bundled CLI has no OpenAI-compatible path).
+**Scope: this scaffold only.** No existing result depends on it, so no re-run.
+
+Conditions (author call):
+- Claude Agent SDK results are a **separate confirmatory slice**, reported on their
+  own and **never pooled** with the two lean scaffolds. The **headline pooled ASR
+  covers OpenAI Agents + LangGraph only** (this narrows §8.3, it does not move a
+  number).
+- Its **effective thinking mode and caching are recorded per trial**. The README
+  limitations state this scaffold ran on a different endpoint, with different
+  thinking and caching behavior from the OpenAI-compatible scaffolds.
+- The Claude Agent SDK **live benign run is authorized under a \$15 cap inside
+  D33's \$100** budget.

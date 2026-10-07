@@ -1,0 +1,15 @@
+{
+  "server": "notes",
+  "trial_id": "era_streamable_stateless_2turn",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2026-07-28",
+  "era_observed": "2026-07-28",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 8,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 28,
+  "payload_text": null
+}

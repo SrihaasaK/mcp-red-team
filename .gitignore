@@ -26,3 +26,8 @@ runs/
 agentdb.rvf*
 review/M2/final/
 review/M2/drafts/
+# Claude Agent SDK CLI per-trial internal state (caches/config/session logs/cwd) --
+# machine-specific, not research evidence; the proxy/upstream/llm logs are the evidence.
+**/cli_home/
+**/cli_config/
+**/cli_cwd/

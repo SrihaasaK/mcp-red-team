@@ -22,7 +22,8 @@ from mcpredteam.scaffolds.contract import TrialSpec
 
 # Frozen manifest, USD per million tokens (input, output). DECISIONS.md D19.
 PRICES = {"claude-sonnet-5-5": (2.0, 10.0), "claude-opus-5-5": (4.0, 20.0)}
-ADAPTERS = {"openai-agents": "scaffolds/openai-agents", "langgraph": "scaffolds/langgraph"}
+ADAPTERS = {"openai-agents": "scaffolds/openai-agents", "langgraph": "scaffolds/langgraph",
+            "claude-agent-sdk": "scaffolds/claude-agent-sdk"}
 
 
 def adapter_python(scaffold: str) -> Path:
@@ -68,6 +69,7 @@ def llm_usage(trial_dir: Path, model: str) -> dict:
         raise ValueError(f"model {model!r} is not in the frozen manifest {sorted(PRICES)}")
     path = trial_dir / "llm.jsonl"
     prompt = completion = calls = missing = 0
+    cache_creation = cache_read = 0
     latency = 0.0
     finish = []
     for line in path.read_text().splitlines() if path.is_file() else []:
@@ -79,14 +81,25 @@ def llm_usage(trial_dir: Path, model: str) -> dict:
             missing += 1
         prompt += usage.get("prompt_tokens", 0)
         completion += usage.get("completion_tokens", 0)
+        cache_creation += usage.get("cache_creation_input_tokens", 0)
+        cache_read += usage.get("cache_read_input_tokens", 0)
         latency += rec.get("latency_s", 0.0)
         finish += [c.get("finish_reason") for c in resp.get("choices", [])]
     price_in, price_out = PRICES[model]
+    # Anthropic prompt-caching multipliers (ephemeral 5-min cache): a cache WRITE is
+    # 1.25x and a cache READ 0.1x the base input price. Both fields are absent on the
+    # OpenAI-compatible endpoint (no caching; PREREG), so these terms are 0 there and
+    # the OpenAI/LangGraph cost is unchanged. They ARE priced for the Claude Agent SDK
+    # native endpoint (PREREG Amendment A1, D39) so the spend cap sees the real cost.
+    cost = (prompt * price_in + completion * price_out
+            + cache_creation * price_in * 1.25 + cache_read * price_in * 0.1) / 1e6
     return {
         "model_calls": calls,
         "prompt_tokens": prompt,
         "completion_tokens": completion,
-        "cost_usd": round(prompt * price_in / 1e6 + completion * price_out / 1e6, 6),
+        "cache_creation_input_tokens": cache_creation,
+        "cache_read_input_tokens": cache_read,
+        "cost_usd": round(cost, 6),
         "model_latency_s": round(latency, 3),
         "finish_reasons": finish,
         "usage_missing": missing,
@@ -158,7 +171,8 @@ async def run_trial(spec: TrialSpec, task: Task, *, hub: HubServer | None, api_k
         "tool_calls": [{k: c[k] for k in ("server", "name", "arguments")} for c in calls],
         "wall_clock_s": wall,
         "adapter": {k: adapter_out.get(k) for k in ("llm_calls", "live_llm_calls", "blocked_network_calls",
-                                                    "llm_replay_unused", "settings_applied", "wall_clock_s")},
+                                                    "llm_replay_unused", "settings_applied", "wall_clock_s",
+                                                    "effective")},
         "proxy": proxies,
         "era_matches": bool(proxies) and all(p["era_matches"] for p in proxies),
         "usage": llm_usage(trial_dir, spec.model) if spec.mode == "record" else None,
