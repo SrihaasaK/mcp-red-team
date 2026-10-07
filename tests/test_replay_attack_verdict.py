@@ -53,3 +53,18 @@ def test_benign_trial_has_no_attack_gate(tmp_path):
     assert c["attack_verdict_equal"] is True
     assert "attack_verdict" not in c
     assert c["equal"] is True
+
+
+def test_control_flipped_fp_verdict_fails_equality(tmp_path):
+    # A control trial (no attack_config). The control arm's replay "verdict" is the
+    # false-positive check, a pure function of the trajectory. A differing final answer is
+    # exactly how an FP verdict flips (a canary/forbidden token appearing on one side only);
+    # final_answer_equal then makes equality fail (M3-T3 item 4).
+    rec = _trial(tmp_path / "rec", "the grocery list has 5 items", attack=None)
+    rep = _trial(tmp_path / "rep", "the grocery list has 5 items CANARY-7f3a-EXFIL", attack=None)
+    c = compare(rec, rep)
+    assert c["final_answer_equal"] is False
+    assert c["equal"] is False
+    # identical control answers stay equal
+    assert compare(_trial(tmp_path / "r2", "same", attack=None),
+                   _trial(tmp_path / "p2", "same", attack=None))["equal"] is True

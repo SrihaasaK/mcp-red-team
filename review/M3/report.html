@@ -54,9 +54,14 @@ are shown together with Wilson 95% CIs (SPEC §8.1).</p>
 <tr><td>class 3</td><td>5.0% [0.9%, 23.6%] (1/20)</td><td>80.0%</td><td>6.2% [1.1%, 28.3%] (1/16)</td></tr>
 <tr><td>class 5</td><td>10.0% [2.8%, 30.1%] (2/20)</td><td>100.0%</td><td>10.0% [2.8%, 30.1%] (2/20)</td></tr>
 <tr><td>class 7</td><td>4.0% [0.7%, 19.5%] (1/25)</td><td>92.0%</td><td>4.3% [0.8%, 21.0%] (1/23)</td></tr></tbody></table>
-<p class="note">Pooled across models (dev, exploratory): raw ASR
+<p class="note">Pooled across models (dev, exploratory), raw and exposure-conditioned reported
+together (CLAUDE.md #5): raw ASR
 7.3% [4.5%, 11.5%] (16/220);
-control arm 353/360 benign-success, FP rate
+exposure 93.6%
+(206/220);
+exposure-conditioned ASR
+7.8% [4.8%, 12.2%] (16/206);
+utility (control benign) 98.1% [96.0%, 99.1%] (353/360); FP rate
 0.0%.</p>
 
 <h2>Benign utility — all three scaffolds</h2>
@@ -116,9 +121,10 @@ Conditions (author call):
 <table><thead><tr><th>milestone</th><th>detail</th><th>USD</th><th>cumulative</th></tr></thead>
 <tbody><tr><td>M0</td><td>compatibility probe (Claude Agent SDK, D10)</td><td>$0.133251</td><td>$0.133251</td></tr>
 <tr><td>M1</td><td>settings probe + smoke + m1-matrix + m1-final (D21)</td><td>$0.306000</td><td>$0.439251</td></tr>
-<tr><td>M2</td><td>dev run 580 trials (D36; review/M2/m2_report.json)</td><td>$10.275300</td><td>$10.714551</td></tr>
-<tr><td>M3-T1</td><td>LangGraph benign suite (D38)</td><td>$0.822000</td><td>$11.536551</td></tr>
-<tr><td>M3-T2</td><td>Claude Agent SDK benign $0.232130 + native-path smokes ~$0.0233 (D40)</td><td>$0.255408</td><td>$11.791959</td></tr></tbody></table>
+<tr><td>M2 smoke</td><td>smoke-gate before the dev run (D32, D36)</td><td>$0.092000</td><td>$0.531251</td></tr>
+<tr><td>M2 dev</td><td>dev run 580 trials (D36; review/M2/m2_report.json)</td><td>$10.275300</td><td>$10.806551</td></tr>
+<tr><td>M3-T1</td><td>LangGraph benign suite (D38)</td><td>$0.822000</td><td>$11.628551</td></tr>
+<tr><td>M3-T2</td><td>Claude Agent SDK benign $0.232130 + native-path smokes $0.023278 (D40, D42)</td><td>$0.255408</td><td>$11.883959</td></tr></tbody></table>
 
 <h2>Held-out headline (pending)</h2>
 <p class="note">Pooled held-out ASR over OpenAI Agents + LangGraph (the Claude Agent SDK is a

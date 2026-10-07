@@ -29,15 +29,18 @@ SOURCES = {
     "prereg": "PREREG.md",
 }
 
-# Spend ledger (USD), each entry recorded in DECISIONS.md; M2/M3 cross-checked against the
-# committed aggregates below. Kept explicit so the report sums the same numbers the D-log does.
+# Spend ledger (USD), each entry recorded in DECISIONS.md; the cumulative total reconciles
+# EXACTLY with DECISIONS.md D42 ($11.883959) -- asserted by tests/test_report.py.
 LEDGER = [
     ("M0", "compatibility probe (Claude Agent SDK, D10)", 0.133251),
     ("M1", "settings probe + smoke + m1-matrix + m1-final (D21)", 0.306),
-    ("M2", "dev run 580 trials (D36; review/M2/m2_report.json)", 10.2753),
+    ("M2 smoke", "smoke-gate before the dev run (D32, D36)", 0.092),
+    ("M2 dev", "dev run 580 trials (D36; review/M2/m2_report.json)", 10.2753),
     ("M3-T1", "LangGraph benign suite (D38)", 0.822),
-    ("M3-T2", "Claude Agent SDK benign $0.232130 + native-path smokes ~$0.0233 (D40)", 0.255408),
+    ("M3-T2", "Claude Agent SDK benign $0.232130 + native-path smokes $0.023278 (D40, D42)", 0.255408),
 ]
+# Cumulative total that must match DECISIONS.md D42; kept as a constant for the reconciliation test.
+LEDGER_TOTAL_D42 = 11.883959
 
 
 def _rate_cell(succ: int, n: int) -> str:
@@ -184,9 +187,14 @@ in the injected text, so most class-1 "successes" are final-answer quotes while 
 exfiltration to a sink; this is an OPEN finding awaiting the author (D37). Raw and exposure-conditioned ASR
 are shown together with Wilson 95% CIs (SPEC §8.1).</p>
 {''.join(model_tables)}
-<p class="note">Pooled across models (dev, exploratory): raw ASR
+<p class="note">Pooled across models (dev, exploratory), raw and exposure-conditioned reported
+together (CLAUDE.md #5): raw ASR
 {_rate_cell(m2['pooled']['overall']['succ'], m2['pooled']['overall']['n'])};
-control arm {openai_ctl_succ}/{openai_ctl_n} benign-success, FP rate
+exposure {stats.format_pct(m2['pooled']['overall']['expo'])}
+({_exposed(m2['pooled']['overall'])}/{m2['pooled']['overall']['n']});
+exposure-conditioned ASR
+{_rate_cell(m2['pooled']['overall']['succ'], _exposed(m2['pooled']['overall']))};
+utility (control benign) {_rate_cell(openai_ctl_succ, openai_ctl_n)}; FP rate
 {stats.format_pct(m2['pooled']['control_fp_rate'])}.</p>
 
 <h2>Benign utility — all three scaffolds</h2>

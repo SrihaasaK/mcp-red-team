@@ -1381,3 +1381,59 @@ append-only (byte-prefix of bd68db4).
 carries the inline caveat); (b) LangGraph class-3 per-turn-refetch (D38); (c) whether to **push** the
 repo + CI workflow to a remote (D46; outward-facing, author's call). **M4** (the three mitigations on
 dev, then held-out at n=10; SPEC §12) is the next milestone and needs the D37 call first.
+
+## D48. Correction to D44 — the stdio "no tools/list" is OUR proxy, not the CLI (M3-T3 rework r1, item 1)
+D44 concluded the stdio+stateless "tools never load" anomaly was CLI-side. **That is wrong.** The
+orchestrator identified head-of-line blocking in our stdio relay: `src/mcpredteam/proxy/stdio.py`
+serially `await`s `relay.handle(message)` before the next `reader.readline()`, so the CLI's
+long-lived `subscriptions/listen` blocks the single stdin pipe and the following `tools/list` is
+never read. OpenAI/LangGraph never open a long-lived request before listing tools, so their serial
+stdio trials never hit it — which is why D44's cross-scaffold comparison was not decisive.
+**Offline \$0 experiment (scratch clone only; repo src/ untouched):** with a concurrent stdio loop
+(create_task per message, replies written as they complete), the SAME cas stdio+stateless trial
+against the native stub now shows `server/discover -> subscriptions/listen -> notifications/cancelled
+-> prompts/list -> resources/list -> tools/list -> tools/call x2`, tools loaded (3 `mcp__notes__*`),
+2 tool calls, no error — i.e. it behaves like streamable-http.
+**Cause confirmed: our serial stdio relay (an apparatus component) -> BLOCKED-AUTHOR for the stdio
+fix** (M3-T3 stop condition). No proxy fix is committed; the concurrent loop lives only in the scratch
+clone.
+**Author options (with cost):**
+- (a) Make the stdio relay concurrent (apparatus change). Then re-verify every existing stdio replay
+  is still EQUAL (m1 stdio, m2-dev stdio, LangGraph stdio) and run the Claude Agent SDK stdio benign
+  half live (~\$0.25) so the scaffold has a stdio record too.
+- (b) Keep the Claude Agent SDK on streamable-http only, as a recorded limitation (its benign suite
+  already ran on http, D40). \$0.
+**Existing OpenAI/LangGraph results are unaffected either way:** their MCP clients issue only short
+request->response calls (initialize/discover -> tools/list -> tools/call), never a long-lived request
+before listing tools, so the serial loop never blocked them — their recorded stdio trials loaded
+tools and replay EQUAL. The Claude Agent SDK's streamable-http benign results (D40) are also
+unaffected (the hub serves concurrent requests, so no head-of-line blocking there).
+
+## D49. M3-T3 rework round 1 — report + replay-checker fixes + reviewer pass (items 2-5)
+Rework of 43e8f69 on the orchestrator's findings (item 1 is D48).
+- **Item 2 (ledger):** `report/render.py` LEDGER omitted the M2-smoke line, so the report summed to
+  \$11.791959. Added the **M2 smoke \$0.092** line and made the M3-T2 detail exact (\$0.232130 +
+  \$0.023278); the ledger now totals **\$11.883959**, reconciling exactly with D42.
+  `tests/test_report.py::test_ledger_total_matches_D42` asserts LEDGER sum == LEDGER_TOTAL_D42 == the
+  D42 figure in DECISIONS.md, and that the rendered report shows it.
+- **Item 3 (CLAUDE.md #5):** the pooled DEV line now reports raw AND exposure-conditioned ASR
+  together — exposure **206/220**, exposure-conditioned ASR **16/206** with its Wilson CI, and the
+  control-benign utility beside it (`test_report.py::test_report_pooled_line_has_exposure_conditioned`).
+- **Item 4 (control arm in replay equality):** `matrix.compare()` now also requires
+  `final_answer_equal` for `equal` (SPEC §9.1 "identical oracle verdict"). The oracle scores each
+  turn's (tool_calls, final_answer); every attack-corpus and control-arm trial runs the single-turn
+  openai scaffold, so tool_sequence_equal + final_answer_equal pin the verdict including the control
+  arm's false-positive check. All 720 existing equal trials already satisfy final_answer_equal, so
+  nothing is weakened. Test: `test_replay_attack_verdict.py::test_control_flipped_fp_verdict_fails_equality`.
+- **Item 5 (reviewer pass, CLAUDE.md #11):** a code-reviewer subagent checked `render.py`,
+  `compare()`, and `report.html` against `review/M2/m2_report.json` and the committed summaries.
+  **Verdict: CLEAN** — the only Wilson implementation is in `report/stats.py`; recomputed CIs match
+  the JSON to <= 4.5e-4 (3-dp rounding); ledger = \$11.883959; SOURCES is a dev+benign allowlist with
+  no held-out path; placeholders emitted verbatim; `score()` reads only per-turn (tool_calls,
+  final_answer) + config + task (model_requests/delivered feed only exposure, not the verdict);
+  `oracle/` unmodified; the report reproduces the committed file byte-for-byte. One LOW note:
+  `final_answer_equal` compares the last-turn answer — exact for the single-turn openai control arm,
+  not a hypothetical multi-turn control arm. **Addressed** by narrowing the compare() comment to that
+  precise scope (no behavior change; a future multi-turn attack/control arm would compare per-turn
+  answers). Re-verification (full suite + full replays with the new checker + fresh-clone re-proof)
+  is recorded in the rework commit message and the D33 report.
