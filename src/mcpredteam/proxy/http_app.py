@@ -20,7 +20,9 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
-from mcpredteam.attacks.engine import build_attack
+# Adaptive dispatcher (M4-T4a/D85): delegates to attacks.engine.build_attack UNCHANGED for every
+# config without an `adaptive_transform` marker; builds the transform interceptor otherwise.
+from mcpredteam.adaptive.engine import build_attack
 from mcpredteam.mitigate.interceptors import build_mitigations
 from mcpredteam.proxy.interfaces import TrialCtx
 from mcpredteam.proxy.relay import Relay, jsonrpc_error
