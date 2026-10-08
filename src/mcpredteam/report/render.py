@@ -45,12 +45,15 @@ LEDGER = [
     ("M3-T1", "LangGraph benign suite (D38)", 0.822),
     ("M3-T2", "Claude Agent SDK benign $0.232130 + native-path smokes $0.023278 (D40, D42)", 0.255408),
     ("M3-T4", "OpenAI Agents full benign suite, 40x2 (D51)", 0.965748),
-    ("M2 dev v2", "D55/D56/D61/D66 correction re-run: pilot $0.287134 + full 580-trial "
-     "$10.001218 (D62/D73; pilot cost corrected in D74; review/M2/v2/m2_report.json)", 10.288352),
+    ("M2 dev v2", ("D55/D56/D61/D66 correction re-run: pilot $0.287134 + full 580-trial "
+                   "$10.001218 (D62/D73; pilot cost corrected in D74; review/M2/v2/m2_report.json)"), 10.288352),
+    ("M4-T1", "SPEC §10 mitigations + offline counterfactual (D75-D79): offline, no live calls", 0.0),
+    ("M4-T2", ("dev mitigation utility eval: pilots $2.008720 (3 gate runs) + full 2160-trial "
+               "$40.685482 (D80-D82; review/M4/dev-util/report.json)"), 42.694202),
 ]
-# Cumulative total that must match the latest DECISIONS.md ledger entry (D74); a constant
+# Cumulative total that must match the latest DECISIONS.md ledger entry (D82); a constant
 # for the reconciliation test.
-LEDGER_TOTAL_USD = 23.138059
+LEDGER_TOTAL_USD = 65.832261
 
 
 def _rate_cell(succ: int, n: int) -> str:

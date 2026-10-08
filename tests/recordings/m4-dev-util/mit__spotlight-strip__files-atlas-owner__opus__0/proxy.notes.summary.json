@@ -1,0 +1,16 @@
+{
+  "server": "notes",
+  "trial_id": "mit__spotlight-strip__files-atlas-owner__opus__0",
+  "transport": "streamable-http",
+  "mode": "record",
+  "era_forced": "2026-07-28",
+  "era_observed": "2026-07-28",
+  "era_matches": true,
+  "refusals": [],
+  "upstream_live_calls": 3,
+  "replay_unused": [],
+  "proxy_errors": [],
+  "messages_logged": 12,
+  "payload_text": null,
+  "mitigation_blocks": []
+}

@@ -1,0 +1,43 @@
+{
+ "arms": {
+  "pinning": {
+   "trials": 360,
+   "equal": 360,
+   "nonzero_live": 0,
+   "replay_dir": "m4-dev-util-pinning-replay-20261008T133957Z"
+  },
+  "spotlight-delimiters": {
+   "trials": 360,
+   "equal": 360,
+   "nonzero_live": 0,
+   "replay_dir": "m4-dev-util-spotlight-delimiters-replay-20261008T134523Z"
+  },
+  "spotlight-strip": {
+   "trials": 360,
+   "equal": 360,
+   "nonzero_live": 0,
+   "replay_dir": "m4-dev-util-spotlight-strip-replay-20261008T135051Z"
+  },
+  "taint-coarse": {
+   "trials": 360,
+   "equal": 360,
+   "nonzero_live": 0,
+   "replay_dir": "m4-dev-util-taint-coarse-replay-20261008T135625Z"
+  },
+  "taint-fine": {
+   "trials": 360,
+   "equal": 360,
+   "nonzero_live": 0,
+   "replay_dir": "m4-dev-util-taint-fine-replay-20261008T140120Z"
+  },
+  "combined": {
+   "trials": 360,
+   "equal": 360,
+   "nonzero_live": 0,
+   "replay_dir": "m4-dev-util-combined-replay-20261008T140604Z"
+  }
+ },
+ "total_trials": 2160,
+ "total_equal": 2160,
+ "total_nonzero_live": 0
+}

@@ -48,3 +48,4 @@ jobs:
           uv run mcpr replay tests/recordings/m3-langgraph        --out "$RUNNER_TEMP/rep-lg"
           uv run mcpr replay tests/recordings/m3-claude-agent-sdk --out "$RUNNER_TEMP/rep-cas"
           uv run mcpr replay tests/recordings/m3-openai-benign    --out "$RUNNER_TEMP/rep-oa"
+          uv run mcpr replay tests/recordings/m4-dev-util          --out "$RUNNER_TEMP/rep-m4"
