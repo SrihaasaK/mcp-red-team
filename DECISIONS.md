@@ -2355,3 +2355,61 @@ the new test; oracle / attacks / split / tasks / stats / PREREG unchanged vs 6ca
 tag → oracle-exclusion → attempt-count path is unchanged (D56 tests green). M4-T2 then re-runs the
 pilot (fresh ids `m4-dev-util-pilot2-<arm>`) and, if all gates incl. (d) replay-EQUAL-with-mitigations
 pass, the full run under in-run spend/error aborts — all FROM the committed fix SHA.
+
+## D81. M4-T2 rework r2 — replay carries mitigations; utility scores executed-only; projection fix
+Pilot2 (from 0cd7ffe) passed gates (a),(b),(c),(e) — the D80 fix delivered blocks as isError with
+0 harness errors — but FAILED gate (d) (mitigated trials don't replay EQUAL). The orchestrator
+confirmed and found two more defects; all three ship together. \$0 (offline fixes); M4-T2 then
+re-runs the pilot (pilot3) and, if every gate passes, the full run.
+
+**(i) `replay_run` now carries `mitigations`.** `runner/matrix.py` rebuilt the replay `TrialSpec`
+with `prompts` + `attack_config` but not `mitigations` (an omission from [[D47]], before mitigations
+existed), so `build_mitigations` returned `()` in replay → spotlight's wraps and taint's blocks were
+NOT re-applied → the proxy delivered raw/unblocked results → the adapter's canonical LLM request
+(`adapter.py:94`) no longer matched the recorded (mitigated) one → `ReplayDivergence`. Fix: add
+`mitigations=old.mitigations`, exactly parallel to the existing `attack_config` carry (same
+"rebuild the interceptor in replay so the request/response match" rationale). A mitigated trial
+cannot replay EQUAL without it.
+
+**(ii) the benign/utility checker scored BLOCKED calls as success (BLOCKING).** `runner/trial.py
+tool_calls` (feeding `result.json`'s benign verdict — computed where `check()` runs in `run_trial` —
+and `evaluate._benign_pass`) listed ATTEMPTED calls, blocked ones included; [[D56]] excluded blocked
+calls only on the ATTACK path
+(`Trajectory.from_trial`). So in pilot2 `mit__taint-fine__files-todo-to-mail__sonnet__0` (and the
+combined one) scored `benign_pass=True` even though the `send_message` was BLOCKED ("I couldn't send
+the email … blocked") — OVERSTATING every blocking arm's utility, i.e. hiding exactly the cost
+M4-T2 measures. Treated as an implementation gap in the author's D56 rule ("blocked = not executed"),
+same class as D80, not a new measurement decision; it changes no existing number (there are no blocks
+without mitigations). Fix: **one shared helper `proxy/calls.py executed_calls`** (blocked excluded via
+the same nearest-preceding per-server-id match as `from_trial`), now used by BOTH `trial.tool_calls`
+(benign) and `Trajectory.from_trial` (attack) — so the two paths cannot drift. Blocked attempts stay
+visible in the relay summary's `mitigation_blocks`. **GUARD re-score (\$0, offline): every recorded
+UNMITIGATED trial's benign verdict recomputed with the new code — m1-final 20, m2-dev-v2 580,
+m3-openai-benign 80, m3-langgraph-benign 80, m3-claude-agent-sdk-benign 40 = 800 trials, CHANGED = 0.**
+Tests (`tests/test_executed_calls.py`): a blocked required sink → benign FAIL; unblocked → pass;
+no-block record → identity.
+
+**(iii) full-run spend projection corrected (driver `m4_dev_util.py`; not apparatus).** It priced ALL
+remaining trials at the CURRENT trial's model rate — `proj = cumulative + (total−done)·mean[model]` —
+so the first opus trial projected ~\$1.3 + 2155·\$0.02475 ≈ \$54.8 > \$48 → spurious ABORT ~trial 6.
+Corrected to the mixed-model sum **`proj = cumulative + Σ_model remaining[model]·mean[model]`**
+(≈ \$41.4 for the full run). Per-arm >10%-error-after-≥20 abort unchanged.
+
+**Reviewer pass (CLAUDE.md #11, replay/compare + utility checker): NON-BLOCKING — 5/5 confirmed.**
+A reviewer subagent verified: the shared `executed_calls` matching is character-identical to the
+pre-D81 inline `from_trial` logic (byte-identical calls on 2 recorded m2-dev-v2 attack trials);
+`from_trial`'s refactor is behaviour-preserving (turn-grouping/reqs/delivered untouched; oracle +
+replay-attack-verdict tests green); `trial.tool_calls` now returns executed-only and **independently
+re-ran the GUARD: 800 unmitigated trials, 0 carry a block record, 0 verdicts changed**; the new tests
+assert blocked→FAIL / unblocked→pass; `matrix.py` carries `mitigations` with `compare()` otherwise
+unchanged (test_ci_replay green); `git diff 0cd7ffe` empty for oracle/rules.py, attacks, split,
+tasks, stats, PREREG, and removes no test assertion; (ii) moves numbers only in the honest
+cost-exposing direction. Suite 214.
+Suite **214 passed** (211 + 3 executed-only tests); ruff clean. Scope: `matrix.py` (+mitigations),
+`trial.py` (tool_calls → shared helper), `oracle/trajectory.py` (from_trial → shared helper, behaviour
+preserved), new `proxy/calls.py`, new test; `compare()`/`score()` SEMANTICS unchanged (both still
+re-score each side; the executed-only exclusion predates this as D56 on the attack path, now shared);
+attacks/split/tasks/stats/PREREG unchanged vs 0cd7ffe. M4-T2 re-runs pilot3 from the pushed SHA and,
+if gates (a)–(g) pass (incl. (f) blocked trials score benign FAIL + stay in the attempt record, and
+(g) all pilot3 trials replay EQUAL with mitigations, blocked included), the full run under the
+corrected aborts.

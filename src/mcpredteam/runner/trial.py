@@ -16,6 +16,7 @@ import time
 from pathlib import Path
 
 from mcpredteam.config import repo_root
+from mcpredteam.proxy.calls import executed_calls
 from mcpredteam.proxy.http_app import HubServer
 from mcpredteam.runner.tasks import Task, Verdict, check
 from mcpredteam.scaffolds.contract import TrialSpec
@@ -45,21 +46,10 @@ def subprocess_env(api_key: str | None) -> dict[str, str]:
 
 
 def tool_calls(trial_dir: Path, servers: list[str]) -> list[dict]:
-    """Tool calls as the agent issued them (proxy log, c2s/in), in arrival order."""
-    calls = []
-    for server in servers:
-        path = trial_dir / f"proxy.{server}.jsonl"
-        if not path.is_file():
-            continue
-        for line in path.read_text().splitlines():
-            rec = json.loads(line)
-            msg = rec.get("message")
-            if rec["dir"] == "c2s" and rec["stage"] == "in" and isinstance(msg, dict) and msg.get("method") == "tools/call":
-                params = msg.get("params") or {}
-                calls.append({"ts": rec["ts"], "server": server, "name": params.get("name"),
-                              "arguments": params.get("arguments") or {}})
-    calls.sort(key=lambda c: c["ts"])
-    return calls
+    """EXECUTED tool calls (proxy log, c2s/in), in arrival order. A mitigation-blocked call is
+    excluded (D81: the benign/utility checker scores executed calls only, matching the attack
+    oracle), via the one shared helper so the two paths cannot drift."""
+    return executed_calls(trial_dir, servers)
 
 
 def llm_usage(trial_dir: Path, model: str) -> dict:

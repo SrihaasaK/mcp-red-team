@@ -180,10 +180,12 @@ async def replay_run(run_dir: Path, out_dir: Path | None = None) -> dict:
                              trial_dir=str(out_dir / old.trial_id), servers=old.servers,
                              recording_dir=str(rec_dir), model_settings=old.model_settings,
                              max_turns=old.max_turns,
-                             # Carry the per-turn prompts (else a two-turn trial replays only turn 1)
-                             # and the attack config (the proxy rebuilds the same interceptor in replay,
-                             # so the mutated request/response match the recording).
-                             prompts=old.prompts, attack_config=old.attack_config)
+                             # Carry the per-turn prompts (else a two-turn trial replays only turn 1),
+                             # the attack config AND the mitigations (D81): the proxy rebuilds the same
+                             # interceptors in replay, so the mutated/wrapped/blocked request/response
+                             # match the recording -- a mitigated trial cannot replay EQUAL otherwise.
+                             prompts=old.prompts, attack_config=old.attack_config,
+                             mitigations=old.mitigations)
             await run_trial(spec, tasks[old.task_id], hub=hub, api_key=None)
             c = compare(rec_dir, out_dir / old.trial_id)
             comparisons.append(c)
