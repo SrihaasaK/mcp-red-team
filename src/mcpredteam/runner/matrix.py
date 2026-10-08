@@ -20,6 +20,7 @@ from mcpredteam.oracle.trajectory import Trajectory
 from mcpredteam.proxy.http_app import HubServer, ProxyHub
 from mcpredteam.proxy.recording import canonical
 from mcpredteam.proxy.relay import HANDSHAKE, STATELESS
+from mcpredteam.runner.canary import hydrate_attack_config
 from mcpredteam.runner.tasks import Task, load_tasks
 from mcpredteam.runner.trial import PRICES, run_trial
 from mcpredteam.scaffolds.contract import TrialSpec
@@ -136,7 +137,9 @@ def compare(rec_dir: Path, rep_dir: Path) -> dict:
     # attack_config, so attack_verdict_equal is vacuously True (their equality rests on
     # trajectory_equal above).
     spec = json.loads((rec_dir / "trial.json").read_text())
-    attack_cfg = spec.get("attack_config")
+    # D61: resolve canary_ref -> canary from the mock source before scoring (no-op for pre-D61
+    # recordings that still embed the value). The oracle raises if a canary_ref is left unresolved.
+    attack_cfg = hydrate_attack_config(spec.get("attack_config"))
     out["attack_verdict_equal"] = True
     if attack_cfg:
         task = _task_map()[spec["task_id"]]

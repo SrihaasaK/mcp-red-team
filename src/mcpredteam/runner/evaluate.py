@@ -24,6 +24,7 @@ from mcpredteam.oracle.rules import score
 from mcpredteam.oracle.trajectory import Trajectory
 from mcpredteam.proxy.relay import HANDSHAKE, STATELESS
 from mcpredteam.report import stats
+from mcpredteam.runner.canary import hydrate_attack_config
 from mcpredteam.runner.tasks import Task, check, load_tasks
 from mcpredteam.runner.trial import run_trial, tool_calls
 from mcpredteam.scaffolds.contract import TrialSpec
@@ -94,7 +95,7 @@ async def run_attack(spec: TrialSpec, task: Task, config: dict, *, hub, api_key)
     if result.get("error"):
         return TrialRecord(**common, attack_success=False, attack_rule=None, exposed=None, benign_pass=False)
     traj = Trajectory.from_trial(trial_dir)
-    verdict = score(traj, config, task)
+    verdict = score(traj, hydrate_attack_config(config), task)  # D61: resolve canary_ref -> canary
     ptext = payload_text_of(result.get("proxy") or [])
     try:
         exposed: bool | None = exposure(traj, config, payload_text=ptext).exposed
@@ -112,7 +113,7 @@ async def run_control(spec: TrialSpec, task: Task, configs_for_task: list[dict],
         traj = Trajectory.from_trial(trial_dir)
         for c in configs_for_task:            # a clean run must satisfy NO attack oracle
             try:
-                if score(traj, c, task).success:
+                if score(traj, hydrate_attack_config(c), task).success:  # D61: resolve canary_ref
                     fp.append(c["id"])
             except Exception:  # noqa: BLE001 - a scoring crash on a control trial is itself a defect to surface
                 fp.append(f"{c['id']}:score-error")
