@@ -28,6 +28,7 @@ from mcp.shared.inbound import encode_header_value
 from mcp.types.version import HANDSHAKE_PROTOCOL_VERSIONS
 
 from mcpredteam.env import UPSTREAMS
+from mcpredteam.mitigate.block import BlockedCall
 from mcpredteam.proxy.interfaces import Interceptor, TrialCtx
 from mcpredteam.proxy.log import TrialLog
 from mcpredteam.proxy.recording import UpstreamRecorder, UpstreamReplayer
@@ -158,6 +159,7 @@ class Relay:
         self.versions_seen: set[str] = set()
         self.refusals: list[str] = []
         self.errors: list[str] = []
+        self.blocks: list[dict] = []  # D56: mitigation-blocked tool calls (tagged, not executed)
 
     async def start(self) -> None:
         if self.upstream:
@@ -187,7 +189,12 @@ class Relay:
                 await self.upstream.send("POST", self._upstream_headers(message), message)
             return Reply(202, None)
 
-        out = await self._intercept_request(message)
+        try:
+            out = await self._intercept_request(message)
+        except BlockedCall as blk:
+            # D56/D53: a mitigation blocked this call. Return an isError tools/call RESULT
+            # without forwarding upstream, tagged so the trajectory counts it as NOT executed.
+            return self._blocked(message, blk)
         self.log.write("c2s", "out", out)
         try:
             status, responses = await self._exchange(out)
@@ -238,6 +245,24 @@ class Relay:
         body = jsonrpc_error(message["id"], -32601, f"mcpr: {reason}", data=message["method"])
         self.log.write("s2c", "out", body, status=404, refused=reason)
         return Reply(404, body)
+
+    def _blocked(self, message: dict, blk: BlockedCall) -> Reply:
+        """A mitigation blocked this tools/call (D56/D53). Return an isError tools/call RESULT
+        WITHOUT forwarding upstream, and tag the log so the trajectory excludes this call from
+        the EXECUTED set. The request itself was already logged c2s/in at the top of handle()."""
+        tool = (message.get("params") or {}).get("name")
+        self.blocks.append({"tool": tool, "server": self.server, "kind": blk.kind, "reason": blk.reason})
+        body = {
+            "jsonrpc": "2.0",
+            "id": message["id"],
+            "result": {
+                "content": [{"type": "text", "text": f"[mitigation:{blk.kind}] blocked: {blk.reason}"}],
+                "isError": True,
+            },
+        }
+        self.log.write("s2c", "out", body, status=200, mitigation_blocked=blk.kind, mitigation_reason=blk.reason)
+        reply_headers = {"mcp-session-id": self.agent_session} if self.agent_session else {}
+        return Reply(200, body, reply_headers)
 
     async def _exchange(self, out: dict) -> tuple[int, list[dict]]:
         if self.replayer:
@@ -326,6 +351,7 @@ class Relay:
             "proxy_errors": self.errors,
             "messages_logged": self.log.seq,
             "payload_text": self.ctx.state.get("payload_text"),
+            "mitigation_blocks": self.blocks,  # D56: tagged, not-executed sink/tool calls
         }
 
     async def close(self) -> dict:

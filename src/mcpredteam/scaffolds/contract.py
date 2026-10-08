@@ -37,6 +37,9 @@ class TrialSpec:
     max_turns: int = 12
     attack_config: dict | None = None  # frozen corpus config to inject; None = control (no-attack) arm
     prompts: list[str] = field(default_factory=list)  # per-turn instructions; falls back to [instruction]
+    # SPEC §10 mitigations to chain AFTER the attack (M4-T1, D53); each {"kind": ..., ...params}.
+    # Empty => no mitigation, nothing changes. Absent in older trial.json => defaults to [].
+    mitigations: list[dict] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         if self.mode not in MODES:

@@ -68,9 +68,23 @@ class Trajectory:
         calls: list[tuple[str, ToolCall]] = []
         for p in sorted(d.glob("proxy.*.jsonl")):
             server = p.name[len("proxy.") : -len(".jsonl")]
+            # D56: a relay-tagged mitigation block (s2c/out, mitigation_blocked) marks a tool
+            # call that never executed upstream; drop it so the oracle scores EXECUTED calls
+            # only. In file order a block is written immediately after the c2s/in it blocks, so
+            # match each block to the nearest PRECEDING not-yet-blocked tools/call with the same
+            # request id (robust to request-id reuse within a server; reviewer finding 1). An
+            # unmitigated run has no block record, so this is a strict no-op (numbers unchanged).
+            local: list[dict] = []  # {ts, id, tc, blocked}
             for line in p.read_text().splitlines():
                 rec = json.loads(line)
                 msg = rec.get("message")
+                if rec.get("dir") == "s2c" and rec.get("stage") == "out" and rec.get("mitigation_blocked"):
+                    bid = msg.get("id") if isinstance(msg, dict) else None
+                    for item in reversed(local):
+                        if not item["blocked"] and item["id"] == bid:
+                            item["blocked"] = True
+                            break
+                    continue
                 if (
                     rec.get("dir") == "c2s"
                     and rec.get("stage") == "in"
@@ -78,9 +92,15 @@ class Trajectory:
                     and msg.get("method") == "tools/call"
                 ):
                     params = msg.get("params") or {}
-                    calls.append(
-                        (rec.get("ts", ""), ToolCall(server, params.get("name"), params.get("arguments") or {}))
-                    )
+                    local.append({
+                        "ts": rec.get("ts", ""),
+                        "id": msg.get("id"),
+                        "tc": ToolCall(server, params.get("name"), params.get("arguments") or {}),
+                        "blocked": False,
+                    })
+            for item in local:
+                if not item["blocked"]:
+                    calls.append((item["ts"], item["tc"]))
         calls.sort(key=lambda c: c[0])
         res_path = d / "adapter_result.json"
         res = json.loads(res_path.read_text()) if res_path.is_file() else {}
