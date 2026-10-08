@@ -252,14 +252,18 @@ class Relay:
         the EXECUTED set. The request itself was already logged c2s/in at the top of handle()."""
         tool = (message.get("params") or {}).get("name")
         self.blocks.append({"tool": tool, "server": self.server, "kind": blk.kind, "reason": blk.reason})
-        body = {
-            "jsonrpc": "2.0",
-            "id": message["id"],
-            "result": {
-                "content": [{"type": "text", "text": f"[mitigation:{blk.kind}] blocked: {blk.reason}"}],
-                "isError": True,
-            },
+        result = {
+            "content": [{"type": "text", "text": f"[mitigation:{blk.kind}] blocked: {blk.reason}"}],
+            "isError": True,
         }
+        # D80: the stateless era's CallToolResult REQUIRES the `resultType` discriminator (normal
+        # 2026-07-28 results carry resultType:"complete"), so a hand-built isError result without it
+        # fails the modern client's union validation and crashes the call instead of delivering the
+        # isError. Key off the forced era (NOT transport); the handshake era used the older schema
+        # with no resultType, so it is left unchanged.
+        if self.ctx.era == STATELESS:
+            result["resultType"] = "complete"
+        body = {"jsonrpc": "2.0", "id": message["id"], "result": result}
         self.log.write("s2c", "out", body, status=200, mitigation_blocked=blk.kind, mitigation_reason=blk.reason)
         reply_headers = {"mcp-session-id": self.agent_session} if self.agent_session else {}
         return Reply(200, body, reply_headers)

@@ -2292,3 +2292,66 @@ assert the right things; `git diff 2762454` empty for oracle/attacks/split/tasks
 test assertion deleted; the direction is honest (removing join artifacts WEAKENS fine's utility-cost
 story, not flatters it). Suites 15 / 206 green.
 Scope: oracle/attacks/split/tasks/stats/PREREG unchanged vs 2762454; DECISIONS append-only.
+
+## D80. M4-T2 rework r1 — era-correct blocked result (the pilot-gate (c) fix)
+The M4-T2 utility-only dev eval was GO'd (orchestrator, under D33/D70 M4-dev autonomy, $48 cap). Its
+mandatory PILOT GATE caught a latent defect; the full run was NOT started. This entry records the fix;
+M4-T2 continues (pilot re-run → full) after it is committed + CI-green.
+
+**Pilot (6 arms × 2 models × 3 tasks × 1 = 36 live trials, \$0.6623).** Gates (a) trial.json records
+each arm's mitigations, (b) spotlight `<untrusted-data>` delimiters in `llm.jsonl` + taint-fine/combined
+blocked EXACTLY the counterfactual-predicted `files-todo-to-mail`, (e) \$/trial sonnet \$0.01381 /
+opus \$0.02298 (both < v2+30%): **PASS**. Gate **(c) 0 harness errors: FAIL** — 2 schema-validation
+errors on the taint-fine + combined `files-todo-to-mail`/sonnet trials.
+
+**Defect (latent, in committed `relay._blocked`, D56; shipped through 6ca4c5c).** `_blocked` hand-built
+`{"result":{"content":[...],"isError":true}}` with **no `resultType`**. The stateless era's
+`CallToolResult` is parsed by the mcp client as a discriminated union
+`CallToolResult | InputRequiredResult` keyed on `resultType` (mcp/client/session.py); a normal
+2026-07-28 result carries `resultType:"complete"`, so the missing field made the real client reject
+the blocked result ("2 validation errors for union[...] CallToolResult.resultType Field required") and
+**crash the call** instead of delivering the isError the agent can react to. Latent because
+`test_relay_block` asserted the body shape directly (never through a real stateless client) and no
+committed recording delivers a block (mitigations off) — so the 800/800 mitigations-off regression is
+unaffected; the bug surfaces only when a real block lands, which the pilot did.
+
+**Fix.** `relay._blocked` adds `"resultType": "complete"` to the isError result **iff
+`self.ctx.era == STATELESS`** (keyed off the forced era, NOT the transport); the handshake era
+(2025-11-25) used the older schema with no `resultType` and is unchanged. One line in the
+block-delivery path only — no mitigation / oracle / task / setting change.
+
+**Regression test (`tests/test_mitigate_block_client.py`, \$0, NO LLM).** Drives the REAL `mcp` SDK
+`Client` end-to-end against the proxy and `call_tool`s a blocked sink — the `mcp` client is the exact
+layer the scaffold wrappers (OpenAI Agents `MCPServerStreamableHttp`/`MCPServerStdio`, LangGraph
+`langchain-mcp-adapters`) delegate result parsing to (the discriminated union above). **taint-fine over
+{stateless, handshake} × {streamable-http, stdio}** and **pinning (via the c2-01 class-2 attack)
+stateless-http** all return an isError result carrying the `[mitigation:...]` tag and raise nothing
+(5/5). The existing D56 body-shape + tag→oracle-exclusion tests (`test_relay_block.py`,
+`test_mitigate.py`) are unchanged and green. **Pre-fix reproduction witness:** the pilot crashed on
+exactly this stateless-http taint-fine/combined block via the real OpenAI client (same mcp parse).
+(Scaffold-venv tests were not added: the scaffolds carry no pytest/mcpredteam dep, and the base `mcp`
+client under test IS the shared parsing layer; the pilot re-run additionally proves the OpenAI
+`MCPServerStreamableHttp` path end-to-end.)
+
+**structuredContent check (orchestrator addition 4; \$0, pre-full-run).** Real stateless results also
+carry `structuredContent` with the raw payload, which spotlight (edits `content`) and taint (records
+from `content`) do not touch. Recorded model requests (`llm.jsonl`) contain **0** occurrences of
+`structuredContent` on every scaffold — OpenAI 0/80 benign + 0/580 v2-control, LangGraph 0/80,
+CAS 0/40 — so the model is never shown it and the mitigations are NOT bypassable via that channel on
+any scaffold. No fix needed; reported clean (would have been a held-out concern for OpenAI + LangGraph
+had any scaffold exposed it).
+
+**Reviewer pass (CLAUDE.md #11, D56 block path): NON-BLOCKING — 5/5 confirmed.** A reviewer subagent
+verified the era-only fix (resultType added iff STATELESS; handshake unchanged); that every D56
+invariant is preserved (block tag + `{tool,server,kind,reason}`, `mitigation_blocked` log, no upstream
+forward, `oracle/trajectory.py` exclusion unchanged — `git diff 6ca4c5c` empty for oracle/trajectory.py);
+and — the key check — **independently monkeypatched the PRE-fix `_blocked` and drove the real client:
+the stateless-http path raises `ValidationError: CallToolResult.resultType Field required` (the pilot
+crash), while the fixed path returns `is_error=True`** — so the regression test is genuinely
+bug-sensitive. structuredContent 0/780 across scaffolds confirmed. Full suite 211; `git diff 6ca4c5c --
+tests/` removes nothing; the fix flatters no measured number (era-correct schema only).
+Suite **211 passed** (206 + 5 block-client tests); ruff clean. Scope: only `relay.py` (`_blocked`) +
+the new test; oracle / attacks / split / tasks / stats / PREREG unchanged vs 6ca4c5c; the block
+tag → oracle-exclusion → attempt-count path is unchanged (D56 tests green). M4-T2 then re-runs the
+pilot (fresh ids `m4-dev-util-pilot2-<arm>`) and, if all gates incl. (d) replay-EQUAL-with-mitigations
+pass, the full run under in-run spend/error aborts — all FROM the committed fix SHA.
