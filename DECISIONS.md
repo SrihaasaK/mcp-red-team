@@ -2501,3 +2501,52 @@ code touched is `render.py` (ledger), `test_ci_replay.py` (+1 SET), `replay.yml`
 offline `review/M4/dev-util/*` builders + artifacts + the sanitized CI recordings. DECISIONS append-only.
 **M4-T2 complete.** Next (separate sessions): D58 PREREG amendment (allowlist + fine k/unit), then D67
 (adaptive arm, dev, \$60).
+
+## D83. M4-T2 rework r1 — false-block rate was double-counting the denominator (corrects D82)
+The orchestrator's independent review of 1bfc255 accepted everything EXCEPT the reported **false-block
+rate**, which was wrong (too LOW by ~15 pts). D82's TABLE values ("~31–33%", "~31%") and its prose
+"blocks ~1/3 of benign sink calls (false-block ≈31–33%)" are **superseded by this entry**; every other
+D82 figure (benign success, utility Δ/CI/verdict, 2160/2160 replay, ledger, reactions) was independently
+reproduced by the orchestrator and stands. D82 is left untouched (append-only).
+
+**Defect (reported statistic only, in `review/M4/dev-util/build_report.py`).** The denominator was
+`sink_attempts = exec_sinks + sink_blocks`, where `exec_sinks` counted `reconstruct_events` "call"
+events — but `reconstruct_events` (counterfactual.py) emits a call for EVERY c2s/in `tools/call`,
+**blocked ones included**, so `exec_sinks` was already ATTEMPTED (executed + blocked). Adding
+`sink_blocks` a second time counted each block twice, inflating the denominator. For taint-fine/sonnet
+it gave 35/105 = 33.3% where the trials have 70 ATTEMPTED sink calls (35 executed + 35 blocked), i.e.
+**35/70 = 50.0%**. The D82 prose line "false-block denominator = executed sinks + blocks" stated the
+WRONG definition (the correct denominator is ATTEMPTED calls, counted once); the code matched that wrong
+definition. **Reviewer miss:** the M4-T2 reviewer subagent said it re-derived "every headline number"
+but computed benign/utility from the raw records and did NOT re-derive the false-block denominator from
+the proxy logs — so it did not catch this. Lesson logged: a reviewer that re-derives OUTPUTS can still
+miss a DENOMINATOR bug unless it recomputes the ratio's numerator AND denominator independently.
+
+**Corrected false-block rates (recomputed from raw `proxy.*.jsonl`; numerator = tagged sink blocks,
+denominator = ATTEMPTED sink calls = each c2s `tools/call` to a side-effecting tool, counted once):**
+
+| arm | sonnet | opus | pooled |
+| --- | --- | --- | --- |
+| taint-fine | 35/70 = **50.0%** | 30/67 = **44.8%** | 65/137 = **47.4%** |
+| combined | 35/70 = **50.0%** | 30/68 = **44.1%** | 65/138 = **47.1%** |
+
+(pinning / spotlight-delimiters / spotlight-strip / taint-coarse: 0 blocks → 0%.) So fine taint blocks
+**about HALF** of benign sink calls, not ~1/3 — a LARGER utility cost than D82 stated, and it now agrees
+with the offline counterfactual on the v2 controls (**65/134 = 48.5%**) once both use the attempted
+denominator; with the inflated denominator live looked spuriously lower than offline. The ~7 reworded
+retries (notes-room-to-mail opus) each add a second ATTEMPTED sink call that executed, which is why
+opus's attempted (67/68) exceeds sonnet's (70 with no retries differs only by task mix) — counted once.
+
+**Fix (scope-tight; no src/, tests/, recordings, run dirs or utility number changed).**
+`build_report.py`: denominator = `attempted_sink_calls` (reconstruct_events count, blocked once);
+added the invariant **`executed_sinks (via proxy/calls.py executed_calls) + sink_blocks ==
+attempted_sinks`**, asserted per model per arm — it holds for all 12 cells (STOP-if-fails, not relaxed).
+`report.json` now carries `executed_sinks`, `attempted_sink_calls`, corrected per-model
+`false_block_rate`, and pooled `{attempted_sink_calls, sink_blocks, false_block_rate}`; `report.md`
+table + a new live-vs-offline RATE comparison regenerated. `review_packet.md` quotes no rate → byte-
+identical (confirmed). Reviewer pass (CLAUDE.md #11, reported statistic): a subagent recomputed BOTH
+numerator and denominator from raw `proxy.*.jsonl` with its own code (not report.json) and confirmed all
+12 cells. Scope: oracle / mitigate / stats / tasks / attacks / splits / PREREG / SPEC unchanged vs
+1bfc255; only `build_report.py` + regenerated `report.{json,md}` + this entry. The ruff 0.16.10 ISC004
+drift (15 pre-existing findings in unrelated files) is a deferred author housekeeping item, NOT in this
+rework.

@@ -16,10 +16,10 @@ Temporal confound: the baseline was recorded earlier (same model ids + era).
 | spotlight-strip | opus | 174/180 | -0.6 [-4.6, +3.4] | no_meaningful_loss | 0 | 0.0% |
 | taint-coarse | sonnet | 180/180 | +0.6 [-1.6, +3.1] | no_meaningful_loss | 0 | 0.0% |
 | taint-coarse | opus | 175/180 | +0.0 [-3.9, +3.9] | no_meaningful_loss | 0 | 0.0% |
-| taint-fine | sonnet | 145/180 | -18.9 [-25.3, -13.2] | meaningful_loss | 35 | 33.3% |
-| taint-fine | opus | 147/180 | -15.6 [-22.1, -9.4] | meaningful_loss | 30 | 30.9% |
-| combined | sonnet | 145/180 | -18.9 [-25.3, -13.2] | meaningful_loss | 35 | 33.3% |
-| combined | opus | 148/180 | -15.0 [-21.4, -8.9] | meaningful_loss | 30 | 30.6% |
+| taint-fine | sonnet | 145/180 | -18.9 [-25.3, -13.2] | meaningful_loss | 35 | 50.0% |
+| taint-fine | opus | 147/180 | -15.6 [-22.1, -9.4] | meaningful_loss | 30 | 44.8% |
+| combined | sonnet | 145/180 | -18.9 [-25.3, -13.2] | meaningful_loss | 35 | 50.0% |
+| combined | opus | 148/180 | -15.0 [-21.4, -8.9] | meaningful_loss | 30 | 44.1% |
 
 ## Reaction to blocks (per arm, both models)
 
@@ -30,9 +30,13 @@ Temporal confound: the baseline was recorded earlier (same model ids + era).
 - **taint-fine**: {'told_user': 63, 'retried': 2}; live sink blocks 65, non-sink blocks 0
 - **combined**: {'told_user': 60, 'retried': 5}; live sink blocks 65, non-sink blocks 0
 
-## Live vs offline-counterfactual (taint, m2-dev-v2 controls)
+## Live vs offline-counterfactual false-block RATE (taint, m2-dev-v2 controls)
 
-The offline counterfactual counted blocks on the UNMITIGATED trajectories; LIVE the agent
-reacts to the first block, so live blocks can differ. Offline-control blocked sink calls:
-taint-fine 65, taint-coarse 0.
+The offline counterfactual counted would-block sink calls on the UNMITIGATED v2 control
+trajectories; LIVE the agent reacts to a block (and may reword + retry), so the two are
+computed over different trajectories. The RATES agree closely once the denominator is
+ATTEMPTED sink calls, counted once (D83 fix -- NOT executed+blocks):
+- live taint-fine **65/137 = 47.4%**
+- live combined **65/138 = 47.1%**
+- offline-control taint-fine 65/134 = 48.5% (taint-coarse 0/134)
 
