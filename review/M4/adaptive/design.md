@@ -79,7 +79,7 @@ summary, not the oracle.
 **DEV coarse classification of the 11 stateless exfil configs (my independent recompute; reported in
 this DEV doc, NOT enumerated in PREREG).** By the canary-flow pair (unit (i)), only **c7-01**
 (files→http) is OUT-of-allowlist; the other 10 move the canary along an allowlisted pair
-(c1-01/c2-01/c7-06 notes→http, c1-02/c2-02/c7-02 mail→http, c5-02/c7-05 files→mail, c7-03 notes→mail)
+(c1-01/c2-01/c7-06 notes→http, c1-02/c2-02/c2-06/c7-02 mail→http, c5-02/c7-05 files→mail, c7-03 notes→mail)
 — consistent with M4-T1's synthetic coarse catch of 1/12. **But LIVE coarse blocks on ANY off-list
 delivered-server→sink**, so a compliant trajectory that also reads the poisoned TARGET server
 contributes an off-list pair for **c2-06 (files→http), c7-03 (http→mail), c7-06 (files→http)** —
