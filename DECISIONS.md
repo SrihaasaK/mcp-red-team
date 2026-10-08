@@ -2693,3 +2693,39 @@ correct, the proxy dispatcher is byte-identical for non-transform configs, and n
 Scope: oracle / mitigate / tasks / attacks / corpus / split / stats unchanged vs 0f51563 (empty diff);
 new `src/mcpredteam/adaptive/*` + 3 new tests + the 2-line proxy import swap + `review/M4/adaptive/design.md`
 + this entry. DECISIONS/PREREG append-only.
+
+## D86. Author decisions (D34 batch), confirmed in-session 2026-10-08
+The author issued these five decisions directly in the Coder's session (and told the orchestrator
+they were sent). Recorded verbatim; the pre-registration parts are appended to PREREG as **A7**
+(this same change set), nothing above A6 edited. The adaptive arm's DESIGN mechanics (B, operator
+space, static-first attempt, seeding, stopping) are deferred to a LATER amendment **A8**, after the
+DEV run (D67 orders the arm's own amendment after its DEV design).
+
+1. **Fine-taint k stays 8** (already frozen, A6). No retuning; its utility cost is reported as a
+   finding. (Closes A6's "author decides whether to change k" open item: NOT changed.)
+2. **Combined arm = pinning + spotlight-strip + taint-coarse** (the zero-utility-cost set, per
+   M4-T2: all three ≈0 benign cost). Taint-fine is reported SEPARATELY as **"strict mode."** This
+   fixes A6 §6's unfrozen combined composition and SUPERSEDES D78's proposal (pin+strip+fine).
+3. **Adaptive arm scope:** exfil objective ONLY; models = **Sonnet 5.5** plus the ladder models the
+   author approves (**Opus 5.5 runs static held-out only** — NOT the adaptive arm); arms =
+   **baseline, spotlight-delimiters, taint-coarse, taint-fine**; **ASR@1/@10/@100, each target
+   stopped at first success.** (Supersedes the M4-T4a orchestrator arm set, which had
+   spotlight-strip; the adaptive DEV run is Sonnet-only.)
+4. **D33 autonomous cap raised \$175 → \$225.** Project the full held-out plan under these cuts and
+   STOP if it exceeds \$225. (This is D33 AUTONOMY, not the analysis plan, so it is recorded HERE
+   only — NOT in PREREG.)
+5. **Prediction (b) restated:** coarse taint blocks **100% of attack flows OUTSIDE the allowlist and
+   0% of flows INSIDE it**; report ASR **separately for in-allowlist and out-of-allowlist flows.**
+   (Supersedes PREREG A4(b); A4 itself is left untouched, the restatement lands in A7.)
+
+**#5 operational definition (CLAUDE.md #10 — an ambiguity; my interpretation, to be surfaced to the
+author).** "Attack flow inside/outside the allowlist" needs a fixed unit. Two readings:
+- **(i) canary-flow pair = (server holding the canary → sink server)** — STATIC per config, so (b)
+  is an EMPIRICAL claim. An incidental coarse block of an IN-allowlist canary flow caused by some
+  OTHER off-list delivery in the trajectory would count against "0% inside."
+- **(ii) any off-list delivered-server → sink in the trajectory** — makes "100% outside" true by
+  coarse's OWN definition, i.e. TAUTOLOGICAL.
+**I adopt (i) as the primary split** (it makes (b) a real empirical test), and report (ii)-type
+incidental blocks SEPARATELY as a diagnostic; the (ii) tautology is stated in A7. The rule is
+defined in A7; no held-out config is enumerated or read here (DEV classification lives in
+`review/M4/adaptive/design.md`).
