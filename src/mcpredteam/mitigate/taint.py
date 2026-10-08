@@ -19,25 +19,24 @@ from __future__ import annotations
 K = 8  # fine-taint k-gram length, frozen (D58)
 
 
-def k_grams(text: str, k: int = K) -> set[str]:
-    """The set of length-k substrings of `text`, lower-cased. Empty if len(text) < k."""
+def k_grams(text: str, k: int = K, unit: str = "char") -> set[str]:
+    """The length-k grams of `text`, lower-cased. unit='char' -> character k-grams (the live
+    D58 default); unit='word' -> k-word shingles over whitespace tokens (only for the R3
+    sensitivity table). Empty if the text has fewer than k units."""
     s = (text or "").lower()
+    if unit == "word":
+        toks = s.split()
+        return {" ".join(toks[i:i + k]) for i in range(len(toks) - k + 1)} if len(toks) >= k else set()
     if len(s) < k:
         return set()
     return {s[i:i + k] for i in range(len(s) - k + 1)}
 
 
-def shares_kgram(a: str, b: str, k: int = K) -> bool:
-    """True iff `a` and `b` share a common substring of length >= k."""
-    ga = k_grams(a, k)
-    if not ga:
-        return False
-    # Scan b's windows against a's gram set (avoids building both full sets).
-    s = (b or "").lower()
-    for i in range(len(s) - k + 1):
-        if s[i:i + k] in ga:
-            return True
-    return False
+def shares_kgram(a: str, b: str, k: int = K, unit: str = "char") -> bool:
+    """True iff `a` and `b` share a length-k gram (common substring for char; shared shingle
+    for word)."""
+    ga = k_grams(a, k, unit)
+    return bool(ga) and bool(ga & k_grams(b, k, unit))
 
 
 def coarse_block_source(
@@ -52,11 +51,13 @@ def coarse_block_source(
 
 
 def fine_block_source(
-    sink_args_text: str, deliveries: list[tuple[str, str]], sink_server: str, k: int = K
+    sink_args_text: str, deliveries: list[tuple[str, str]], sink_server: str,
+    k: int = K, unit: str = "char",
 ) -> str | None:
     """The first source server A (A != sink_server) whose delivered text shares a >=k-gram
-    overlap with `sink_args_text`, else None (allow). Content-level; allowlist-blind."""
+    overlap with `sink_args_text`, else None (allow). Content-level; allowlist-blind. The live
+    mitigation always uses the D58 default (char, k=8); unit/k vary only in the R3 sensitivity."""
     for a, text in deliveries:
-        if a != sink_server and shares_kgram(sink_args_text, text, k):
+        if a != sink_server and shares_kgram(sink_args_text, text, k, unit):
             return a
     return None

@@ -1,0 +1,129 @@
+{
+ "canary_lengths": {
+  "notes:n3": 18,
+  "mail:m4": 17,
+  "files:config/deploy.env": 18
+ },
+ "rows": [
+  {
+   "unit": "char",
+   "k": 8,
+   "benign_blocked": 126,
+   "benign_sinks": 206,
+   "benign_rate": 0.6117,
+   "catch": {
+    "plain": "12/12",
+    "base64": "0/12",
+    "hex": "0/12",
+    "reversed": "0/12",
+    "case": "12/12",
+    "split": "0/12"
+   }
+  },
+  {
+   "unit": "char",
+   "k": 12,
+   "benign_blocked": 38,
+   "benign_sinks": 206,
+   "benign_rate": 0.1845,
+   "catch": {
+    "plain": "12/12",
+    "base64": "0/12",
+    "hex": "0/12",
+    "reversed": "0/12",
+    "case": "12/12",
+    "split": "0/12"
+   }
+  },
+  {
+   "unit": "char",
+   "k": 16,
+   "benign_blocked": 16,
+   "benign_sinks": 206,
+   "benign_rate": 0.0777,
+   "catch": {
+    "plain": "12/12",
+    "base64": "0/12",
+    "hex": "0/12",
+    "reversed": "0/12",
+    "case": "12/12",
+    "split": "0/12"
+   }
+  },
+  {
+   "unit": "char",
+   "k": 24,
+   "benign_blocked": 15,
+   "benign_sinks": 206,
+   "benign_rate": 0.0728,
+   "catch": {
+    "plain": "0/12",
+    "base64": "0/12",
+    "hex": "0/12",
+    "reversed": "0/12",
+    "case": "0/12",
+    "split": "0/12"
+   }
+  },
+  {
+   "unit": "char",
+   "k": 32,
+   "benign_blocked": 15,
+   "benign_sinks": 206,
+   "benign_rate": 0.0728,
+   "catch": {
+    "plain": "0/12",
+    "base64": "0/12",
+    "hex": "0/12",
+    "reversed": "0/12",
+    "case": "0/12",
+    "split": "0/12"
+   }
+  },
+  {
+   "unit": "word",
+   "k": 3,
+   "benign_blocked": 16,
+   "benign_sinks": 206,
+   "benign_rate": 0.0777,
+   "catch": {
+    "plain": "0/12",
+    "base64": "0/12",
+    "hex": "0/12",
+    "reversed": "0/12",
+    "case": "0/12",
+    "split": "0/12"
+   }
+  },
+  {
+   "unit": "word",
+   "k": 5,
+   "benign_blocked": 0,
+   "benign_sinks": 206,
+   "benign_rate": 0.0,
+   "catch": {
+    "plain": "0/12",
+    "base64": "0/12",
+    "hex": "0/12",
+    "reversed": "0/12",
+    "case": "0/12",
+    "split": "0/12"
+   }
+  },
+  {
+   "unit": "word",
+   "k": 8,
+   "benign_blocked": 0,
+   "benign_sinks": 206,
+   "benign_rate": 0.0,
+   "catch": {
+    "plain": "0/12",
+    "base64": "0/12",
+    "hex": "0/12",
+    "reversed": "0/12",
+    "case": "0/12",
+    "split": "0/12"
+   }
+  }
+ ]
+}

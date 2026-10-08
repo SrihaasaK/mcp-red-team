@@ -63,12 +63,16 @@ def main() -> None:
 
     lines = ["# M4-T1 offline counterfactual (coarse-vs-fine input)", "",
              "Each SPEC §10 mitigation's DECISION logic applied to RECORDED trajectories; NO live",
-             "calls, NO re-run. Benign numbers are a utility-cost **proxy** (NOT measured utility; the",
-             "agent did not react to a block). Attack numbers are a **counterfactual** (NOT ASR).",
-             "Taint-fine under-blocks TRANSFORMED secrets by design (PREREG (c)); here the v2 attacks",
-             "contain no exfil, so both taint variants mainly exercise the benign false-block surface.",
+             "calls, NO re-run. Both the benign AND the attack columns here are a **utility-cost proxy**",
+             "(blocks of the agent's OWN, task-required sink calls), **NOT a security catch**: every one",
+             "of the 48 executed sink calls in the v2 ATTACK trials is task-required (checked against each",
+             "task's `exercises`), and v2 has 0 executed exfil and 0 executed forbidden-action, so there",
+             "is no malicious sink call here to catch. The security **catch** rate is measured",
+             "SYNTHETICALLY in `synthetic_catch.md` (R2), not from these recordings. 'altered' means a",
+             "spotlight-STRIP pattern changed a result's content; delimiters wrap EVERY result but remove",
+             "nothing, so delimiters 'altered' is 0 by definition.",
              ""]
-    lines.append("## Benign (utility-cost proxy; blocked sink calls / altered results)")
+    lines.append("## Benign (utility-cost proxy; blocked sink calls / strip-altered results)")
     lines.append("")
     lines.append("| group | trials | mitigation | sink calls | blocked | block rate | results | altered |")
     lines.append("| --- | --- | --- | --- | --- | --- | --- | --- |")
@@ -79,16 +83,27 @@ def main() -> None:
             lines.append(f"| {label} | {n} | {k} | {a['sink_calls']} | {a['blocked_calls']} | "
                          f"{rate(a['blocked_calls'], a['sink_calls'])} | {a['results']} | {a['altered_results']} |")
     lines.append("")
-    lines.append("## Attack (counterfactual; attack sink calls that WOULD be blocked)")
+    lines.append("## Under attack (utility cost, NOT catch): blocks of TASK-REQUIRED sink calls")
     lines.append("")
-    lines.append("| group | trials | mitigation | sink calls | would-block | block rate | altered |")
+    lines.append("All 48 executed sink calls in the v2 attack trials are task-required; a block here is")
+    lines.append("a utility cost the agent would pay WHILE under attack, not a thwarted exfiltration.")
+    lines.append("")
+    lines.append("| group | trials | mitigation | task sink calls | blocked | block rate | strip-altered |")
     lines.append("| --- | --- | --- | --- | --- | --- | --- |")
     na = out["trial_counts"]["m2-dev-v2 attack"]
     for k in KINDS:
         a = out["attack"]["m2-dev-v2 attack"][k]
         lines.append(f"| m2-dev-v2 attack | {na} | {k} | {a['sink_calls']} | {a['blocked_calls']} | "
                      f"{rate(a['blocked_calls'], a['sink_calls'])} | {a['altered_results']} |")
-    lines.append("")
+    lines += ["",
+              "Pinning's 6 blocks are task-required http calls (http_get ×1, http_post ×5) whose",
+              "descriptions a class-2 attack poisoned: pinning cannot tell the task's own use of the",
+              "poisoned tool from a malicious one, so under attack it is a utility cost (its genuine",
+              "value — refusing to let the agent trust a changed description — is real but not an exfil",
+              "block). Taint-fine's blocks are the agent re-sending read content to an allowlisted sink",
+              "(benign content flow), NOT exfil. spotlight-strip altered 93 attack results (it removed",
+              "injected instructions from poisoned tool results) with 0 benign alterations — that IS its",
+              "defensive action, measured as a content change, not a sink block.", ""]
     OUT_MD.write_text("\n".join(lines) + "\n")
     print("wrote", OUT_JSON, "and", OUT_MD)
     print("benign m2-dev-v2 controls coarse blocked:",
