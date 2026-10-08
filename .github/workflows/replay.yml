@@ -13,10 +13,12 @@ permissions:
 
 jobs:
   replay:
-    # macos-14 is Apple silicon (arm64). The claude-agent-sdk wheel ships a platform-specific
-    # bundled CLI binary and the recordings were made on darwin/arm64; this runner matches both
-    # (and the fresh-clone proof was run on the same platform). See DECISIONS.md D46.
-    runs-on: macos-14
+    # ubuntu-latest per author decision D60 (supersedes the D46 macos-14 pin; D46 left intact as
+    # history, see D74). The lockfiles resolve manylinux x86_64 wheels for every platform-specific
+    # package incl. claude-agent-sdk 0.2.164 (manylinux_2_17_x86_64), so `uv sync --frozen` works on
+    # linux. Replay serves recorded SSE by sequence and request diffs are diagnostic-only, so the
+    # darwin-made recordings replay here; this first Actions run IS the linux reproducibility proof.
+    runs-on: ubuntu-latest
     env:
       # Replay is offline. Leave the model keys unset so a live call is impossible.
       ANTHROPIC_API_KEY: ""

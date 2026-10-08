@@ -1965,3 +1965,56 @@ scan clean; (6) fixtures — all 5 full-canary-only, sink-scoped, exfil=true; su
 `review/M2/m2_report.json` preserved. The headline weakened (7.27% → 1.36%) and is reported as-is.
 
 PREREG unchanged this task; DECISIONS append-only. Nothing pushed (T-D handles push after T-C verified).
+
+## D74. T-D — ubuntu CI + full-history secret scan + first push (orchestrator-sequenced; author D60)
+T-C accepted by the orchestrator (727643e). This task publishes the branch and switches CI to linux.
+\$0, no live model calls.
+
+**Ledger correction (orchestrator NIT 1; [[D73]] NOT edited — append-only).** The [[D62]] pilot (the
+20-trial scratch `m2-dev-v2-pilot`) was recorded in D73 / `render.py` as \$0.287100; its own
+`summary.json` and the raw per-trial `cost_usd` sum both say **\$0.287134** (the ledger was \$0.000034
+low). `report/render.py` `LEDGER` "M2 dev v2" entry corrected to pilot \$0.287134 → \$10.288352;
+`LEDGER_TOTAL_USD` → **\$23.138059**. `tests/test_report.py` is unchanged and its reconciliation test
+passes against the new entry. Corrected cumulative **\$23.138059**, inside D33's \$175 cap ([[D70]]).
+
+**CI runner → ubuntu-latest (author [[D60]]; supersedes [[D46]]).** `.github/workflows/replay.yml`
+`runs-on: macos-14` → `ubuntu-latest`. D46 (the macos-14 pin) is left intact as history; this entry
+records the supersession per the author's call. No macOS matrix leg (not requested; macOS minutes cost
+10× on private repos). **Lockfile wheel check (pre-push):** root + all three scaffold `uv.lock` resolve
+manylinux x86_64 wheels for every platform-specific package, incl. **claude-agent-sdk 0.2.164
+(`manylinux_2_17_x86_64`)**; no package is macOS-only in any lock, so `uv sync --frozen` works on linux.
+Replay serves recorded SSE by sequence and CAS request diffs are diagnostic-only (`adapter.py`), so the
+darwin-made recordings replay on linux — **not asserted platform-neutral in advance; the first Actions
+run IS the linux reproducibility proof.**
+
+**Full-history secret scan (24 commits reachable from `mcp-red-team`).** BLOCKING patterns (`sk-ant-`,
+`sk-proj-`, `sk-[A-Za-z0-9_-]{20,}`, `ghp_`/`gho_`/`github_pat_`, `AKIA…`, `xox[bp]-`, `BEGIN … PRIVATE
+KEY`, non-empty `ANTHROPIC_API_KEY=`/`OPENAI_API_KEY=`, `authorization`/`x-api-key` in committed
+`*.jsonl`): **0 real hits.** Expected (documentation / guards / stub, not secrets): `.env.example`
+key-format comments, the `FORBIDDEN = (…, "sk-ant-")` scan-guard literals, the
+`"sk-ant-offline-stub-NOT-A-REAL-KEY"` offline stub (`scaffolds/claude-agent-sdk/adapter.py`), and the
+D45 scan-pattern text in DECISIONS. `.env` never committed (`git log --all --diff-filter=A -- .env
+'**/.env'` empty). No key/auth material in any recording or review-packet blob; synthetic canaries
+(`CANARY-*`) do not match the key patterns. gitleaks/trufflehog not installed (not added, per
+instruction). **INFORMATIONAL — no block, no history rewrite (for the author's public-release call):**
+**74** real `/Users/srihaasa/…` absolute-path line-hits in the current tree, all in pre-sanitization
+probe artifacts under `review/M2/` (c6_resource_probe, cache_ttl_*, mrtr_*) and `review/M3/*_probe/`
+(claude_agent_sdk_probe, langgraph_probe) — `trial_dir`/`cli_home`/`cli_cwd`/`cli_path` and the CAS
+`llm.jsonl` Environment block. The T-C additions (`review/M2/v2/`, `tests/recordings/m2-dev`) are
+path-clean. **0** real author-email occurrences (the 8 content hits are the D45 scan-pattern literal in
+DECISIONS, not an address).
+
+**Finding — CAS isolation gap (text only; no code change in T-D).** Both committed CAS recordings' CLI
+environment block (`messages[1]`) shows `cli_cwd` inside the repo's git worktree, so the model's context
+included "This is a git worktree…", the stash guidance and "Is a git repository: true"; `adapter.py`'s
+docstring claims full isolation. Impact: the benign-only slice plus a diagnostic-only replay diff.
+Proposed fix (NOT applied here; surfaced to the author): set `cli_cwd` to a temp dir outside any git
+repo before any further CAS run.
+
+**Push.** `git push -u origin mcp-red-team` → private `SrihaasaK/mcp-red-team` (origin already set; repo
+private, size 0, no branches, so GitHub makes `mcp-red-team` the default branch). This branch only — not
+`main`, no `worktree-agent-*` branches, no tags, no force. Pushed only after the local suite is green on
+the exact pushed commit and the scan is clean. The first Actions run (ubuntu-latest) and its result are
+reported to the orchestrator.
+
+PREREG unchanged; DECISIONS append-only (D73 untouched). Public release still waits for M4 ([[D60]]).

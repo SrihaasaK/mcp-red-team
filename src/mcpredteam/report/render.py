@@ -35,7 +35,7 @@ SOURCES = {
 }
 
 # Spend ledger (USD), each entry recorded in DECISIONS.md; the cumulative total reconciles
-# EXACTLY with the latest DECISIONS.md ledger entry (D73: $23.138025) -- asserted by
+# EXACTLY with the latest DECISIONS.md ledger entry (D74: $23.138059) -- asserted by
 # tests/test_report.py.
 LEDGER = [
     ("M0", "compatibility probe (Claude Agent SDK, D10)", 0.133251),
@@ -45,12 +45,12 @@ LEDGER = [
     ("M3-T1", "LangGraph benign suite (D38)", 0.822),
     ("M3-T2", "Claude Agent SDK benign $0.232130 + native-path smokes $0.023278 (D40, D42)", 0.255408),
     ("M3-T4", "OpenAI Agents full benign suite, 40x2 (D51)", 0.965748),
-    ("M2 dev v2", "D55/D56/D61/D66 correction re-run: pilot $0.287100 + full 580-trial "
-     "$10.001218 (D62/D73; review/M2/v2/m2_report.json)", 10.288318),
+    ("M2 dev v2", "D55/D56/D61/D66 correction re-run: pilot $0.287134 + full 580-trial "
+     "$10.001218 (D62/D73; pilot cost corrected in D74; review/M2/v2/m2_report.json)", 10.288352),
 ]
-# Cumulative total that must match the latest DECISIONS.md ledger entry (D73); a constant
+# Cumulative total that must match the latest DECISIONS.md ledger entry (D74); a constant
 # for the reconciliation test.
-LEDGER_TOTAL_USD = 23.138025
+LEDGER_TOTAL_USD = 23.138059
 
 
 def _rate_cell(succ: int, n: int) -> str:
