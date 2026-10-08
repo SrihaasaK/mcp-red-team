@@ -11,5 +11,6 @@
   "replay_unused": [],
   "proxy_errors": [],
   "messages_logged": 16,
-  "payload_text": null
+  "payload_text": null,
+  "mitigation_blocks": []
 }

@@ -1,0 +1,29 @@
+{
+  "trial_id": "ctl__files-q3-revenue__sonnet__4",
+  "scaffold": "openai-agents",
+  "mode": "record",
+  "final_answer": "Revenue grew by 12 percent in Q3, according to `report/q3-summary.txt`.",
+  "error": null,
+  "turns": [
+    {
+      "final_answer": "Revenue grew by 12 percent in Q3, according to `report/q3-summary.txt`.",
+      "tool_call_count": 1
+    }
+  ],
+  "wall_clock_s": 2.536,
+  "model": "claude-sonnet-5-5",
+  "settings_applied": {
+    "parallel_tool_calls": false,
+    "max_tokens": 8192,
+    "extra_body": {
+      "output_config": {
+        "effort": "high"
+      }
+    }
+  },
+  "llm_calls": 2,
+  "live_llm_calls": 2,
+  "blocked_network_calls": 0,
+  "llm_replay_unused": null,
+  "cache_tools_list": false
+}

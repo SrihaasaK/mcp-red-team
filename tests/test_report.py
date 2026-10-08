@@ -16,10 +16,13 @@ def test_ledger_total_reconciles_with_decisions():
 
 
 def test_report_pooled_line_has_exposure_conditioned():
+    # Golden tracks the CORRECTED v2 dev report (D55/D56/D61/D66; review/M2/v2/, D73):
+    # pooled 3/220 raw, exposure 205/220, exposure-conditioned 3/205. The pre-correction
+    # golden was 16/206 of 206/220 -- superseded, not a result that was tuned.
     html = build_report()
     assert "exposure-conditioned ASR" in html  # reported with raw (CLAUDE.md #5)
-    assert "(16/206)" in html   # pooled exposure-conditioned = 16 successes / 206 exposed
-    assert "(206/220)" in html  # pooled exposure count
+    assert "(3/205)" in html    # pooled exposure-conditioned = 3 successes / 205 exposed
+    assert "(205/220)" in html  # pooled exposure count
 
 
 def test_report_placeholders_unfilled():

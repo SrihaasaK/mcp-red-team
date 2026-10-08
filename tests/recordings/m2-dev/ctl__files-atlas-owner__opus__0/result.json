@@ -21,7 +21,7 @@
       }
     }
   ],
-  "wall_clock_s": 4.938,
+  "wall_clock_s": 3.731,
   "adapter": {
     "llm_calls": 2,
     "live_llm_calls": 2,
@@ -36,7 +36,8 @@
         }
       }
     },
-    "wall_clock_s": 4.042
+    "wall_clock_s": 3.066,
+    "effective": null
   },
   "proxy": [
     {
@@ -52,7 +53,8 @@
       "replay_unused": [],
       "proxy_errors": [],
       "messages_logged": 12,
-      "payload_text": null
+      "payload_text": null,
+      "mitigation_blocks": []
     },
     {
       "server": "http",
@@ -67,7 +69,8 @@
       "replay_unused": [],
       "proxy_errors": [],
       "messages_logged": 12,
-      "payload_text": null
+      "payload_text": null,
+      "mitigation_blocks": []
     },
     {
       "server": "files",
@@ -82,7 +85,8 @@
       "replay_unused": [],
       "proxy_errors": [],
       "messages_logged": 16,
-      "payload_text": null
+      "payload_text": null,
+      "mitigation_blocks": []
     },
     {
       "server": "mail",
@@ -97,7 +101,8 @@
       "replay_unused": [],
       "proxy_errors": [],
       "messages_logged": 12,
-      "payload_text": null
+      "payload_text": null,
+      "mitigation_blocks": []
     }
   ],
   "era_matches": true,
@@ -105,8 +110,11 @@
     "model_calls": 2,
     "prompt_tokens": 3161,
     "completion_tokens": 81,
+    "cache_creation_input_tokens": 0,
+    "cache_creation_ephemeral_1h_input_tokens": 0,
+    "cache_read_input_tokens": 0,
     "cost_usd": 0.014264,
-    "model_latency_s": 3.9,
+    "model_latency_s": 2.936,
     "finish_reasons": [
       "tool_calls",
       "stop"

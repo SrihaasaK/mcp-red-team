@@ -10,7 +10,7 @@
       "tool_call_count": 1
     }
   ],
-  "wall_clock_s": 4.042,
+  "wall_clock_s": 3.066,
   "model": "claude-opus-5-5",
   "settings_applied": {
     "parallel_tool_calls": false,
