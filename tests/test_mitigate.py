@@ -20,6 +20,7 @@ from mcpredteam.mitigate.interceptors import (
     PinningMitigation,
     SpotlightMitigation,
     TaintCoarseMitigation,
+    _args_text,
     build_mitigations,
 )
 from mcpredteam.mitigate.patterns import derive_patterns
@@ -78,6 +79,27 @@ def test_fine_blocks_on_overlap_and_misses_transformed():
     assert taintmod.fine_block_source(f"body={b64}", deliveries, "http") is None
     # same-server delivery is not cross-server
     assert taintmod.fine_block_source(canary, [("http", canary)], "http") is None
+
+
+# -- D79: fine-taint grams must not straddle a leaf/block join ----------------
+
+def test_fine_no_straddle_across_arg_leaves():
+    # the ONLY 8-gram overlap is the url-tail + join-space straddle; per leaf there is none.
+    args = {"url": "https://hooks.example.test/offsite", "d": "2026-11-12"}
+    delivery = "the offsite trip is on"
+    assert taintmod.shares_kgram("https://hooks.example.test/offsite 2026-11-12", delivery)  # space-join WOULD match
+    assert taintmod.fine_block_source(_args_text(args), [("mail", delivery)], "http") is None  # SEP-join does NOT
+
+
+def test_fine_plain_canary_in_one_leaf_still_blocks():
+    args = {"url": "https://c.example.test/x", "body": "send CANARY-NOTES-7Q2X9 now"}
+    assert taintmod.fine_block_source(_args_text(args), [("notes", "note CANARY-NOTES-7Q2X9 here")], "http") == "notes"
+
+
+def test_fine_no_straddle_across_delivery_blocks():
+    arg = "qqqABCD1234qqq"                                  # contains the 8-gram ABCD1234
+    assert taintmod.shares_kgram(arg, "zzzzABCD1234zzzz")   # within ONE block -> match
+    assert not taintmod.shares_kgram(arg, "zzzzABCD" + taintmod.SEP + "1234zzzz")  # only across the block join -> no match
 
 
 # -- taint store, BOTH transports (shared file; in-process + cross-process) -----

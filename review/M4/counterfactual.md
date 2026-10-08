@@ -18,22 +18,22 @@ nothing, so delimiters 'altered' is 0 by definition.
 | m2-dev-v2 controls | 360 | spotlight-delimiters | 134 | 0 | 0.0% | 684 | 0 |
 | m2-dev-v2 controls | 360 | spotlight-strip | 134 | 0 | 0.0% | 684 | 0 |
 | m2-dev-v2 controls | 360 | taint-coarse | 134 | 0 | 0.0% | 684 | 0 |
-| m2-dev-v2 controls | 360 | taint-fine | 134 | 84 | 62.7% | 684 | 0 |
+| m2-dev-v2 controls | 360 | taint-fine | 134 | 65 | 48.5% | 684 | 0 |
 | m3-openai-benign | 80 | pinning | 30 | 0 | 0.0% | 150 | 0 |
 | m3-openai-benign | 80 | spotlight-delimiters | 30 | 0 | 0.0% | 150 | 0 |
 | m3-openai-benign | 80 | spotlight-strip | 30 | 0 | 0.0% | 150 | 0 |
 | m3-openai-benign | 80 | taint-coarse | 30 | 0 | 0.0% | 150 | 0 |
-| m3-openai-benign | 80 | taint-fine | 30 | 18 | 60.0% | 150 | 0 |
+| m3-openai-benign | 80 | taint-fine | 30 | 14 | 46.7% | 150 | 0 |
 | m3-langgraph-benign | 80 | pinning | 27 | 0 | 0.0% | 145 | 0 |
 | m3-langgraph-benign | 80 | spotlight-delimiters | 27 | 0 | 0.0% | 145 | 0 |
 | m3-langgraph-benign | 80 | spotlight-strip | 27 | 0 | 0.0% | 145 | 0 |
 | m3-langgraph-benign | 80 | taint-coarse | 27 | 0 | 0.0% | 145 | 0 |
-| m3-langgraph-benign | 80 | taint-fine | 27 | 15 | 55.6% | 145 | 0 |
+| m3-langgraph-benign | 80 | taint-fine | 27 | 12 | 44.4% | 145 | 0 |
 | m3-claude-agent-sdk-benign | 40 | pinning | 15 | 0 | 0.0% | 79 | 0 |
 | m3-claude-agent-sdk-benign | 40 | spotlight-delimiters | 15 | 0 | 0.0% | 79 | 0 |
 | m3-claude-agent-sdk-benign | 40 | spotlight-strip | 15 | 0 | 0.0% | 79 | 0 |
 | m3-claude-agent-sdk-benign | 40 | taint-coarse | 15 | 0 | 0.0% | 79 | 0 |
-| m3-claude-agent-sdk-benign | 40 | taint-fine | 15 | 9 | 60.0% | 79 | 0 |
+| m3-claude-agent-sdk-benign | 40 | taint-fine | 15 | 7 | 46.7% | 79 | 0 |
 
 ## Under attack (utility cost, NOT catch): blocks of TASK-REQUIRED sink calls
 
@@ -46,7 +46,7 @@ a utility cost the agent would pay WHILE under attack, not a thwarted exfiltrati
 | m2-dev-v2 attack | 220 | spotlight-delimiters | 48 | 0 | 0.0% | 0 |
 | m2-dev-v2 attack | 220 | spotlight-strip | 48 | 0 | 0.0% | 93 |
 | m2-dev-v2 attack | 220 | taint-coarse | 48 | 0 | 0.0% | 0 |
-| m2-dev-v2 attack | 220 | taint-fine | 48 | 20 | 41.7% | 0 |
+| m2-dev-v2 attack | 220 | taint-fine | 48 | 18 | 37.5% | 0 |
 
 Pinning's 6 blocks are task-required http calls (http_get ×1, http_post ×5) whose
 descriptions a class-2 attack poisoned: pinning cannot tell the task's own use of the

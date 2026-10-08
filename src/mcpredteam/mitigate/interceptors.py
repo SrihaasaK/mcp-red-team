@@ -50,16 +50,19 @@ def _value_leaves(obj: Any) -> list[str]:
 
 
 def _args_text(args: dict) -> str:
-    return " ".join(_value_leaves(args))
+    """Argument value leaves joined with taint.SEP, so a fine-taint k-gram can never straddle
+    two distinct argument values (D79)."""
+    return taintmod.SEP.join(_value_leaves(args))
 
 
 def _result_text(result: Any) -> str:
-    """Delivered text of a tools/call result or a resources/read contents list."""
+    """Delivered text of a tools/call result or a resources/read contents list, with content
+    BLOCKS joined by taint.SEP so a k-gram never straddles two delivered blocks (D79)."""
     if isinstance(result, dict):
         blocks = result.get("content")
         if isinstance(blocks, list):
-            return " ".join(b.get("text", "") for b in blocks if isinstance(b, dict))
-    return " ".join(_value_leaves(result))
+            return taintmod.SEP.join(b.get("text", "") for b in blocks if isinstance(b, dict))
+    return taintmod.SEP.join(_value_leaves(result))
 
 
 class _PassThrough:

@@ -8,9 +8,9 @@
   {
    "unit": "char",
    "k": 8,
-   "benign_blocked": 126,
+   "benign_blocked": 98,
    "benign_sinks": 206,
-   "benign_rate": 0.6117,
+   "benign_rate": 0.4757,
    "catch": {
     "plain": "12/12",
     "base64": "0/12",

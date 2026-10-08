@@ -27,7 +27,7 @@
    },
    "taint-fine": {
     "sink_calls": 134,
-    "blocked_calls": 84,
+    "blocked_calls": 65,
     "results": 684,
     "altered_results": 0
    }
@@ -59,7 +59,7 @@
    },
    "taint-fine": {
     "sink_calls": 30,
-    "blocked_calls": 18,
+    "blocked_calls": 14,
     "results": 150,
     "altered_results": 0
    }
@@ -91,7 +91,7 @@
    },
    "taint-fine": {
     "sink_calls": 27,
-    "blocked_calls": 15,
+    "blocked_calls": 12,
     "results": 145,
     "altered_results": 0
    }
@@ -123,7 +123,7 @@
    },
    "taint-fine": {
     "sink_calls": 15,
-    "blocked_calls": 9,
+    "blocked_calls": 7,
     "results": 79,
     "altered_results": 0
    }
@@ -157,7 +157,7 @@
    },
    "taint-fine": {
     "sink_calls": 48,
-    "blocked_calls": 20,
+    "blocked_calls": 18,
     "results": 293,
     "altered_results": 0
    }

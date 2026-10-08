@@ -17,6 +17,11 @@ Matching is lower-cased (case-robust); no stopword/whitelist filtering (that wou
 from __future__ import annotations
 
 K = 8  # fine-taint k-gram length, frozen (D58)
+# Segment separator: `_args_text` joins argument value LEAVES with it, and `_result_text` joins
+# delivered content BLOCKS with it, so a k-gram never straddles two distinct leaves/blocks (D79;
+# SPEC §10 counts overlap WITHIN an argument, not across an artificial join). NUL cannot occur in
+# the mock text or args, so segmenting on it is lossless.
+SEP = "\x00"
 
 
 def k_grams(text: str, k: int = K, unit: str = "char") -> set[str]:
@@ -32,11 +37,21 @@ def k_grams(text: str, k: int = K, unit: str = "char") -> set[str]:
     return {s[i:i + k] for i in range(len(s) - k + 1)}
 
 
+def _segmented_grams(text: str, k: int, unit: str) -> set[str]:
+    """Grams of `text`, computed PER SEGMENT (split on SEP) and unioned, so no gram crosses a
+    leaf/block boundary (D79)."""
+    out: set[str] = set()
+    for seg in text.split(SEP):
+        out |= k_grams(seg, k, unit)
+    return out
+
+
 def shares_kgram(a: str, b: str, k: int = K, unit: str = "char") -> bool:
-    """True iff `a` and `b` share a length-k gram (common substring for char; shared shingle
-    for word)."""
-    ga = k_grams(a, k, unit)
-    return bool(ga) and bool(ga & k_grams(b, k, unit))
+    """True iff `a` and `b` share a length-k gram that lies WITHIN one segment of each (common
+    substring for char; shared shingle for word). Segments are SEP-delimited, so a gram spanning
+    two joined leaves/blocks never counts (D79). Inputs with no SEP are a single segment."""
+    ga = _segmented_grams(a, k, unit)
+    return bool(ga) and bool(ga & _segmented_grams(b, k, unit))
 
 
 def coarse_block_source(
