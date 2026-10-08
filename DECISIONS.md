@@ -2018,3 +2018,132 @@ the exact pushed commit and the scan is clean. The first Actions run (ubuntu-lat
 reported to the orchestrator.
 
 PREREG unchanged; DECISIONS append-only (D73 untouched). Public release still waits for M4 ([[D60]]).
+
+## D75. M4-T1 — SPEC §10 mitigations as chainable Interceptors + offline counterfactual (D53/D58)
+Built the three mitigations (SPEC §10) as `Interceptor`s selected per trial via
+`TrialSpec.mitigations` and chained AFTER the attack in each per-(trial, server) relay
+(`proxy/http_app.py`, `proxy/stdio.py`): mitigations see the attacked traffic. **Empty
+`mitigations` → no interceptors → nothing changes** (the regression guarantee). $0, offline only;
+no live model call, no held-out read.
+
+**Design.** `mitigate/interceptors.py`: `PinningMitigation`, `SpotlightMitigation` (modes
+`delimiters` / `strip`), `TaintCoarseMitigation`, `TaintFineMitigation`, all over a `_PassThrough`
+base that is the identity for every unused Interceptor hook; `build_mitigations(spec, server)` maps
+each `{"kind": ...}` to its interceptor for that server. Every block raises `mitigate/block.py
+BlockedCall`, which the relay turns into an isError result NOT forwarded upstream and tags
+`mitigation_blocked` (D56): `Trajectory.from_trial` excludes it from the executed set (never ASR)
+and it is counted in the per-mitigation attempt rate.
+
+**Cross-server taint store.** `mitigate/store.py TaintStore`: a per-trial, append-only
+`_mitigate_taint.jsonl` in the trial dir, guarded by `fcntl.flock`. It is the ONE piece of
+cross-server state ("did content from A reach a sink on B?"), and the lock makes it correct and
+**identical over both transports** — separate OS processes per server on stdio, concurrent
+coroutines sharing one process on streamable-http. Tested both: an in-process shared-instance test
+(http) and a subprocess-writer test (stdio). Pins are per-server, so they stay in `ctx.state` and
+never touch this file.
+
+**Pinning — pin source + timing.** The clean pin per server is the SHA-256 of each tool's
+description in the **pristine mock's own `tools/list`** (`env.UPSTREAMS[server].list_tools()`) — the
+clean no-attack list by construction, computed ONCE and cached offline ($0), `cwd`-independent. A
+test asserts the pristine-mock pins equal what a clean control recording delivers. A class-2
+(tool-description) attack rewrites a description the agent sees; pinning (running after the attack)
+hashes the rewritten text, flags the mismatch (unknown tool = fail-closed), and blocks CALLS to the
+flagged tool. Pinning never mutates the list the agent sees.
+
+**Spotlight.** Wraps each delivered text in `<untrusted-data server=...>` delimiters; `strip` mode
+first removes DEV-derived instruction patterns. **Pattern provenance (no held-out leakage):**
+`mitigate/patterns.py` derives patterns ONLY from (1) DEV-split intents × the engine's fixed
+instruction skeletons — rewritten this task to mirror the CURRENT (D61) `attacks/engine._instruction`
+(the exfil skeletons name the canary SOURCE by reference, never the literal canary) — and (2) generic
+injection phrasing (engine `FRAMINGS` + well-known lead-ins). A provenance test removes EVERY held-out
+config and asserts the derived patterns are byte-identical (the skeletons are engine-fixed, so
+held-out content cannot contribute); no held-out config id or payload is ever read.
+
+**Coarse allowlist derivation (D58).** `mitigate/allowlist.py` derives the (source→sink) allowlist
+from `tasks/benign.yaml` `exercises` (a sink = `SIDE_EFFECTING_TOOLS`; a source = any other tool;
+emit source_server→sink_server for every benign task where they differ). The derivation equals the
+D58 snapshot and the orchestrator's set EXACTLY — **6 pairs: files→mail, http→files, mail→files,
+mail→http, notes→http, notes→mail** (a test pins derived == D58_SNAPSHOT). **Fine-taint k = 8**,
+frozen (D58); not changed (no logged dev reason to). Fine is char-level, lower-cased, cross-server
+only, allowlist-blind.
+
+**stdio import fix (regression-critical).** The stdio proxy runs as a subprocess whose `cwd` is the
+CLI's `cli_cwd` (OUTSIDE the repo). `allowlist.py` initially derived the allowlist at IMPORT via
+`repo_root()` (which walks up from cwd) → `FileNotFoundError` → the stdio proxy crashed, tools never
+loaded, and the CAS record/replay test regressed. Fixed: the allowlist is lazy (no import-time I/O)
+and `allowlist.py`/`patterns.py` anchor `repo_root(Path(__file__))` on the module file, not cwd.
+
+**Offline counterfactual (`mitigate/counterfactual.py`; `review/M4/counterfactual.{json,md}`,
+reproducible via `review/M4/build_counterfactual.py`).** The SAME pure decision functions applied to
+RECORDED benign + attack trajectories (reconstructed from `proxy.<server>.jsonl`, ordered by ts), NO
+live calls, NO re-run. Benign = utility-cost PROXY (NOT measured utility); attack = COUNTERFACTUAL
+(NOT ASR). **The coarse-vs-fine result:**
+
+| mitigation | benign sink-blocks (proxy) | attack sink would-block (cf) |
+| --- | --- | --- |
+| pinning | 0 / 206 (0%) | 6 / 48 (12.5%, class-2) |
+| spotlight-delimiters | 0 | 0 (alters 0 benign / 93 attack results) |
+| spotlight-strip | 0 altered benign | 0 blocked; 93 attack results stripped |
+| **taint-coarse** | **0 / 206 (0%)** | **0 / 48 (0%)** |
+| **taint-fine** | **126 / 206 (~61%)** | **20 / 48 (41.7%)** |
+
+The honest tradeoff: **coarse has zero benign cost but catches nothing** here (the attacks reuse
+benign-looking server pairs, which are exactly the allowlisted ones), while **fine catches content
+flows (42% of attack sink calls) at a large benign cost (~61% of benign sink calls false-blocked)**
+because benign cross-server tasks legitimately move content into a sink. Spotlight-strip removes
+injected instructions from 93 attack results with 0 benign alterations. (v2 attacks contain 0 exfil,
+so these are counterfactual block decisions, not ASR deltas.)
+
+**Regression (mitigations off → EQUAL + zero-live).** Full offline replay of every recorded run
+with no mitigation selected: **m1-final 20/20, m2-dev-v2 580/580, m3-langgraph 80/80,
+m3-claude-agent-sdk 40/40, m3-openai-benign 80/80 — all 800 trials EQUAL + zero-live** (`REGRESSION:
+ALL EQUAL + ZERO-LIVE`). The full unit suite is **198 passed** (181 + 17 new mitigation tests; nothing
+in `tests/` weakened or deleted), ruff clean on the changed files.
+**Reviewer pass (CLAUDE.md #11, taint policy + oracle interaction): NON-BLOCKING — all 8 checks
+CONFIRMED with file:line evidence + independent recomputation.** A reviewer subagent: re-derived the
+allowlist from `tasks/benign.yaml` (by hand AND programmatically) = the 6 D58 pairs; confirmed k=8
+char-level cross-server allowlist-blind fine taint and the base64-miss (PREREG (c)); traced the
+block→tag→oracle path (not forwarded, tagged, excluded by `trajectory.from_trial`, counted); checked
+every `_INTENT_SKELETONS` regex against the live D61 `engine._instruction` and the held-out-invariance
+of the strip patterns; confirmed pins come from the pristine mock list_tools and the agent's list is
+never mutated; and **independently recomputed taint-fine over all 360 m2-dev-v2 controls from scratch
+→ 134 sinks / 84 blocked / 62.7%, zero mismatches vs `evaluate()`** (the ~62.7% is real benign
+cross-server content overlap, e.g. `ctl__files-todo-to-mail` shares " renew p"/"ew passp" between the
+read file and the emailed body — correct behaviour, not a bug). `git diff 0424e16` empty for oracle /
+attacks / split / tasks / stats / PREREG; `build_mitigations` returns `()` when unselected; 18/18
+mitigation+relay tests pass. No honesty red flag; the one weak result (fine's 62.7% false-block +
+transform blindness) is reported as-is and matches the pre-registered prediction.
+
+Scope: `oracle/` unchanged vs 0424e16; `attacks/` (engine/corpus/mutators), `split.yaml`, `tasks/`,
+`report/stats.py` unchanged; PREREG unchanged. mitigate/{store,patterns}.py (the deferred M4-T1
+skeletons) are now committed, with patterns.py's skeletons corrected to the D61 engine.
+
+## D76. M4-T2 — dev mitigation-evaluation DESIGN (proposal; spend author/orchestrator-gated)
+A design only — NOT run here. The dev mitigation eval measures each mitigation on the DEV split,
+LIVE, against the existing unmitigated v2 baseline ([[D73]], `runs/m2-dev-v2`).
+
+**Arms (5 mitigation modes + the existing baseline):** pinning; spotlight-delimiters; spotlight-strip;
+taint-coarse; taint-fine. Baseline = the committed v2 run (no re-run). **Models:** sonnet 5.5 + opus
+5.5 (dev; per-model, never pooled, [[D59]]). **n = 5** per cell, **control_n = 5** (the v2 cadence).
+Each arm re-runs the dev attack arm (220) + control arm (360) = 580 trials.
+
+**Cost projection** (from v2's MEASURED per-model \$/trial: sonnet \$3.4481/290 = \$0.011890,
+opus \$6.5531/290 = \$0.022597): 5 arms × 290 trials/model → sonnet 1450 × \$0.011890 ≈ **\$17.24**,
+opus 1450 × \$0.022597 ≈ **\$32.77**, total ≈ **\$50.0**. Cumulative projection \$23.138059 + \$50.0
+≈ **\$73.1**, inside D33's \$175 cap ([[D70]]). (A utility-only variant — control arm × 5 only, 1800
+trials ≈ \$31 — is available if the orchestrator prefers.)
+
+**Utility Δ.** Per mitigation vs baseline, benign-success difference with a **Newcombe CI** on the
+two independent proportions (PREREG §8.4), significant only beyond the **5-point** threshold. Reported
+per model, never pooled.
+
+**The floor problem (honest limits).** v2 static dev ASR is **1.36%** with **0 exfil**, so a static
+dev **ASR delta** is near-unmeasurable (the effect floor is below the CI width at n=5). What the dev
+eval CAN show: (a) **utility Δ** (does the mitigation break benign tasks — the real cost); (b)
+**block / attempt rates** with the agent actually REACTING to a block (beyond the offline
+counterfactual); (c) **false-block rate** on the control arm. What it CANNOT show: a credible
+ASR-reduction on static dev. That question is covered by the **adaptive arm** ([[D67]], ASR@1/@10/@100,
+\$60 cap) and the **held-out model ladder** ([[D69]]/A3), where ASR is high enough to move. No arms,
+models, or attacks are added to manufacture a measurable static-dev effect.
+
+**Gating:** the orchestrator/author gates the ~\$50 spend; this entry only proposes it.

@@ -14,6 +14,7 @@ import sys
 from pathlib import Path
 
 from mcpredteam.attacks.engine import build_attack
+from mcpredteam.mitigate.interceptors import build_mitigations
 from mcpredteam.proxy.http_app import ctx_for
 from mcpredteam.proxy.relay import Relay, jsonrpc_error
 from mcpredteam.scaffolds.contract import TrialSpec
@@ -23,7 +24,8 @@ async def serve(trial_dir: Path, server: str) -> None:
     spec = TrialSpec.read(trial_dir / "trial.json")
     attack = spec.attack_config
     on_target = bool(attack) and (attack.get("target") or {}).get("server") == server
-    interceptors = (build_attack(attack),) if on_target else ()
+    # Attack first, then the SPEC §10 mitigations (M4-T1); empty mitigations -> unchanged.
+    interceptors = ((build_attack(attack),) if on_target else ()) + build_mitigations(spec, server)
     relay = Relay(
         server=server,
         ctx=ctx_for(spec),

@@ -21,6 +21,7 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from mcpredteam.attacks.engine import build_attack
+from mcpredteam.mitigate.interceptors import build_mitigations
 from mcpredteam.proxy.interfaces import TrialCtx
 from mcpredteam.proxy.relay import Relay, jsonrpc_error
 from mcpredteam.scaffolds.contract import TrialSpec
@@ -56,7 +57,9 @@ class ProxyHub:
             if key not in self.relays:
                 attack = spec.attack_config
                 on_target = bool(attack) and (attack.get("target") or {}).get("server") == server
-                interceptors = (build_attack(attack),) if on_target else ()
+                # Attack first, then the SPEC §10 mitigations (M4-T1): mitigations see the
+                # attacked traffic. Empty mitigations -> unchanged chain (regression).
+                interceptors = ((build_attack(attack),) if on_target else ()) + build_mitigations(spec, server)
                 relay = Relay(
                     server=server,
                     ctx=ctx_for(spec),
