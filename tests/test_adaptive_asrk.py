@@ -62,3 +62,17 @@ def test_f_early_stop_is_asr_preserving():
     assert [idx for idx, _ in early] == [3, None, 1]
     for k in (1, 2, 3):  # min budget is 3; ASR@k for k>3 is N/A by design (R2)
         assert asr_at_k(early, k).successes == asr_at_k([(first_success(v), len(v)) for v in full], k).successes
+
+
+def test_r2_cells_use_planned_budget_not_attempts_run():
+    # A loop-shaped result: the cell early-stopped at attempt 3 (attempts_run=3) but its PLANNED
+    # budget was B=20. The cell MUST be built as (first_success_index=3, budget=20) so ASR@10 stays
+    # DEFINED (3 <= 20). Building it from attempts_run (=3) would wrongly make ASR@10 N/A.
+    planned_cell = (3, 20)   # (first_success_index, PLANNED budget) -- correct
+    assert asr_at_k([planned_cell], 10).successes == 1          # defined: success@10 True (3<=10)
+    assert asr_at_k([planned_cell], 20).successes == 1
+    with pytest.raises(ValueError):                              # ASR@100 still N/A (100 > 20)
+        asr_at_k([planned_cell], 100)
+    # the WRONG construction (budget = attempts_run = 3) would make ASR@10 N/A -- guard against it:
+    with pytest.raises(ValueError):
+        asr_at_k([(3, 3)], 10)
