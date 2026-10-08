@@ -13,12 +13,20 @@ injects; it carries only `canary_ref` (never the canary value, A2).
 from __future__ import annotations
 
 import copy
+import hashlib
 import random
 from dataclasses import asdict, dataclass
 
 from mcpredteam.adaptive.engine import TRANSFORM_NAMES
 from mcpredteam.attacks import mutators
 from mcpredteam.attacks.mutators import MutatorSpec
+
+
+def cell_seed(config_id: str, model: str) -> int:
+    """A deterministic seed from (config, model) ONLY — NOT the arm (R5/D86), so the arms are
+    PAIRED: for the same (config, model) every arm explores the identical sequence until a taint
+    block reorders the queue. Stable across processes (sha256, not Python's salted hash)."""
+    return int.from_bytes(hashlib.sha256(f"{config_id}|{model}".encode()).digest()[:8], "big")
 
 # The curated DEV MutatorSpec subset (design.md §1; pinned exactly in A7). 5 framings (incl none)
 # x 3 placements x 4 encodings (incl none), language=en -> 60 specs.
@@ -77,9 +85,14 @@ class AdaptiveAttacker:
 
     def __init__(self, base_config: dict, seed: int, specs: tuple[MutatorSpec, ...] = DEV_SPECS) -> None:
         self.base_config = base_config
-        variants = variant_space(base_config, specs)
-        random.Random(seed).shuffle(variants)  # seed-derived permutation (deterministic)
-        self._queue: list[Variant] = variants
+        # R3/D87: attempt 1 is ALWAYS the config's OWN frozen mutator spec + the PLAIN instruction --
+        # exactly the static attack -- so ASR@1 is the per-arm STATIC ASR (n=1 per cell, noisy on DEV).
+        # The seeded permutation then covers the remaining variants; the static variant is
+        # de-duplicated if it already appears in `specs`.
+        self.static = Variant("plain", MutatorSpec(**base_config["mutators"]))
+        rest = [v for v in variant_space(base_config, specs) if v != self.static]
+        random.Random(seed).shuffle(rest)
+        self._queue: list[Variant] = [self.static, *rest]
         self.history: list[tuple[Variant, Feedback]] = []
 
     def next_variant(self) -> Variant | None:

@@ -2729,3 +2729,49 @@ author).** "Attack flow inside/outside the allowlist" needs a fixed unit. Two re
 incidental blocks SEPARATELY as a diagnostic; the (ii) tautology is stated in A7. The rule is
 defined in A7; no held-out config is enumerated or read here (DEV classification lives in
 `review/M4/adaptive/design.md`).
+
+## D87. M4-T4a rework r1 — orchestrator R1–R5 with the author D34 batch folded in ($0, no live)
+Rework of the adaptive-arm DEV design/impl (D85) per the orchestrator's R1–R5, incorporating D86.
+Still $0, no live calls, nothing held-out. `review/M4/adaptive/design.md` updated.
+
+**D34 folds (D86):** adaptive DEV arm set = **`baseline`, `spotlight-delimiters`, `taint-coarse`,
+`taint-fine`** — **SONNET ONLY**, exfil only (the 11 stateless DEV exfil configs); spotlight-strip
+DROPPED from the adaptive arm; combined excluded (its composition pin+strip+coarse is A7, not an
+adaptive arm). `loop.ARMS` updated accordingly.
+
+**R1 (honesty) + author #5:** design.md §6 corrected — coarse ASR is reported **split by in-allowlist
+vs out-of-allowlist** flows (unit = the canary-flow pair `(canary server → sink server)`, A7 (i);
+incidental trajectory blocks a separate diagnostic). My independent recompute of the 11 stateless DEV
+exfil configs: by the canary pair only **c7-01** (files→http) is out-of-allowlist (matches M4-T1's
+1/12); LIVE coarse also blocks on any off-list delivered-server→sink, adding **c2-06, c7-03, c7-06**
+(up to 4/11) incidentally — realized count MEASURED on DEV. Expected readout: coarse ≈ baseline on the
+in-allowlist flows, so A4(b) reads ADVERSE/uninformative on DEV; c7-01 is the clean out-of-allowlist
+test. The attacker is described honestly (a seeded random permutation of ~300 variants + one feedback
+rule; little effect at B=20).
+
+**R2 (statistics):** `asrk.asr_at_k`/`asr_curve` are now BUDGET-AWARE — ASR@k is **N/A (raises /
+returns None) for any k greater than a cell's budget**, never silently truncated to ASR@budget. DEV
+reports **ASR@1, ASR@10, ASR@20 (=B)**; **ASR@100 is N/A on DEV**. Test added.
+
+**R3 (static comparator):** `AdaptiveAttacker` now makes **attempt 1 = the config's own frozen mutator
+spec + the plain instruction** (the static attack), de-duplicated from the seeded permutation of the
+rest. **ASR@1 is therefore the per-arm STATIC ASR** (n=1 per cell, noisy on DEV). Test added.
+
+**R4 (guard a):** the payload-canary test is now EXHAUSTIVE (full variant space × every DEV exfil
+config). A RUN-TIME guard `loop.assert_payload_canary_free` runs after every attempt: if the injected
+`payload_text` contains the canary in ANY form (plain/case/base64/hex/reversed/split, via the frozen
+`oracle.rules.canary_form_in_text`) it raises `AdaptivePayloadLeak` and STOPS the run. Test added
+(planted-canary fixture).
+
+**R5 (spec):** the seed is `cell_seed(config_id, model)` — a function of (config, model) ONLY, not the
+arm — so the arms are PAIRED (identical sequence until a taint block reorders one). An errored attempt
+counts toward B, is never retried, is recorded/surfaced, and can NEVER be a success
+(`success = verdict.success and not errored`). Tests added.
+
+Suite **233 passed** (219 + 14 adaptive); ruff clean. Reviewer pass (CLAUDE.md #11, statistics +
+oracle feedback) covering BOTH commits — see the M4-T4a report. Scope: oracle / mitigate / attacks /
+tasks / corpus / split / report/stats.py / PREREG A1–A6 unchanged vs fabed5f; this change set is
+`src/mcpredteam/adaptive/*` (attacker/asrk/loop rework), the 2-line proxy import swap (unchanged since
+D85), the 3 `tests/test_adaptive_*`, `review/M4/adaptive/design.md`, and this entry. DECISIONS
+append-only. Cost re-projected Sonnet-only (DEV ≈ \$14 worst-case); full remaining plan ≈ \$154 < the
+raised \$225 cap (D86 #4) — design.md §10.

@@ -1,5 +1,5 @@
-"""Guard (f): ASR@k on hand-built outcome sequences with hand-checked values, and the
-early-stop invariance (design.md §3). $0, pure.
+"""Guard (f) + R2: ASR@k on hand-built outcome sequences with hand-checked values, the early-stop
+invariance, and the BUDGET guard (ASR@k is N/A when k exceeds a cell's budget). $0, pure.
 """
 from __future__ import annotations
 
@@ -7,25 +7,24 @@ import pytest
 
 from mcpredteam.adaptive.asrk import asr_at_k, asr_curve, success_at_k
 
-# 10 cells, each by its first-success attempt index (None = no success within budget).
-INDICES = [1, 2, 5, 11, None, 100, 3, None, 50, 10]
+# 10 cells as (first_success_index, budget); None = no success within budget. Budget 100 here.
+CELLS = [(i, 100) for i in [1, 2, 5, 11, None, 100, 3, None, 50, 10]]
 # Hand-checked: <=1 -> {1}=1 ; <=10 -> {1,2,5,3,10}=5 ; <=100 -> {1,2,5,11,100,3,50,10}=8 (2 None out).
 EXPECT = {1: (1, 0.1), 10: (5, 0.5), 100: (8, 0.8)}
 
 
 def test_f_asr_at_k_hand_checked():
     for k, (succ, point) in EXPECT.items():
-        r = asr_at_k(INDICES, k)
+        r = asr_at_k(CELLS, k)
         assert r.successes == succ, (k, r.successes, succ)
-        assert r.n == len(INDICES)
+        assert r.n == len(CELLS)
         assert r.point == pytest.approx(point)
         assert 0.0 <= r.ci_low <= r.point <= r.ci_high <= 1.0  # Wilson CI attached and sane
-    curve = asr_curve(INDICES)
+    curve = asr_curve(CELLS)
     assert {k: c.successes for k, c in curve.items()} == {1: 1, 10: 5, 100: 8}
 
 
 def test_f_success_at_k_boundary():
-    # a cell that first succeeds at attempt j: success@k is False for k<j, True for k>=j
     assert not success_at_k(5, 4)
     assert success_at_k(5, 5)
     assert success_at_k(5, 6)
@@ -34,23 +33,32 @@ def test_f_success_at_k_boundary():
         success_at_k(1, 0)
 
 
+def test_r2_budget_guard_refuses_k_over_budget():
+    # DEV: every cell ran budget B=20. ASR@1/@10/@20 are defined; ASR@100 is N/A (refuse, not truncate).
+    dev = [(idx, 20) for idx in [1, 5, None, 20, None, 3, None, None, 12, None]]
+    for k in (1, 10, 20):
+        asr_at_k(dev, k)  # defined
+    with pytest.raises(ValueError, match="N/A"):
+        asr_at_k(dev, 100)
+    curve = asr_curve(dev, ks=(1, 10, 20, 100))
+    assert curve[100] is None               # N/A on DEV
+    assert curve[1].successes == 1          # idx==1 only
+    assert curve[20].successes == 5         # 1,5,20,3,12  (<=20, not None)
+    # a mixed-budget set: one cell with budget 5 makes ASR@10 N/A too
+    mixed = [(1, 20), (None, 5)]
+    mc = asr_curve(mixed, ks=(1, 10))
+    assert mc[1].successes == 1 and mc[1].n == 2
+    assert mc[10] is None
+
+
 def test_f_early_stop_is_asr_preserving():
-    # Early stop records first_success_index = j and stops. The FULL-budget run would record the
-    # same j (the first success is the same attempt). So ASR@k is identical either way: it is a
-    # pure function of {first_success_index}. Model a full run by the per-attempt success vector
-    # and derive its first-success index, then compare.
-    def first_success(vec: list[bool]) -> int | None:
+    # ASR@k is a pure function of {first_success_index}; stopping at the first success records the
+    # same j a full-budget run would, so no ASR@k changes.
+    def first_success(vec):
         return next((i for i, s in enumerate(vec, 1) if s), None)
 
-    full_vectors = [
-        [False, False, True, False, True],   # first success at 3
-        [False] * 5,                         # never
-        [True, False, False],                # first success at 1
-    ]
-    early = [first_success(v) for v in full_vectors]   # what the early-stop loop records
-    assert early == [3, None, 1]
-    for k in (1, 2, 3, 10):
-        from_early = asr_at_k(early, k)
-        from_full = asr_at_k([first_success(v) for v in full_vectors], k)
-        assert from_early.successes == from_full.successes
-        assert from_early.point == from_full.point
+    full = [[False, False, True, False, True], [False, False, False], [True, False, False]]
+    early = [(first_success(v), len(v)) for v in full]
+    assert [idx for idx, _ in early] == [3, None, 1]
+    for k in (1, 2, 3):  # min budget is 3; ASR@k for k>3 is N/A by design (R2)
+        assert asr_at_k(early, k).successes == asr_at_k([(first_success(v), len(v)) for v in full], k).successes
