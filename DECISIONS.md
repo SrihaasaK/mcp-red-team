@@ -2880,3 +2880,34 @@ per the author, NO held-out run executes until A8 is approved (D33 hard stop). R
    can complete before 2026-10-15; otherwise dropped.
 
 These feed A8 and held-out decision #1 (scaffold scope + cost). No attack/oracle/split/seed change.
+
+## D92. Author decisions batch (D34, confirmed in-session 2026-10-09) — held-out scope + housekeeping
+The author confirmed the following (D34 authority). These fold into PREREG A8 (drafted next and
+committed as a DRAFT; NO held-out run until the author approves A8).
+
+1. **Held-out scaffold scope:** BOTH scaffolds (OpenAI Agents + LangGraph), POOLED for the static
+   headline (per A1). Resolves the handoff's decision #1; the \$225 cap now fits because adaptive is
+   ladder-only (D91).
+2. **Prediction (b):** accept the canary-flow-pair unit (i); report "100% outside the allowlist" as a
+   STRUCTURAL property check, not an empirical finding (A7/D88).
+3. **D70 \$60 adaptive cap** applies to DEV ONLY; held-out adaptive sits under the \$225 project cap.
+4. **Utility = executed calls only** (D81), kept (a blocked required sink fails the task).
+5. **README adaptive-attacker wording (verbatim):** "A rule-based adaptive search ran (B=20 dev,
+   B=100 held-out, ladder models only; no LLM-driven attacker). Measured ASR is therefore a lower
+   bound on what a stronger adaptive attacker would achieve, and mitigation effectiveness is an upper
+   bound."
+6. **Pin CI to ubuntu-24.04** through held-out.
+7. **Bump GitHub Actions** versions off Node 20.
+8. **No further Claude Agent SDK trials.** Keep its M3 benign result; name the `cli_cwd` git-text leak
+   (D74) in Limitations; its slice moves to v2. (So held-out static runs on OpenAI Agents + LangGraph
+   only — consistent with #1.)
+9. **LangGraph class 3 (rug pull) stays N/A,** named in Limitations.
+10. **Redact the `/Users/srihaasa` paths in TRACKED files; do NOT rewrite git history** — DECISIONS.md
+    cites commit SHAs throughout and the audit trail must stay intact.
+11. **Ruff ISC004 at release prep.**
+12. **Public release + PyPI stay author-gated** until the author accepts the M4 report and README
+    (D33/D60).
+
+**Ladder qualification (D91 #4):** the open-weight rung runs via a HOSTED provider (not local Ollama).
+Next action: measure Haiku 5.5 + the open-weight candidate (benign success vs the 90% bar, per-trial
+cost), then draft A8 with all of the above and STOP for author approval. No held-out run before A8.
