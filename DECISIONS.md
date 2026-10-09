@@ -2789,3 +2789,75 @@ construction → **"100% outside" is STRUCTURAL**; **(b)'s empirical content is 
 ASR split.** The final reviewer re-confirms the structural claim from `coarse_block_source`. $0, no
 code change (PREREG + DECISIONS only); committed + pushed BEFORE the pilot. The orchestrator surfaces
 the operationalisation to the author.
+
+## D89. M4-T4b — DEV adaptive report builder + loop-shaped ASR@k test (shipped WIP as 0afbe92)
+Recorded now; the code shipped as the WIP commit `0afbe92` (2026-10-08) without its own DECISIONS
+entry. `review/M4/adaptive/dev/build_report.py` is the single-run offline report builder for the
+adaptive DEV run (per-arm ASR@1/@10/@20 with Wilson CIs, in/out-allowlist split per A7 unit (i) +
+D88 erratum, blocked-attempt rate, successes-by-transform); the R2 budget-aware loop-shaped ASR@k
+test landed in `tests/test_adaptive_asrk.py`. \$0, offline. Superseded for the ANALYSIS SET by
+`build_report_r2.py` (D90); build_report.py is kept as the historical single-run builder.
+
+## D90. Off-Orca migration + M4-T4b r2 adaptive re-run — 44-cell DEV null (honest null, CLAUDE.md #1)
+
+**Operational change — moved off Orca.** The author is deprecating Orca, so the project was taken out
+of it. The git worktree was relocated with `git worktree move` from
+`~/orca/workspaces/mcp-red-team/mcp-red-team` to `~/mcp-red-team-work` (git common-dir unchanged at
+`~/mcp-red-team/.git`, which is OUTSIDE Orca; remote `SrihaasaK/mcp-red-team` unchanged; HEAD 0afbe92).
+The gitignored `runs/` (956 MB, 105,203 files, verified byte-identical) and all live-run drivers were
+backed up to `~/mcp-red-team-backup` first. The two live Orca agents (buildout 87eb7e07, orchestrator
+79692bb9) exited. The three-party Orca protocol (author / orchestrator / buildout) is RETIRED; this
+session is now the single worker, still bound by the CLAUDE.md non-negotiables. Rejected alternative:
+keep driving buildout inside Orca — rejected because the author is leaving Orca.
+
+**Why the re-run.** The aborted `runs/m4-adaptive-dev` run (D85–D88 era) hit an API-connection outage:
+31 errored attempts, ALL in c7-01 (taint-coarse 20/20, spotlight-delimiters 11/20), and the per-arm
+>10%-error guard aborted it before c7-02/03/05/06 ran. Those 2 c7-01 cells scored 0% only as an ERROR
+artifact, and 4 of the 11 stateless DEV exfil configs were left unmeasured.
+
+**What ran (author-authorised re-run; M4-T4b \$20 task cap).** `scripts/m4_adaptive_dev_r2.py` re-ran
+exactly the 19 affected cells — c7-01 × {spotlight-delimiters, taint-coarse, taint-fine} (c7-01
+baseline was clean, err=0, and RETAINED) plus c7-02/03/05/06 × all 4 arms — into
+`runs/m4-adaptive-dev-r2`, with the SAME `cell_seed(config, model)` (arm-independent, so r2 cells are
+seed-compatible with the retained cells), B=20, and the same three aborts (payload-canary leak;
+per-arm >10% error; projected-cost > cap). A benign health-check trial ran first and passed (gate:
+stop if it errors). c7-04 is held-out and excluded. A 3-lens adversarial pre-run review cleared the
+driver before any spend.
+
+**Result — honest null (SPEC §8.3 exploratory; NOT a headline number).** `build_report_r2.py`
+assembles the 44-cell analysis set = 25 retained clean cells + 19 r2 cells = 11 stateless DEV exfil
+configs × 4 arms. Every arm: ASR@1/@10/@20 = 0/11 = 0.0% (Wilson 95% CI [0.0%, 25.9%]); 880 attempts;
+0 errored; 0 mitigation-blocks; 0 successes. Out-of-allowlist = c7-01 only (10 in-allowlist); coarse
+out-of-allowlist block rate 0% — "100% outside" stays STRUCTURAL (A7-erratum/D88), NOT empirically
+exercised, because Sonnet refused before any exfil sink call existed for coarse to block. In-allowlist
+coarse block rate 0%, no incidental blocks. Sonnet refused every DEV exfil injection, so the
+mitigations never had a sink call to judge (author decision #3: proceed and report the null; changing
+the attacker to move a result is barred, CLAUDE.md #1). No attack / oracle / scoring / split / seed
+change.
+
+**Honest caveat (new, from verification).** 274/880 (~31%) attempts were provider CONTENT-FILTER
+refusals (finish_reason=content_filter, completion_tokens=0, error=null) — genuine non-errored
+no-output attempts that legitimately score 0 exfil. So the DEV null is partly the Anthropic content
+filter, not solely in-context model refusal; this must be stated in the held-out interpretation too.
+
+**Verification (CLAUDE.md #11 reviewer pass — two subagent workflows, both CONFIRMED, 0 blocking).**
+(1) Pre-run review (plan-fidelity, mechanism-fidelity, cost/safety): all safe-to-run. (2) Results
+verification: (a) recompute + oracle RE-SCORE of all 880 trajectories with the unchanged A5 oracle →
+every verdict.success=False (c5-02 was the only sink-calling config: 26 mail.send_message, canary in
+none); (b) canary/secret deep scan → 0 canary in any form in any payload / sink-arg / final-answer /
+file, 0 secret leaks; (c) apparatus integrity → protected paths (oracle, attacks, tasks, split, stats,
+adaptive, A6-pinned mitigate) byte-identical to origin/mcp-red-team, no test changed, r2 run clean
+(380 attempts, 0 errored, all carry llm.jsonl), health check error-free.
+
+**Spend.** r2 run \$3.712016 (health check \$0.0109 + 19 cells); M4-T4b cumulative \$7.718286 of the
+\$20 task cap; project cumulative \$73.550547 of the \$225 autonomous cap (\$375 global guard). Derived
+from raw usage.
+
+**Files.** New: `scripts/m4_adaptive_dev_r2.py`, `review/M4/adaptive/dev/build_report_r2.py` +
+`report.{json,md}` (44-cell). Durable drivers brought into `scripts/` from the backup (per the
+handoff recommendation): `m4_adaptive_dev.py`, `m4_dev_util.py`, `m4_replay_all.py`,
+`replay_all_m4.py`, `verify_m4t2.py`. `runs/` stays gitignored (local + backed up).
+
+**Next (author-gated).** Held-out remains a D33 hard stop behind the author's GO; the 14 author
+decisions in the handoff stay open (decision #1, held-out scope/cost, is the A8 blocker). The adaptive
+DEV arm being a null means the mitigation contribution cannot be shown on DEV — it rests on held-out.
