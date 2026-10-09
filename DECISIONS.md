@@ -2861,3 +2861,22 @@ handoff recommendation): `m4_adaptive_dev.py`, `m4_dev_util.py`, `m4_replay_all.
 **Next (author-gated).** Held-out remains a D33 hard stop behind the author's GO; the 14 author
 decisions in the handoff stay open (decision #1, held-out scope/cost, is the A8 blocker). The adaptive
 DEV arm being a null means the mitigation contribution cannot be shown on DEV — it rests on held-out.
+
+## D91. Held-out scope — author decisions (pre-A8; recorded, NOT yet frozen in PREREG)
+Author decisions on held-out scope, given the DEV adaptive null (D90). PREREG A8 is NOT frozen here;
+per the author, NO held-out run executes until A8 is approved (D33 hard stop). Recorded:
+
+1. **Adaptive held-out runs on the LADDER MODELS ONLY** (not Sonnet, not Opus). Rationale: the DEV
+   adaptive arm showed Sonnet refuses every exfil injection (0% ASR, D90), so the adaptive search is
+   uninformative on Sonnet; Opus stays static-only (D22). Supersedes the handoff's "adaptive on
+   OpenAI only" phrasing re the model set.
+2. **Static held-out (the HEADLINE) runs Sonnet 5.5 + Opus 5.5.**
+3. **Refusal tagging:** every refusal is tagged model-refusal vs provider-content-filter
+   (finish_reason=content_filter), and ASR is reported WITH that split. The README states that
+   Anthropic-API results include provider safeguards, so the measured ASR is a lower bound on a
+   bare-model attacker. Motivated by D90 (~31% of DEV attempts were content-filter refusals).
+4. **Ladder qualification (D69), measured NOW:** benign-task success (>=90% bar) and cost/trial for
+   Haiku 5.5 and one open-weight model (e.g. Qwen3). Haiku 4.5 is included ONLY if its held-out runs
+   can complete before 2026-10-15; otherwise dropped.
+
+These feed A8 and held-out decision #1 (scaffold scope + cost). No attack/oracle/split/seed change.
