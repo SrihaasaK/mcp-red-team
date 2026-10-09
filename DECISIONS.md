@@ -2929,3 +2929,33 @@ candidate's benign-success + per-trial wall-clock; if NEITHER clears 90%, DROP t
 first-success stopping; long runs go overnight under `caffeinate -i`, plugged in. Ledger: open-weight
 rung = \$0 API spend, record COMPUTE TIME (wall-clock) instead. Also qualify Haiku 5.5 (Anthropic API).
 Then draft A8 as a DRAFT and STOP for author approval; no held-out run before A8 approval.
+
+## D94. M4-T4b ladder qualification (D69/D91/D93) — Haiku 5.5 + qwen3:8b qualify; qwen3:14b dropped
+Benign-suite qualification on scaffold=openai-agents (BENIGN only, attack_config=None, mitigations=[]),
+the 36 control task ids (control_task_ids() from runs/m2-dev-v2), n=1 each, era=STATELESS. Independently
+re-tallied from raw records.jsonl. All candidates logged (author: "log every candidate"):
+
+| model | benign pass | % | >=90%? | median s/trial | cost | digest |
+| --- | --- | --- | --- | --- | --- | --- |
+| claude-haiku-5-5 | 36/36 | 100.0 | YES | 4.32 | \$0.023938 (API) | hosted |
+| qwen3:8b (Ollama) | 36/36 | 100.0 | YES | 26.58 | \$0 (local) | 500a1f067a9f (Q4_K_M) |
+| qwen3:14b (Ollama) | 31/36 | 86.1 | NO | 43.42 | \$0 (local) | bdbd181c33f2 (Q4_K_M) |
+
+**Decision: the ladder is Haiku 5.5 (Anthropic API) + qwen3:8b (open-weight rung, local Ollama, \$0,
+digest 500a1f067a9f).** qwen3:14b is DROPPED (86.1% < 90%); its 5 misses were empty-final-answer-
+after-tool-use (NOT tool-calling failures), so the larger model does not help and it is ~1.6× slower.
+Haiku 4.5 is NOT added — qwen3:8b already fills the open-weight rung. Tool-calling via Ollama's
+OpenAI-compatible endpoint works (0 tool-call failures on both qwen3 models).
+
+**Mechanism (no source change):** run_trial passes (api_key, base_url, model) to the openai-agents
+adapter (AsyncOpenAI(base_url=...)); Ollama works with base_url=http://localhost:11434/v1 + a dummy
+api_key. The only accommodation was a RUNTIME price injection inside the driver (trial.PRICES lacks the
+new models; llm_usage raises in record mode otherwise) — no source edit. Verified git: only
+scripts/m4_ladder_qual.py (new) + runs/ (gitignored) changed; no protected path touched.
+
+**Ledger:** Haiku qualification \$0.023938 (API) → project cumulative \$73.574485 of the \$225 cap. qwen3
+rungs = \$0 API; COMPUTE TIME logged (median 26.58 s/trial 8b; 43.42 s/trial 14b).
+
+**Held-out runtime projection (qwen3:8b, B=100, first-success stopping; from 26.58 s/trial):** ~44 min
+per (config×arm) cell; worst-case adaptive held-out ≈ 3–9 h depending on the final exfil-config × arm
+count — overnight under `caffeinate -i`, plugged in. DEV static ASR ≈1.4% so early-stop saves little.
