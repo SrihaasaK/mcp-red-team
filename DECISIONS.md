@@ -2911,3 +2911,21 @@ committed as a DRAFT; NO held-out run until the author approves A8).
 **Ladder qualification (D91 #4):** the open-weight rung runs via a HOSTED provider (not local Ollama).
 Next action: measure Haiku 5.5 + the open-weight candidate (benign success vs the 90% bar, per-trial
 cost), then draft A8 with all of the above and STOP for author approval. No held-out run before A8.
+
+## D93. Open-weight ladder rung → LOCAL Ollama (\$0) — reinstates Ollama (dropped in D19), open-weight rung ONLY
+Change of plan (author, 2026-10-09): no Together AI (no budget). The open-weight ladder rung runs
+LOCALLY on Ollama at \$0 API spend. This reinstates Ollama — dropped at D19 as the iteration model —
+for the OPEN-WEIGHT RUNG ONLY (Sonnet/Opus/Haiku stay on the Anthropic API; the openai-agents scaffold
+points at Ollama's OpenAI-compatible endpoint http://localhost:11434/v1 for the qwen3 rung). Supersedes
+D92's Together recommendation.
+
+Machine: 24 GB RAM (>=16) -> pull BOTH qwen3:8b and qwen3:14b. Ollama was not installed; installing via
+Homebrew. caffeinate present; the Mac is on battery now (plug in before any long/overnight run).
+
+Plan: pin the exact model DIGEST in the manifest for reproducibility (once pulled); qualify on the
+benign suite vs the 90% bar on the openai-agents scaffold, qwen3:8b first then qwen3:14b, logging each
+candidate's benign-success + per-trial wall-clock; if NEITHER clears 90%, DROP the open-weight rung
+(logged) and the ladder is Haiku 5.5 only. Measure per-trial wall-clock, project held-out runtime under
+first-success stopping; long runs go overnight under `caffeinate -i`, plugged in. Ledger: open-weight
+rung = \$0 API spend, record COMPUTE TIME (wall-clock) instead. Also qualify Haiku 5.5 (Anthropic API).
+Then draft A8 as a DRAFT and STOP for author approval; no held-out run before A8 approval.
