@@ -2959,3 +2959,23 @@ rungs = \$0 API; COMPUTE TIME logged (median 26.58 s/trial 8b; 43.42 s/trial 14b
 **Held-out runtime projection (qwen3:8b, B=100, first-success stopping; from 26.58 s/trial):** ~44 min
 per (config×arm) cell; worst-case adaptive held-out ≈ 3–9 h depending on the final exfil-config × arm
 count — overnight under `caffeinate -i`, plugged in. DEV static ASR ≈1.4% so early-stop saves little.
+
+## D95. A8 amended (author D34, 2026-10-09) + FROZEN — held-out plan locked; projection under cap
+The author approved A8 with four amendments (folded into PREREG A8, now FROZEN per SPEC §8.6 / CLAUDE.md
+#4). Amendments: (1) a LADDER STATIC SLICE — Haiku 5.5 + qwen3:8b, OpenAI Agents only, arms
+{baseline, combined, strict/fine-taint}, n=10 — so the capability comparison isn't confounded with attack
+type; (2) the ADAPTIVE arm runs multiple independent seeds per held-out exfil config (qwen3:8b 3, Haiku
+5.5 3), reported as EXACT PER-TARGET COUNTS with no pooled claim beyond n; (3) PIN qwen3:8b settings
+exactly as qualified (Ollama 0.40.2, digest 500a1f067a9f Q4_K_M, parallel_tool_calls=false,
+max_tokens=8192, sampling/thinking defaults UNSET) in the A8.1 manifest; (4) execution priority
+(frontier static > ladder static > adaptive seeds) + cost projection.
+
+**Projection (conservative):** frontier static ≈\$62 + ladder static ≈\$0.24 (Haiku; qwen \$0) + adaptive
+3+3 seeds ≈\$4 (Haiku; qwen \$0) → CUMULATIVE ≈\$140 of the \$225 cap, UNDER, so amendment 4's
+"trim Haiku seeds + tell me first" condition did NOT trigger (freeze proceeded). Held-out split = 28 dev
+/ 12 held_out (5 stateless-exfil); derived offline from the frozen corpus/split — no held-out result
+inspected. qwen3:8b local compute ≈26–44 h (overnight, \$0).
+
+**Next:** run the held-out plan in priority order (CLAUDE.md #4 — headline only from the now-frozen
+held-out split). The adaptive arm first needs `loop.assert_dev` extended to the frozen held-out exfil
+configs (apparatus change + reviewer pass, A8.13). No frozen number is changed by any of this (#1).
