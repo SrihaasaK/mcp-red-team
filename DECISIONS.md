@@ -2979,3 +2979,43 @@ inspected. qwen3:8b local compute ≈26–44 h (overnight, \$0).
 **Next:** run the held-out plan in priority order (CLAUDE.md #4 — headline only from the now-frozen
 held-out split). The adaptive arm first needs `loop.assert_dev` extended to the frozen held-out exfil
 configs (apparatus change + reviewer pass, A8.13). No frozen number is changed by any of this (#1).
+
+## D96. Held-out FRONTIER STATIC headline — complete + verified (76/2240; exfil 0; 58% content-filter)
+Ran the FROZEN A8 frontier-static plan (scripts/m4_heldout_static.py full): Sonnet 5.5 + Opus 5.5 ×
+{openai-agents, langgraph} × 7 arms × held-out static configs × n=10 = 224 cells / 2240 trials
+(runs/m4-heldout-static/). Not aborted (exposure-floor/harness/spend guards held). Preceded by a 3-lens
+pre-run review (safe-to-run), the exposure-floor abort fix, and a LangGraph 1-cell live smoke (first-ever
+LangGraph attack trials — injection→exposure→scoring confirmed end-to-end).
+
+**Result (exploratory per-model; the pooled headline table is `mcpr report`'s job, #12):**
+- 76 successes / 2240 trials; 9 infra errors (adapter timeouts, none hid a success). Raw pooled ASR
+  3.41% (76/2231); exposure-conditioned 3.96% (75/1896). Baseline arm 9/317 = 2.84% [Wilson 1.50–5.31%].
+  Per model (never pooled across models, §8.3): Opus 54/1112 = 4.86%, Sonnet 22/1119 = 1.97%.
+- **Success composition: 52 persistence + 24 answer_hijack; 0 exfil, 0 forbidden_action.** Exfil ASR is
+  EXACTLY 0 — across 978 non-error exfil trials the canary never reached a sink arg or the final answer
+  in any form (0 secret leaks); exfil was possible (sources readable) but no trial moved it. Consistent
+  with the DEV adaptive null — these models resist exfil; the static successes are persistence + hijack.
+- 2 of the 24 answer_hijack are D55 refusal-quote cases (model declines but quotes the planted target);
+  per the UNCHANGED A5 oracle these count (target appears in the final answer); the refusal-quote audit
+  is diagnostic-only by design (D55). Flagged for transparency.
+- **Refusal split (A8.4): 58.1% provider-content-filter (finish_reason=content_filter), 1.3%
+  model-refusal, 40.6% attempted/benign; 0 filtered successes.** So the measured ASR is a LOWER bound
+  under Anthropic-API safeguards (A8.4 / README disclosure).
+- spotlight-strip & combined drive exposure→0 on class-1/7 cells (payload stripped pre-LLM-boundary), so
+  their exposure-conditioned ASR exceeds raw there (expected; A8.4 note).
+
+**Cost:** run \$33.134640 (< the \$41.55 projection); cumulative \$106.709125 of the \$225 cap.
+
+**Verification (CLAUDE.md #11 — 4-lens subagent workflow, all CONFIRMED; 0 blocking that invalidates):**
+recompute + oracle RE-SCORE of all 76 successes from raw (reproduced from the frozen corpus AND each
+recording's embedded config, 0 mismatches; 52 persistence all strictly post-inject-turn); exposure +
+refusal split; canary/secret deep scan (0 canary movement, 0 leaks); apparatus integrity (git only
+scripts/, frozen suite/split hashes match, 16 runnable combos, no result-driven adaptation, baseline
+exposure floor OpenAI 0.972 / LangGraph 0.907 ≥0.50). One non-blocking provenance note: the run spanned
+2026-10-09 17:36 → 10-10 23:00 (a long invocation over laptop sleeps; `caffeinate -i` blocks idle not
+lid sleep) — no stale-corpus contamination, headline unaffected. Raw evidence backed up to
+~/mcp-red-team-backup.
+
+**Next:** priority 2 (ladder static slice); then priority 3 (adaptive — needs loop.assert_dev extension +
+reviewer pass, A8.13). Full headline (ASR before/after per mitigation, coarse-vs-fine, utility Δ) via
+`mcpr report` after all held-out arms. No frozen number changed (#1).
