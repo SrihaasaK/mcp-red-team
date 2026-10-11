@@ -382,3 +382,9 @@ ladder-static ≈3 h of LOCAL inference, overnight under `caffeinate -i`, plugge
 extended to permit the FROZEN held-out exfil configs for the adaptive arm ONLY — an apparatus change
 gated by a reviewer pass (CLAUDE.md #11) before the adaptive held-out run, logged separately; it changes
 no attack/oracle/scoring/seed.
+
+**A8.11 amendment (D99, 2026-10-11).** The qwen3:8b adaptive rung runs **1 independent seed** (seed 0),
+not 3, for a HARDWARE/THERMAL reason — 3 seeds × B=100 qwen ≈ 26–44 h of sustained local GPU on a 24 GB
+laptop (memory swap + heat) for a near-certain null. Haiku 5.5 retains its 3 completed seeds. qwen
+adaptive is therefore reported at n=1 search per target (asymmetric vs Haiku's 3; stated in the report).
+B=100 and everything else unchanged. This is a power decision, NOT a result-moving one (CLAUDE.md #1).

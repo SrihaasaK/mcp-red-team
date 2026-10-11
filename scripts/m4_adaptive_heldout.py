@@ -251,14 +251,19 @@ def _project(prior: float, run_cost: float, planned: dict[str, int], mcost: dict
     return proj
 
 
-async def run_full(prior_spent: float) -> None:
+async def run_full(prior_spent: float, resume: bool = False) -> None:
     inject_prices()  # ladder rungs into runner.trial.PRICES (runtime only) BEFORE any trial
     for tag in MODEL_ORDER:
         if MODELS[tag]["model"] not in trial_mod.PRICES:
             raise SystemExit(f"price injection failed for {tag}")
-    assert not OUT_ROOT.exists(), f"{OUT_ROOT} exists; a run never reuses a directory (refusing)"
+    if not resume:
+        assert not OUT_ROOT.exists(), f"{OUT_ROOT} exists; a run never reuses a directory (refusing)"
     configs, tasks = held_configs()
     OUT_ROOT.mkdir(parents=True, exist_ok=True)
+    # D99 (A8.11 amended 3->1 seed for the qwen rung; hardware/thermal). On resume: qwen3-8b seed0 ONLY,
+    # skipping cells already complete (B attempts). Haiku's 3 completed seeds are done and untouched.
+    models_to_run = ["qwen3-8b"] if resume else MODEL_ORDER
+    seeds_to_run = range(1) if resume else range(SEEDS)
 
     # Worst-case planned attempts per model (B every cell); early-stop only lowers realized spend.
     planned = {tag: len(configs) * SEEDS * len(ARMS_ORDER) * B for tag in MODEL_ORDER}
@@ -292,17 +297,22 @@ async def run_full(prior_spent: float) -> None:
         (OUT_ROOT / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
 
     async with HubServer(ProxyHub()) as hub:
-        for tag in MODEL_ORDER:
+        for tag in models_to_run:
             cfgm = MODELS[tag]
             model = cfgm["model"]
             api_key = anthropic_api_key() if not cfgm["local"] else "ollama"  # dummy key for Ollama
-            for seed_idx in range(SEEDS):
+            for seed_idx in seeds_to_run:
                 loop.cell_seed = seeded_cell_seed(seed_idx)  # A8.11 per-seed independence (R5 paired within)
                 seed_root = OUT_ROOT / tag / f"seed{seed_idx}"
                 try:
                     for config in configs:
                         task = tasks[config["compatible_tasks"][0]]
                         for arm in ARMS_ORDER:
+                            if resume:  # D99: skip cells already complete (B attempts); re-run only the rest
+                                _tag = model.split("-")[1] if "-" in model else model.split(":")[0]
+                                _cid = f"{config['id']}__{task.id}__{_tag}__{arm}"
+                                if len(list((seed_root / _cid).glob("attempt_*"))) >= B:
+                                    continue
                             proj = _project(prior_spent, run_cost, planned, mcost)
                             if proj > CAP:
                                 flush()
@@ -371,14 +381,14 @@ def main() -> None:
         configs, _tasks = held_configs()
         print_enumeration(configs, prior)
         return
-    if mode == "full":
+    if mode in ("full", "resume"):
         try:
-            asyncio.run(run_full(prior))
+            asyncio.run(run_full(prior, resume=(mode == "resume")))
         except AbortRun as a:
-            print(f"ABORT (full): {a}", flush=True)
+            print(f"ABORT ({mode}): {a}", flush=True)
             raise SystemExit(3) from a
         return
-    raise SystemExit("mode must be 'enumerate' (offline) or 'full' (live, author-gated)")
+    raise SystemExit("mode must be 'enumerate' (offline), 'full' (live), or 'resume' (live, 1-seed qwen)")
 
 
 if __name__ == "__main__":

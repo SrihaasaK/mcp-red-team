@@ -3073,3 +3073,20 @@ Also committed here for reproducibility: the frontier (m4_heldout_static.py) + l
 **GATE:** the adaptive run is NOT started — it needs the Mac PLUGGED IN (the ~26–44 h overnight qwen arm;
 on battery, prior runs stretched over sleep suspensions). On plug-in I launch it, then verify + run
 `mcpr report`. No frozen number changed (#1).
+
+## D99. Adaptive held-out trimmed to 1 qwen seed (A8.11 amended) — hardware/thermal; resume launched
+During the 3-seed qwen adaptive run (bbl472kvj) the laptop hit memory-swap warnings; the author
+restarted and chose to TRIM the qwen adaptive to **1 seed** (seed 0). Amends A8.11 (qwen 3→1 seed);
+Haiku retains its 3 COMPLETED seeds (36 cells, data kept). REASON: 3 seeds × B=100 qwen ≈ 26–44 h of
+sustained local GPU on a 24 GB laptop (swap + heat) for a near-certain null (project-wide exfil ASR ~0);
+1 seed × B=100 (~8.5 h) still gives a solid single-search null per target. HONEST-NUMBERS (CLAUDE.md #1):
+a power/hardware decision, NOT result-moving; qwen adaptive reported at n=1 search/target (asymmetric vs
+Haiku's 3), stated transparently. No attack/oracle/scoring/seed change.
+
+State at trim: killed run saved 39 cells (36 Haiku[3 seeds] + 3 qwen[seed0: c1-07 baseline/spotlight/
+coarse]); the 1 partial qwen cell (c1-07 taint-fine, 71/100) was moved aside (scratchpad) to re-run
+clean. Driver scripts/m4_adaptive_heldout.py gains a `resume` mode (qwen3-8b seed0 only; skip cells with
+B complete attempts; re-run the rest) → runs the 9 remaining qwen seed0 cells (c1-07 taint-fine + c5-01
+×4 + c7-04 ×4) into the existing dir. py_compile OK; launched on AC + caffeinate -i. qwen = $0
+(wall-clock logged); the Haiku adaptive cost (~$2.41, from the killed run's attempts) is ledgered in the
+final adaptive report → cumulative ~$109 of the $225 cap.
