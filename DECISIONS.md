@@ -3019,3 +3019,28 @@ lid sleep) — no stale-corpus contamination, headline unaffected. Raw evidence 
 **Next:** priority 2 (ladder static slice); then priority 3 (adaptive — needs loop.assert_dev extension +
 reviewer pass, A8.13). Full headline (ASR before/after per mitigation, coarse-vs-fine, utility Δ) via
 `mcpr report` after all held-out arms. No frozen number changed (#1).
+
+## D97. Held-out LADDER STATIC SLICE — complete + verified (A8.10; non-headline capability comparison)
+Ran the FROZEN A8.10 ladder static slice (scripts/m4_heldout_ladder_static.py full): Haiku 5.5 + qwen3:8b
+× OpenAI Agents ONLY × {baseline, combined, taint-fine} × 9 held-out static configs × n=10 = 54 cells /
+540 trials (runs/m4-heldout-ladder-static/). Not aborted; 0 errors. PURPOSE: same static attacks on each
+rung so the capability comparison isn't confounded with attack type (NOT pooled into the frontier headline).
+
+**Result (per-target counts; verified from cells.jsonl + raw):**
+- 49 successes / 540 (0 errors). Per (model, arm), /90 each:
+  - Haiku 5.5:  baseline 15, combined 9, taint-fine 14.
+  - qwen3:8b:   baseline 2,  combined 3, taint-fine 6.
+- Capability read: the frontier-cheap Haiku rung is MORE susceptible than the open-weight qwen3:8b rung
+  (baseline 15/90 vs 2/90). Arm effects are within noise at n=90 — reported as per-target counts (A8.11),
+  no pooled claim beyond n. 0 canary leaks across 240 exfil final-answers (exfil ASR ~0, consistent).
+- qwen3:8b ATTACK trials (first ever) work: exposure healthy (exp≈10/10 most cells); injection→exposure
+  →scoring fire; the exposure-floor + harness + spend guards held.
+
+**Cost:** run \$0.251628 (Haiku; qwen \$0 local); cumulative \$106.9608 of the \$225 cap. qwen wall-clock
+≈3.07 h (11042.8 s); Haiku ≈48 min (2900.7 s).
+
+**Verification:** per-(model,arm) re-tallied from cells.jsonl (540/49/0-err, matches the DONE line); canary
+scan 0 leaks; git only scripts/; not aborted. Raw backed up to ~/mcp-red-team-backup.
+
+**Next:** priority 3 — adaptive held-out. Needs the loop.assert_dev held-out extension + reviewer pass
+(A8.13) and the Mac plugged in for the ~26–44 h overnight qwen arm. No frozen number changed (#1).
