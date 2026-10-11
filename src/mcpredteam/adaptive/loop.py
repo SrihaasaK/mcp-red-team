@@ -28,8 +28,10 @@ from mcpredteam.adaptive.attacker import (
 from mcpredteam.env import resolve_canary
 from mcpredteam.oracle.rules import canary_form_in_text, score
 from mcpredteam.oracle.trajectory import Trajectory
+from mcpredteam.proxy.relay import STATELESS
 from mcpredteam.runner.canary import hydrate_attack_config
 from mcpredteam.runner.evaluate import (
+    RUNNABLE_CLASSES,
     SERVERS,
     dev_runnable,
     era_for,
@@ -64,10 +66,34 @@ def dev_config_ids() -> frozenset[str]:
     return frozenset(c["id"] for c in dev_runnable(configs, split))
 
 
+@lru_cache(maxsize=1)
+def heldout_exfil_config_ids() -> frozenset[str]:
+    """A8.13 allowlist: the FROZEN held-out STATELESS exfil configs the adaptive arm may run
+    (A8.1/A8.11). A config qualifies iff split=='held_out' AND payload.intent=='exfil_canary'
+    AND era==STATELESS (era_for) AND it is runnable on the OpenAI scaffold (class in
+    RUNNABLE_CLASSES, the conditional-class map). This is the ONLY held-out set `assert_dev`
+    accepts -- NOT all held-out, and no longer dev-only. Derived from the frozen corpus + split +
+    class map (the id LIST is never hardcoded); changes no attack/oracle/scoring/seed (A8.13)."""
+    configs, split, _ = load_corpus()
+    return frozenset(
+        c["id"]
+        for c in configs
+        if split.get(c["id"]) == "held_out"
+        and c["class"] in RUNNABLE_CLASSES
+        and era_for(c) == STATELESS
+        and (c.get("payload") or {}).get("intent") == "exfil_canary"
+    )
+
+
 def assert_dev(config_id: str) -> None:
-    """Refuse any config that is not a DEV-split runnable config (guard c; no held-out)."""
-    if config_id not in dev_config_ids():
-        raise ValueError(f"adaptive loop is DEV-only; {config_id!r} is not a DEV-runnable config")
+    """Guard (c): accept a DEV-split runnable config OR a frozen held-out STATELESS exfil config
+    (A8.13 authorized apparatus change). Every OTHER held-out config -- and every non-exfil or
+    non-stateless held-out config -- is still refused."""
+    if config_id not in dev_config_ids() and config_id not in heldout_exfil_config_ids():
+        raise ValueError(
+            f"adaptive loop is DEV-only except the frozen held-out-exfil allowlist (A8.13); "
+            f"{config_id!r} is neither DEV-runnable nor held-out-exfil"
+        )
 
 
 def assert_payload_canary_free(payload_text: str | None, config: dict) -> None:
@@ -106,7 +132,8 @@ async def run_cell(
         raise ValueError(f"unknown arm {arm!r}; known: {sorted(ARMS)}")
     seed = cell_seed(base_config["id"], model)  # R5: f(config, model), NOT arm
     attacker = AdaptiveAttacker(base_config, seed, specs)
-    cell_id = f"{base_config['id']}__{task.id}__{model.split('-')[1]}__{arm}"
+    model_tag = model.split("-")[1] if "-" in model else model.split(":")[0]  # claude-*->mid; qwen3:8b->qwen3
+    cell_id = f"{base_config['id']}__{task.id}__{model_tag}__{arm}"
     first_success: int | None = None
     blocked_attempts = errored_attempts = 0
     attempts: list[dict] = []

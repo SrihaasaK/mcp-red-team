@@ -3044,3 +3044,32 @@ scan 0 leaks; git only scripts/; not aborted. Raw backed up to ~/mcp-red-team-ba
 
 **Next:** priority 3 — adaptive held-out. Needs the loop.assert_dev held-out extension + reviewer pass
 (A8.13) and the Mac plugged in for the ~26–44 h overnight qwen arm. No frozen number changed (#1).
+
+## D98. Adaptive held-out apparatus + driver (A8.13) — reviewer-passed; run GATED on plug-in
+Prepared the adaptive held-out arm (NO live run yet). Two loop.py apparatus changes + the driver:
+1. **loop.assert_dev extended (A8.13-authorized):** accepts DEV-runnable configs OR the 3 FROZEN
+   held-out STATELESS exfil configs (heldout_exfil_config_ids() = c1-07, c5-01, c7-04; derived from the
+   frozen split + conditional-class map, not hardcoded). Every other held-out config still refused.
+2. **loop.run_cell cell_id bugfix (pre-existing):** model_tag = model.split('-')[1] if '-' in model else
+   model.split(':')[0]. Old split('-')[1] raised IndexError on 'qwen3:8b' (DEV only ran hyphenated
+   claude-* ids). LABEL-ONLY: byte-identical cell_id for claude-* (haiku/sonnet/opus); 'qwen3' for
+   qwen3:8b. No seed/oracle/scoring change (seed uses the raw model string). A 2nd loop.py change beyond
+   A8.13's assert_dev, necessary for the authorized qwen3:8b rung — flagged to the author.
+3. **Driver scripts/m4_adaptive_heldout.py:** ladder-only (Haiku 5.5 + qwen3:8b) × the 3 held-out-exfil
+   configs × 3 INDEPENDENT seeds (per-seed cell_seed rebind sha256(base_seed|seed_idx); arms paired
+   within a seed, R5) × 4 arms × B=100 = 72 cells / 7200 worst-case. Per-target counts, no pooled claim
+   beyond n (A8.11). qwen Ollama wiring from the qualified m4_ladder_qual.py. Guards: payload-canary-leak,
+   per-(model,arm) harness-error, spend-projection vs \$225, baseline exposure-floor.
+
+**Reviewer pass (CLAUDE.md #11, 2-lens workflow):** driver-fidelity PASS; loop+tests initially FAILED on
+one regression — the reworded assert_dev message dropped the 'DEV-only' substring that
+test_adaptive_guards::test_c_dev_only_refuses_held_out asserts (behavior correct — c1-05 still refused;
+message-match only). FIXED by rewording to an accurate 'DEV-only except the frozen held-out-exfil
+allowlist' message WITHOUT touching the test (#3). Full suite re-run: **234 passed, 0 failed.**
+
+**Projection:** Haiku ≈\$2.41 + qwen \$0 → cumulative ≈\$109.37 of the \$225 cap. qwen local ≈26–44 h.
+Also committed here for reproducibility: the frontier (m4_heldout_static.py) + ladder (m4_heldout_ladder_static.py) static drivers that produced D96/D97.
+
+**GATE:** the adaptive run is NOT started — it needs the Mac PLUGGED IN (the ~26–44 h overnight qwen arm;
+on battery, prior runs stretched over sleep suspensions). On plug-in I launch it, then verify + run
+`mcpr report`. No frozen number changed (#1).
