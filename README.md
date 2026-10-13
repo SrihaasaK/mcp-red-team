@@ -42,10 +42,13 @@ canaries are synthetic.
 - **Scaffolds:** OpenAI Agents SDK + LangGraph (held-out, pooled for the headline). The Claude Agent
   SDK is a separate confirmatory benign slice and is excluded from held-out.
 
-## Reproduce in one command
+## Reproduce
 
-Download the sanitized held-out recordings (synthetic canaries only, paths redacted, secret-scanned),
-rebuild the committed aggregate from them, and assert it is byte-identical:
+Two sanitized held-out recording sets are published as release assets (synthetic canaries only, home
+paths redacted, secret-scanned): a small **rebuild bundle** and the **full set** of every trial.
+
+**Rebuild the aggregate** (small bundle — the aggregate inputs plus the answer-hijack recordings the
+aggregate hydrates):
 
 ```
 gh release download heldout-static-recordings-v1 -R SrihaasaK/mcp-red-team -p 'heldout-static-recordings.tar.gz'
@@ -53,9 +56,18 @@ tar -xzf heldout-static-recordings.tar.gz
 uv run python -I review/M4/heldout-static/rebuild_from_release.py heldout-static-recordings
 ```
 
-That reconstructs `review/M4/heldout-static/aggregate.json` from the recordings and fails unless it is
-byte-identical to the committed file. Then render the held-out headline offline from the committed
-aggregate, with **zero live model calls**:
+**Re-score every trial** (full set — re-runs the frozen oracle over all 2,240 trials, confirms every
+verdict matches the per-cell records, and rebuilds the aggregate):
+
+```
+gh release download heldout-static-recordings-v1 -R SrihaasaK/mcp-red-team -p 'heldout-static-recordings-full.tar.gz'
+tar -xzf heldout-static-recordings-full.tar.gz
+uv run python -I review/M4/heldout-static/rescore_from_release.py heldout-static-recordings-full
+```
+
+Both reconstruct `review/M4/heldout-static/aggregate.json` and fail unless it is byte-identical to the
+committed file. Then render the held-out headline offline from the committed aggregate, with **zero
+live model calls**:
 
 ```
 uv run mcpr report

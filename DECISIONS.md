@@ -3252,6 +3252,21 @@ Author README review, all items applied:
 Cost $0. No frozen attack/oracle/split/stat changed (#1); the release asset is a redacted/secret-scanned
 reproduction artifact, not a change to any published number.
 
+## D105. Full sanitized recording set published + whole-set rescore (author-approved)
+Second release asset on `heldout-static-recordings-v1`: `heldout-static-recordings-full.tar.gz`
+(14.8 MB, 38,667 files) — every held-out static trial recording, sanitized with the same gates as the
+rebuild bundle. `make_release_bundle.py` gained a `full` mode; redaction broadened to strip the repo
+root (`<REPO>`) and home dir (`<HOME>`), not just the frontier run prefix — the exhaustive secret scan
+CAUGHT residual `/Users/<user>/` paths in some `adapter_result.json` on the first full pass and REFUSED
+to package until fixed (the gate working; the 238 KB rebuild bundle had already scanned clean).
+New `rescore_from_release.py` re-runs the frozen A5 oracle over every trial in the full set.
+LOCAL VERIFICATION before publishing: **2,240 trials re-scored, 0 oracle-verdict mismatches, 0 per-cell
+mismatches, aggregate.json BYTE-IDENTICAL.** (Honest: the oracle verdict is re-derived; `exposed` and
+`cost_usd` are recorded live-boundary / live-API measurements carried from the published records.jsonl,
+not reconstructable from a static recording — checked for consistency, not re-derived.)
+README "Reproduce" now lists both paths: "rebuild the aggregate" (small bundle) and "re-score every
+trial" (full set). Cost $0. No frozen attack/oracle/split/stat changed (#1).
+
 Cost: \$0 (offline render + aggregate). Cumulative unchanged at \$109.479119 of the \$225 cap.
 AUTHOR-GATED, still NOT done (#12): README §14 and the resume-line / headline framing. No frozen
 attack/oracle/split/stat changed (#1).

@@ -21,16 +21,23 @@ SANITIZATION (CLAUDE.md #7):
 import json
 import re
 import shutil
+import sys
 import tarfile
 from pathlib import Path
 
 from mcpredteam.config import repo_root
 
+# Mode: "" (default) = rebuild bundle (aggregate inputs + the answer-hijack success trial dirs the
+# aggregate hydrates); "full" = EVERY trial recording (for independent re-scoring, see
+# rescore_from_release.py). Same sanitization + hard-gate secret scan either way.
+MODE = sys.argv[1] if len(sys.argv) > 1 else ""
+_NAME = "heldout-static-recordings-full" if MODE == "full" else "heldout-static-recordings"
+
 ROOT = repo_root()
 FRONTIER = ROOT / "runs" / "m4-heldout-static"
 LADDER = ROOT / "runs" / "m4-heldout-ladder-static"
-STAGE = ROOT / "runs" / "_release_stage" / "heldout-static-recordings"
-TARBALL = ROOT / "runs" / "_release_stage" / "heldout-static-recordings.tar.gz"
+STAGE = ROOT / "runs" / "_release_stage" / _NAME
+TARBALL = ROOT / "runs" / "_release_stage" / f"{_NAME}.tar.gz"
 
 ABS_PREFIX = str(FRONTIER) + "/"          # <repo>/runs/m4-heldout-static/
 SECRET_PATTERNS = [
@@ -42,9 +49,17 @@ SECRET_PATTERNS = [
 ]
 
 
+HOME = str(Path.home())
+
+
 def _redact(text: str) -> str:
-    # strip the absolute prefix (so paths become relative to the bundle root), then any stray abs path.
-    return text.replace(ABS_PREFIX, "").replace(str(FRONTIER), "")
+    # 1) strip the frontier run prefix so recording paths become bundle-relative (needed for rebuild);
+    # 2) redact any remaining repo-rooted path to <REPO>; 3) redact any remaining home path to <HOME>.
+    # None of these strings feed the oracle (verdict inputs are tool-call args + final answers), so
+    # redaction cannot change a verdict -- the rescore gate confirms byte-identical reproduction.
+    text = text.replace(ABS_PREFIX, "").replace(str(FRONTIER), "")
+    text = text.replace(str(ROOT), "<REPO>")
+    return text.replace(HOME, "<HOME>")
 
 
 def _copy_redacted(src: Path, dst: Path) -> None:
@@ -64,12 +79,15 @@ def main() -> None:
     _copy_redacted(LADDER / "cells.jsonl", STAGE / "ladder" / "cells.jsonl")
 
     records = [json.loads(l) for l in (FRONTIER / "records.jsonl").read_text().splitlines() if l.strip()]
-    hijack = [r for r in records if r["attack_rule"] == "answer_hijack" and r["attack_success"]
-              and not r.get("error")]
+    if MODE == "full":
+        # every trial dir (both scaffold trees) for independent re-scoring
+        trial_dirs = [FRONTIER / r["trial_dir"].replace(ABS_PREFIX, "") for r in records]
+    else:
+        trial_dirs = [FRONTIER / r["trial_dir"].replace(ABS_PREFIX, "") for r in records
+                      if r["attack_rule"] == "answer_hijack" and r["attack_success"] and not r.get("error")]
     copied = 0
-    for r in hijack:
-        rel = r["trial_dir"].replace(ABS_PREFIX, "")
-        base = FRONTIER / rel
+    for base in trial_dirs:
+        rel = base.relative_to(FRONTIER)
         for f in base.rglob("*"):
             if f.is_file():
                 _copy_redacted(f, STAGE / "frontier" / rel / f.relative_to(base))
@@ -95,7 +113,7 @@ def main() -> None:
 
     TARBALL.parent.mkdir(parents=True, exist_ok=True)
     with tarfile.open(TARBALL, "w:gz") as tar:
-        tar.add(STAGE, arcname="heldout-static-recordings")
+        tar.add(STAGE, arcname=_NAME)
     nfiles = sum(1 for _ in STAGE.rglob("*") if _.is_file())
     print(f"staged {nfiles} files ({copied} hijack-success trial dirs); secret scan CLEAN")
     print("tarball:", TARBALL, f"({TARBALL.stat().st_size/1e6:.2f} MB)")
