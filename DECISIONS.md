@@ -3214,6 +3214,20 @@ only the first complete bullet ("Test your scaffold, not just your model.") was 
 is NOT fabricated and awaits the author's text. Cost $0 (offline). No frozen attack/oracle/split/stat
 changed (#1). Headline wording remains the author's.
 
+## D103. README §14 completed + SPEC §14 context sections added
+Appended the author's verbatim rest of §14 (2 takeaway bullets; Limitations subsection) and applied
+the two author scoping edits (Finding 4 "+(OpenAI Agents SDK only)"; Finding 5 "58.1% of frontier
+held-out trials"). Then added the remaining SPEC §14-required README sections, each transcribed from
+a committed source (no new claims): Threat model (SPEC §2), ASR + exposure definitions (SPEC §8.1/8.2),
+Model manifest (PREREG A8.1), Reproduce-in-one-command (`uv run mcpr report`; replay via `uv run
+pytest`, §9.1), and a short factual Prior-art section (names AgentDojo/InjecAgent/mcp-scan per SPEC §14).
+Two judgment calls flagged to the author: (1) **Prior art** is a FACTUAL stub only (category +
+what this harness is) — the comparative positioning is author-voice and left for the author to expand;
+(2) **Era-comparison limitation** (SPEC §4.3) was NOT in the author's six Limitations bullets, so a
+seventh was added, sourced from D7 (fallback not triggered; held-out scaffolds OpenAI-Agents stateless
++ LangGraph stateful-only ⇒ era confounded with scaffold) — the author may reword/remove it. Cost $0.
+No frozen attack/oracle/split/stat changed (#1).
+
 Cost: \$0 (offline render + aggregate). Cumulative unchanged at \$109.479119 of the \$225 cap.
 AUTHOR-GATED, still NOT done (#12): README §14 and the resume-line / headline framing. No frozen
 attack/oracle/split/stat changed (#1).
