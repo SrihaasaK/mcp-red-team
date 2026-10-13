@@ -3228,6 +3228,30 @@ seventh was added, sourced from D7 (fallback not triggered; held-out scaffolds O
 + LangGraph stateful-only ⇒ era confounded with scaffold) — the author may reword/remove it. Cost $0.
 No frozen attack/oracle/split/stat changed (#1).
 
+## D104. README review applied — sanitized recordings release + verified prior art
+Author README review, all items applied:
+1. **Reproduction release.** Published a SANITIZED held-out recordings bundle as GitHub release
+   `heldout-static-recordings-v1` (asset `heldout-static-recordings.tar.gz`, 0.24 MB, 422 files:
+   frontier cells/records/summary + ladder cells + the 24 answer-hijack SUCCESS trial dirs the
+   aggregate hydrates). New `review/M4/heldout-static/make_release_bundle.py` (synthetic canaries only;
+   absolute `/Users/...` paths redacted; **hard-gate secret scan — CLEAN**) and `rebuild_from_release.py`
+   (runs the committed aggregator against the bundle). Verified locally: the rebuild is **BYTE-IDENTICAL**
+   to the committed `aggregate.json`. "Reproduce" rewritten: rebuild-from-release command first, then
+   `mcpr report`. build_aggregate.py itself UNCHANGED (rebuild monkeypatches its input roots).
+2. Threat-model out-of-scope reworded (adaptive attackers stronger than the reported rule-based search).
+3. Manifest: ladder listed as "static slice (baseline, combined, strict; OpenAI Agents SDK only) +
+   adaptive search"; "qwen3:14b was tested and dropped".
+4. Intro: "measured alongside attack success".
+5. 7th limitation (era confounded with scaffold) kept.
+6. **Prior art** replaced with the author's text after verifying every reference against its source
+   (AgentDojo NeurIPS'24; InjecAgent ACL Findings'24; mcp-scan → Snyk Agent Scan, Snyk acq. Invariant
+   Labs 2025-06; Cisco mcp-scanner `cisco-ai-defense/mcp-scanner`, 2025-09; CaMeL arXiv 2503.18813;
+   FIDES arXiv 2505.23643; Progent arXiv 2504.11703; Nasr/Carlini "The Attacker Moves Second" arXiv
+   2510.09023, 2025) — ALL verified, none dropped.
+7. 3-line summary added under the title (what it is; exfil 0/978; framework effect exploratory; link).
+Cost $0. No frozen attack/oracle/split/stat changed (#1); the release asset is a redacted/secret-scanned
+reproduction artifact, not a change to any published number.
+
 Cost: \$0 (offline render + aggregate). Cumulative unchanged at \$109.479119 of the \$225 cap.
 AUTHOR-GATED, still NOT done (#12): README §14 and the resume-line / headline framing. No frozen
 attack/oracle/split/stat changed (#1).

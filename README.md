@@ -1,10 +1,15 @@
 # MCP Red Team
 
+> **MCP Red Team** is a dynamic red-team harness for MCP agents: a transparent proxy injects attacks
+> into live tool traffic and scores them with a deterministic oracle. Held-out headline: **0 of 978
+> exfiltration trials** moved the planted secret; attack success concentrated under one agent
+> framework (exploratory). See [Results](#14-results).
+
 MCP Red Team is a dynamic red-team harness for agents that speak the Model Context Protocol. A
 transparent proxy sits between an agent and its MCP servers, injects attacks into the traffic the
 agent sees, measures attack success rate (ASR) with a deterministic oracle, and ships an
-information-flow mitigation layer whose cost to the agent's useful work is measured alongside its
-benefit. It is defensive security research: attacks run only against mock servers in this repo, and
+information-flow mitigation layer whose cost to the agent's useful work is measured alongside attack
+success. It is defensive security research: attacks run only against mock servers in this repo, and
 canaries are synthetic.
 
 ## Threat model
@@ -15,7 +20,8 @@ canaries are synthetic.
 - **Attacker goals:** exfiltrate a secret, trigger a forbidden action, hijack the final answer, or
   persist across turns.
 - **Out of scope (v1):** compromised clients, network MITM, malicious gateways, model-weight attacks,
-  and adaptive attackers who craft payloads against the deployed defense.
+  and adaptive attackers stronger than the rule-based search reported in Results (e.g., LLM-driven or
+  human red-teamers).
 
 ## Metrics: ASR and exposure
 
@@ -29,30 +35,45 @@ canaries are synthetic.
 
 - **Static held-out (the headline):** `claude-sonnet-5-5`, `claude-opus-5-5` (Anthropic API),
   reported per model and pooled across scaffolds.
-- **Adaptive held-out (ladder):** `claude-haiku-5-5` (Anthropic API) + `qwen3:8b` (local Ollama
-  0.40.2, digest `500a1f067a9f`, Q4_K_M, 8.2B; `parallel_tool_calls=false`, `max_tokens=8192`,
-  sampling unset). `qwen3:14b` qualified and was dropped (86.1% < 90% benign).
+- **Ladder (`claude-haiku-5-5`, Anthropic API, + `qwen3:8b`):** a static slice (baseline, combined,
+  strict; OpenAI Agents SDK only) + an adaptive search. `qwen3:8b` = local Ollama 0.40.2, digest
+  `500a1f067a9f`, Q4_K_M, 8.2B (`parallel_tool_calls=false`, `max_tokens=8192`, sampling unset).
+  `qwen3:14b` was tested and dropped (86.1% < 90% benign).
 - **Scaffolds:** OpenAI Agents SDK + LangGraph (held-out, pooled for the headline). The Claude Agent
   SDK is a separate confirmatory benign slice and is excluded from held-out.
 
 ## Reproduce in one command
 
+Download the sanitized held-out recordings (synthetic canaries only, paths redacted, secret-scanned),
+rebuild the committed aggregate from them, and assert it is byte-identical:
+
+```
+gh release download heldout-static-recordings-v1 -R SrihaasaK/mcp-red-team -p 'heldout-static-recordings.tar.gz'
+tar -xzf heldout-static-recordings.tar.gz
+uv run python -I review/M4/heldout-static/rebuild_from_release.py heldout-static-recordings
+```
+
+That reconstructs `review/M4/heldout-static/aggregate.json` from the recordings and fails unless it is
+byte-identical to the committed file. Then render the held-out headline offline from the committed
+aggregate, with **zero live model calls**:
+
 ```
 uv run mcpr report
 ```
 
-Renders the held-out headline offline from the committed aggregate
-(`review/M4/heldout-static/aggregate.json`) with **zero live model calls**. For trial-level
-reproduction, `uv run pytest` replays the recorded sessions with zero live calls and asserts replay
-equality — identical tool-call sequence, identical tool arguments, identical oracle verdict (SPEC
-§9.1).
+`uv run pytest` additionally replays the recorded sessions with zero live calls and asserts replay
+equality — identical tool-call sequence, identical tool arguments, identical oracle verdict (SPEC §9.1).
 
 ## Prior art
 
-This harness is a *dynamic* red-team: a transparent MCP proxy injects attacks into live agent traffic
-and scores them with a deterministic, objective oracle, and it measures a mitigation layer's utility
-cost alongside its benefit. It positions against synthetic agent-injection benchmarks (AgentDojo,
-InjecAgent) and static MCP scanners (mcp-scan).
+Synthetic agent-injection benchmarks (AgentDojo, InjecAgent) measure attacks inside purpose-built
+environments; this harness attacks real agent frameworks over live MCP traffic, in both MCP protocol
+eras. Static MCP scanners (mcp-scan, now Snyk Agent Scan; Cisco mcp-scanner) inspect tool metadata at
+install time; this harness measures runtime behavior. Out-of-band defenses such as CaMeL, FIDES and
+Progent enforce information-flow or policy constraints outside the model; our taint gateway belongs to
+this family, and we report its utility cost. Nasr, Carlini et al. ("The Attacker Moves Second", 2025)
+show that adaptive attackers break most published prompt-injection defenses, which is why our
+rule-based adaptive results are reported as a lower bound.
 
 ## 14. Results
 
