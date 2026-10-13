@@ -2250,6 +2250,50 @@
     }
    }
   },
+  "per_scaffold_allarms": {
+   "openai-agents": {
+    "trials": 1253,
+    "errors": 7,
+    "successes": 70,
+    "exposed": 1103,
+    "exposure_rate": 0.8803,
+    "raw": {
+     "pt": 0.0559,
+     "lo": 0.0445,
+     "hi": 0.07,
+     "succ": 70,
+     "n": 1253
+    },
+    "expcond": {
+     "pt": 0.0635,
+     "lo": 0.0505,
+     "hi": 0.0794,
+     "succ": 70,
+     "n": 1103
+    }
+   },
+   "langgraph": {
+    "trials": 978,
+    "errors": 2,
+    "successes": 6,
+    "exposed": 793,
+    "exposure_rate": 0.8108,
+    "raw": {
+     "pt": 0.0061,
+     "lo": 0.0028,
+     "hi": 0.0133,
+     "succ": 6,
+     "n": 978
+    },
+    "expcond": {
+     "pt": 0.0076,
+     "lo": 0.0035,
+     "hi": 0.0164,
+     "succ": 6,
+     "n": 793
+    }
+   }
+  },
   "ladder_capability": {
    "label": "EXPLORATORY (NOT pre-registered): capability comparison, same static attacks on each rung; OpenAI Agents only; per-target counts, no pooled claim (A8.10/A8.11).",
    "models": {

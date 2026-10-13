@@ -221,6 +221,8 @@ def main() -> None:
     for sc in SCAFFOLDS:
         per_scaffold[sc] = {m: agg([c for c in cells if c["arm"] == "baseline"
                                     and c["model"] == m and c["scaffold"] == sc]) for m in MODELS}
+    # --- EXPLORATORY per-scaffold ALL-ARMS (all 7 arms + both models pooled per scaffold) ---
+    per_scaffold_allarms = {sc: agg([c for c in cells if c["scaffold"] == sc]) for sc in SCAFFOLDS}
 
     comp, hijack = composition_and_hijack(records, cfg_by_id, tasks)
 
@@ -246,6 +248,7 @@ def main() -> None:
         "exploratory": {
             "label": "NOT pre-registered; reported for transparency, never a headline claim.",
             "per_scaffold_baseline": per_scaffold,
+            "per_scaffold_allarms": per_scaffold_allarms,
             "ladder_capability": ladder_block()},
         "adaptive_heldout_ref": ({"source": "review/M4/adaptive/heldout/report.json (D100)",
                                   "successes": adaptive["totals"]["successes"],

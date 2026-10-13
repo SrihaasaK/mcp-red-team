@@ -208,6 +208,18 @@ def _heldout_section(h: dict) -> str:
                  'headline is not scaffold-uniform):</p>'
                  '<table><thead><tr><th>scaffold</th><th>model</th><th>baseline raw ASR [CI]</th>'
                  '<th>exposure-conditioned [CI]</th></tr></thead><tbody>' + "".join(psrows) + "</tbody></table>")
+    # all-arms per scaffold (same Wilson method; all 7 arms + both models pooled per scaffold)
+    psa = ex.get("per_scaffold_allarms", {})
+    if psa:
+        parows = "".join(
+            f"<tr><td>{sc}</td><td>{_agg_cell(psa[sc]['raw'])}</td><td>{_agg_cell(psa[sc]['expcond'])}</td></tr>"
+            for sc in ("openai-agents", "langgraph") if sc in psa)
+        parts.append('<p class="note"><b>All-arms per-scaffold ASR</b> (exploratory; all 7 arms + both '
+                     'frontier models pooled per scaffold &mdash; the framework gap persists beyond '
+                     'baseline):</p>'
+                     '<table><thead><tr><th>scaffold</th><th>raw ASR [CI] (succ/n)</th>'
+                     '<th>exposure-conditioned [CI] (succ/exposed)</th></tr></thead><tbody>'
+                     + parows + "</tbody></table>")
     lad = ex["ladder_capability"]
     larms = sorted({a for mv in lad["models"].values() for a in mv})
     lrows = []

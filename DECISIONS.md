@@ -3191,6 +3191,29 @@ exploratory labels correct; no `<<`/resume tokens survive and the renderer reads
 Advisory (non-blocking, ADOPTED): added test_report_sources_never_point_under_runs to make the
 "never reads runs/" invariant self-enforcing.
 
+## D102. README §14 built from author framing — two pre-commit number corrections (#1)
+The author supplied the §14 headline/findings/takeaways wording and asked to fill `[report]` markers
+with EXACT rendered numbers, keep every claim's wording, add no new claims, and STOP if any number
+disagreed. Verifying against the report caught two disagreements (reported; author reworded, nothing
+patched silently):
+1. **Finding 3 overreach:** "every frontier success occurred under OpenAI Agents … none under
+   LangGraph" is true for the BASELINE arm only (OA 9, LG 0). Across all seven arms LangGraph had
+   **6 successes** (all in mitigation arms: pinning 3, spotlight-delimiters 2, spotlight-strip 1),
+   70 of 76 total under OA. Author scoped the baseline claim to "at baseline" and added an all-arms
+   clause. The all-arms per-scaffold rates were NOT in the rendered report, so (per author
+   instruction) they were added first as an EXPLORATORY table (same Wilson method) to
+   aggregate.json + render.py: OpenAI Agents **5.6% [4.5, 7.0]** (70/1253), LangGraph **0.6%
+   [0.3, 1.3]** (6/978), then cited.
+2. **Finding 2 pooled figure:** the single pooled-across-models baseline % is not a pre-registered
+   headline (§8.3) and is not in the rendered report; author switched to per-model only (Sonnet
+   3.1% [1.3, 7.1], Opus 2.5% [1.0, 6.4]).
+All other §14 numbers verified against the report (0/978 exfil; adaptive 1/3; Haiku 16.7%
+[10.4, 25.7] vs qwen 2.2% [0.6, 7.7]; refusal 58.1%/1.3%; fine-taint 15.6–18.9 pts).
+**TAKEAWAYS incomplete:** the author's input was truncated mid-bullet ("…Count provider-level");
+only the first complete bullet ("Test your scaffold, not just your model.") was committed — the rest
+is NOT fabricated and awaits the author's text. Cost $0 (offline). No frozen attack/oracle/split/stat
+changed (#1). Headline wording remains the author's.
+
 Cost: \$0 (offline render + aggregate). Cumulative unchanged at \$109.479119 of the \$225 cap.
 AUTHOR-GATED, still NOT done (#12): README §14 and the resume-line / headline framing. No frozen
 attack/oracle/split/stat changed (#1).
