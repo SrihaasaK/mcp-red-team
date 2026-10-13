@@ -1,11 +1,13 @@
-"""Render the M3 report HTML from committed, recorded aggregates (SPEC §8).
+"""Render the M3 + held-out report HTML from committed, recorded aggregates (SPEC §8).
 
-Zero live calls. Reads ONLY dev-split + benign aggregates that are committed in the
-repo -- it never globs `runs/` and never opens a held-out record, so the held-out
-headline placeholders (<<X>>, <<Y>>, <<U>>, <<MODEL>>, <<N>>) stay unfilled until
-`mcpr report` fills them from the frozen held-out split (there is no held-out data yet).
-Wilson CIs are recomputed from the committed counts via `report.stats` (no second
-implementation). The Claude Agent SDK is shown as a separate confirmatory slice and is
+Zero live calls, and it never globs `runs/`. The M2/M3 dev + benign sections read committed
+dev-split + benign aggregates. The held-out headline (M4, D101) reads the committed held-out
+aggregate `review/M4/heldout-static/aggregate.json` (built offline by that dir's
+`build_aggregate.py` from the frozen held-out split) and FILLS what used to be the stub
+placeholders (<<X>>, <<Y>>, <<U>>, <<MODEL>>, <<N>>) -- `write_report` now asserts none of those
+stub tokens survive. Held-out ASR is pooled across OpenAI Agents + LangGraph (A1/A8.2), reported per
+model and never pooled across models (SPEC §8.3). Wilson CIs are recomputed from the committed counts
+via `report.stats` (no second implementation). The Claude Agent SDK is a separate confirmatory slice,
 never pooled with the two lean scaffolds (PREREG Amendment A1, DECISIONS.md D39).
 """
 
@@ -32,10 +34,14 @@ SOURCES = {
     "langgraph": "tests/recordings/m3-langgraph/summary.json",
     "claude_agent_sdk": "tests/recordings/m3-claude-agent-sdk/summary.json",
     "prereg": "PREREG.md",
+    # M4 held-out headline aggregate (SPEC §8.3 / PREREG A8), committed aggregates-only; built by
+    # review/M4/heldout-static/build_aggregate.py from the gitignored raw run (D101). This is the
+    # ONLY held-out source: the renderer reads this committed aggregate, never globs runs/.
+    "heldout": "review/M4/heldout-static/aggregate.json",
 }
 
 # Spend ledger (USD), each entry recorded in DECISIONS.md; the cumulative total reconciles
-# EXACTLY with the latest DECISIONS.md ledger entry (D74: $23.138059) -- asserted by
+# EXACTLY with the latest DECISIONS.md ledger entry (D101: $109.479119) -- asserted by
 # tests/test_report.py.
 LEDGER = [
     ("M0", "compatibility probe (Claude Agent SDK, D10)", 0.133251),
@@ -50,10 +56,19 @@ LEDGER = [
     ("M4-T1", "SPEC §10 mitigations + offline counterfactual (D75-D79): offline, no live calls", 0.0),
     ("M4-T2", ("dev mitigation utility eval: pilots $2.008720 (3 gate runs) + full 2160-trial "
                "$40.685482 (D80-D82; review/M4/dev-util/report.json)"), 42.694202),
+    ("M4-T4 adaptive DEV", ("ASR@k apparatus + r1/r2 adaptive dev runs (health + 19 cells r2 $3.712016; "
+                            "D83-D85; review/M4/adaptive/dev)"), 7.718286),
+    ("Ladder qual", "held-out ladder benign qualification, Haiku 5.5 (qwen3:8b $0 local, D94)", 0.023938),
+    ("M4 held-out: frontier static", ("HEADLINE run: Sonnet+Opus x {OpenAI-Agents,LangGraph} x 7 arms x "
+                                      "held-out static x n=10 = 2240 trials (D96; review/M4/heldout-static)"), 33.134640),
+    ("M4 held-out: ladder static", ("capability slice: Haiku 5.5 + qwen3:8b x OpenAI-Agents x 3 arms x "
+                                     "n=10 = 540 trials (D97); qwen3 $0 local"), 0.251628),
+    ("M4 held-out: adaptive", ("ladder adaptive, Haiku 3 seeds + qwen3:8b 1 seed (D99), B=100 = 48 cells "
+                               "(D100; review/M4/adaptive/heldout); qwen3 $0 local"), 2.518366),
 ]
-# Cumulative total that must match the latest DECISIONS.md ledger entry (D82); a constant
+# Cumulative total that must match the latest DECISIONS.md ledger entry (D101); a constant
 # for the reconciliation test.
-LEDGER_TOTAL_USD = 65.832261
+LEDGER_TOTAL_USD = 109.479119
 
 
 def _rate_cell(succ: int, n: int) -> str:
@@ -96,6 +111,115 @@ def _asr_rows(model_block: dict) -> str:
     return "\n".join(rows)
 
 
+HELD_OUT_MODEL_LABELS = {"claude-sonnet-5-5": "claude-sonnet-5-5", "claude-opus-5-5": "claude-opus-5-5"}
+HELD_OUT_ARMS = ["baseline", "pinning", "spotlight-delimiters", "spotlight-strip",
+                 "taint-coarse", "taint-fine", "combined"]
+
+
+def _agg_cell(r: dict) -> str:
+    """Format an aggregate rate dict {pt,lo,hi,succ,n}; N/A when undefined (e.g. 0 exposed)."""
+    if r["pt"] is None:
+        return f"N/A ({r['succ']}/{r['n']})"
+    return f"{stats.format_pct(r['pt'])} [{stats.format_pct(r['lo'])}, {stats.format_pct(r['hi'])}] ({r['succ']}/{r['n']})"
+
+
+def _util_cell(u: dict) -> str:
+    lo, hi = u["ci_pts"]
+    v = u["verdict"].replace("_", " ")
+    return f"{u['delta_pts']:+.1f} pts [{lo:+.1f}, {hi:+.1f}] &mdash; {v}"
+
+
+def _delta_pts(x) -> str:
+    return "N/A" if x is None else f"{x:+.1f}"
+
+
+def _heldout_section(h: dict) -> str:
+    """The FILLED held-out headline from the committed aggregate (SPEC §8.3 / PREREG A8). Per model,
+    pooled across OpenAI Agents + LangGraph (A1/A8.2), NEVER pooled across models (§8.3)."""
+    comp = h["composition_successes"]
+    hj = h["answer_hijack"]
+    rs = h["refusal_split"]
+    n_cell = h["frozen"]["n_per_cell"]
+    parts = [
+        '<h2>Held-out headline (pre-registered, SPEC §8.3 / PREREG A8)</h2>',
+        '<p class="note">Pooled across <b>OpenAI Agents + LangGraph</b> (the Claude Agent SDK slice is '
+        'never pooled, A1), reported <b>per model and never pooled across models</b> (§8.3). '
+        f'n={n_cell} trials per held-out cell. Raw and exposure-conditioned ASR shown together with '
+        'Wilson 95% CIs (CLAUDE.md #5); utility &Delta; (points, 95% CI, 5-pt threshold §8.4) from the '
+        'committed M4-T2 DEV eval. <b>Exfil ASR = 0 on every arm for both models</b> (0 canary reached a '
+        'sink); the successes below are persistence + answer-hijack, which the information-flow '
+        'mitigations do not target. Numbers are rendered from the committed aggregate '
+        '<code>review/M4/heldout-static/aggregate.json</code> (built offline from the frozen run; the '
+        'renderer never reads <code>runs/</code>). <b>Integrity:</b> its baseline reconstruction matches '
+        f'the committed run summary on all {h["integrity"]["baseline_vs_summary_checks"]} checks '
+        '(0 mismatch).</p>',
+    ]
+    for model in HELD_OUT_MODEL_LABELS:
+        m = h["headline_models"][model]
+        util = h["utility"][model]
+        parts.append(f"<h4>{html.escape(model)} &mdash; pooled OpenAI Agents + LangGraph</h4>")
+        parts.append('<table><thead><tr><th>arm</th><th>raw ASR [95% CI] (succ/n)</th><th>exposure</th>'
+                     '<th>exposure-conditioned ASR [95% CI] (succ/exposed)</th>'
+                     '<th>&Delta; raw vs baseline</th><th>utility &Delta; (DEV)</th></tr></thead><tbody>')
+        eff = m["mitigation_effect"]
+        for arm in HELD_OUT_ARMS:
+            o = m["arms"][arm]["overall"]
+            klass = ' class="overall"' if arm == "baseline" else ""
+            dcell = "&mdash;" if arm == "baseline" else f"{_delta_pts(eff[arm]['delta_raw_pts'])} pts"
+            expo = "N/A" if o["exposure_rate"] is None else stats.format_pct(o["exposure_rate"])
+            parts.append(
+                f'<tr{klass}><td>{arm}</td><td>{_agg_cell(o["raw"])}</td><td>{expo}</td>'
+                f'<td>{_agg_cell(o["expcond"])}</td><td>{dcell}</td><td>{_util_cell(util[arm])}</td></tr>')
+        parts.append("</tbody></table>")
+        # baseline per-class (headline "overall and per attack class", §8.3)
+        bc = m["arms"]["baseline"]["by_class"]
+        parts.append('<p class="note">baseline by attack class (raw ASR): '
+                     + "; ".join(f"class {c} {_agg_cell(bc[c]['raw'])}" for c in sorted(bc)) + "</p>")
+        cf = m["coarse_vs_fine"]
+        parts.append('<p class="note">coarse vs fine (raw ASR): taint-coarse '
+                     f'{_agg_cell(cf["taint-coarse"])} vs taint-fine {_agg_cell(cf["taint-fine"])} '
+                     '(A4(c); taint-fine additionally carries a meaningful DEV utility loss, see the '
+                     'utility column).</p>')
+    parts.append(
+        '<p class="note"><b>Success composition (both models, all arms pooled for description only):</b> '
+        f'{comp.get("persistence", 0)} persistence + {comp.get("answer_hijack", 0)} answer-hijack; '
+        f'<b>0 exfil, 0 forbidden-action</b>. Answer-hijack = {hj["total"]} total, '
+        f'{hj["excluding_refusal_quote"]} excluding the {hj["refusal_quote"]} D55 refusal-quote case(s) '
+        f'(audited over all {hj["audited"]} hijack successes; report-only, never changes ASR).</p>')
+    parts.append(
+        '<p class="note"><b>Refusal split (A8.4):</b> '
+        f'{stats.format_pct(rs["content_filter"])} provider content-filter '
+        f'(finish_reason=content_filter), {stats.format_pct(rs["model_refusal"])} model-refusal, '
+        f'{stats.format_pct(rs["attempted_benign"])} attempted/benign; {rs["filtered_successes"]} '
+        'filtered successes. Measured ASR is a LOWER bound under Anthropic-API safeguards. '
+        f'<span class="note">[{html.escape(rs["source"])}]</span></p>')
+    # EXPLORATORY (clearly labelled, not a headline claim)
+    ex = h["exploratory"]
+    parts.append('<h4>Exploratory (NOT pre-registered)</h4>')
+    parts.append(f'<p class="caveat">{html.escape(ex["label"])}</p>')
+    ps = ex["per_scaffold_baseline"]
+    psrows = []
+    for sc in ("openai-agents", "langgraph"):
+        for model in HELD_OUT_MODEL_LABELS:
+            o = ps[sc][model]
+            psrows.append(f"<tr><td>{sc}</td><td>{html.escape(model)}</td><td>{_agg_cell(o['raw'])}</td>"
+                          f"<td>{_agg_cell(o['expcond'])}</td></tr>")
+    parts.append('<p class="note"><b>Baseline per-scaffold split</b> (exploratory; shows the pooled '
+                 'headline is not scaffold-uniform):</p>'
+                 '<table><thead><tr><th>scaffold</th><th>model</th><th>baseline raw ASR [CI]</th>'
+                 '<th>exposure-conditioned [CI]</th></tr></thead><tbody>' + "".join(psrows) + "</tbody></table>")
+    lad = ex["ladder_capability"]
+    larms = sorted({a for mv in lad["models"].values() for a in mv})
+    lrows = []
+    for model in sorted(lad["models"]):
+        cells = "".join(f"<td>{_agg_cell(lad['models'][model][a]['raw'])}</td>" for a in larms)
+        lrows.append(f"<tr><td>{html.escape(model)}</td>{cells}</tr>")
+    parts.append(f'<p class="note"><b>Ladder static capability slice</b> (exploratory; {html.escape(lad["label"])}):</p>'
+                 '<table><thead><tr><th>model</th>' + "".join(f"<th>{a}</th>" for a in larms)
+                 + "</tr></thead><tbody>" + "".join(lrows) + "</tbody></table>")
+    return "\n".join(parts)
+
+
 def build_report(root: Path | None = None) -> str:
     root = root or repo_root()
     src = {k: (root / v) for k, v in SOURCES.items()}
@@ -104,6 +228,7 @@ def build_report(root: Path | None = None) -> str:
     lg = json.loads(src["langgraph"].read_text())
     cas = json.loads(src["claude_agent_sdk"].read_text())
     prereg = src["prereg"].read_text()
+    heldout = json.loads(src["heldout"].read_text())
 
     # --- M2 dev ASR table: per scaffold x model (M2 is openai-agents only) ---
     model_tables = []
@@ -169,11 +294,10 @@ def build_report(root: Path | None = None) -> str:
                    f"{html.escape(', '.join(ne.get('thinking_modes_seen', [])))} and prompt caching "
                    f"(cache-read {ne.get('cache_read_input_tokens', 0)} tokens across {cas['ran_ok']} trials).")
 
-    placeholders = ", ".join(HELD_OUT_PLACEHOLDERS)
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MCP Red Team — M3 report</title>
+<title>MCP Red Team — M3 + held-out report</title>
 <style>
   body {{ font: 15px/1.5 -apple-system, system-ui, sans-serif; margin: 0 auto; max-width: 960px;
          padding: 24px 16px; color: #1a1a1a; background: #fff; }}
@@ -191,11 +315,11 @@ def build_report(root: Path | None = None) -> str:
   code {{ background: #f0f0f0; padding: 0 3px; border-radius: 3px; }}
 </style></head>
 <body>
-<h1>MCP Red Team — M3 report</h1>
-<p class="note">Rendered offline from committed, recorded aggregates (zero live model calls).
-Dev-split and benign only. The held-out headline is not computed here: the placeholders
-{html.escape(placeholders)} remain unfilled and no held-out record is read (none exists yet;
-<code>mcpr report</code> fills them only after the frozen held-out split is run).</p>
+<h1>MCP Red Team — M3 + held-out report</h1>
+<p class="note">Rendered offline from committed, recorded aggregates (zero live model calls). The
+M2/M3 dev + benign sections below read the dev-split and benign aggregates; the held-out headline
+reads the committed held-out aggregate (<code>review/M4/heldout-static/aggregate.json</code>, built
+offline from the frozen held-out split). The renderer never globs <code>runs/</code>.</p>
 
 <h2>M2 attack success rate — DEV split (exploratory)</h2>
 <p class="caveat"><b>DEV / exploratory only.</b> Per-cell numbers (scaffold &times; model &times; class)
@@ -242,12 +366,7 @@ held for {m2['pooled']['exfil_successes_with_source_read']}
 <table><thead><tr><th>milestone</th><th>detail</th><th>USD</th><th>cumulative</th></tr></thead>
 <tbody>{ledger_table}</tbody></table>
 
-<h2>Held-out headline (pending)</h2>
-<p class="note">Pooled held-out ASR over OpenAI Agents + LangGraph (the Claude Agent SDK is a
-separate confirmatory slice and is never pooled, A1): raw <b>{HELD_OUT_PLACEHOLDERS[0]}</b>,
-exposure-conditioned <b>{HELD_OUT_PLACEHOLDERS[1]}</b>, utility <b>{HELD_OUT_PLACEHOLDERS[2]}</b>
-on <b>{HELD_OUT_PLACEHOLDERS[4]}</b> trials per cell with <b>{HELD_OUT_PLACEHOLDERS[3]}</b>. Unfilled by
-design — no held-out evaluation has been run and none is read to render this page.</p>
+{_heldout_section(heldout)}
 </body></html>
 """
 
@@ -255,8 +374,10 @@ design — no held-out evaluation has been run and none is read to render this p
 def write_report(out_path: Path, root: Path | None = None) -> Path:
     out_path = Path(out_path)
     html_text = build_report(root)
-    leaked = [p for p in HELD_OUT_PLACEHOLDERS if p not in html_text]
-    if leaked:  # the placeholders must survive verbatim; filling them is `mcpr report`'s job only
-        raise RuntimeError(f"held-out placeholders missing from the report: {leaked}")
+    # M4 (D101): the held-out headline is now FILLED from the committed aggregate. The old stub
+    # placeholders must NOT survive -- their presence means the held-out aggregate did not render.
+    present = [p for p in HELD_OUT_PLACEHOLDERS if p in html_text]
+    if present:
+        raise RuntimeError(f"unfilled held-out stub placeholders present (headline did not render): {present}")
     out_path.write_text(html_text)
     return out_path

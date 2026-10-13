@@ -3137,3 +3137,60 @@ headline field.
 
 AUTHOR-GATED, NOT done here (#12): the `mcpr report` `<<...>>` headline, README §14, and the release.
 No frozen attack/oracle/split/stat changed (#1).
+
+## D101. Held-out headline renderer built — `mcpr report` fills the §8 aggregation (author-approved)
+The author approved building the held-out headline renderer (it did not exist: `render.py` was the
+M3 renderer, reading only dev+benign aggregates, leaving the `<<X>>…<<N>>` stubs unfilled, with three
+tests enforcing that M3 state). Scope executed exactly as instructed; README §14 + the resume-line
+framing stay with the author.
+
+1. **Committed machine-readable aggregate (aggregates only, no raw runs):**
+   `review/M4/heldout-static/build_aggregate.py` → `aggregate.json`. Reconstructs per (model, scaffold,
+   arm, class) from the gitignored raw run (`runs/m4-heldout-static/{cells,records}.jsonl`) and
+   **validates** against the committed `summary.json` baseline on all 8 checks (overall + 2 scaffolds +
+   5 classes) → **0 mismatch**. Convention (matches `evaluate.aggregate`): raw-ASR denominator =
+   planned − errored; exposure_rate = exposed / (planned − errored); exposure-conditioned = succ /
+   exposed; Wilson 95% via `report.stats`.
+2. **§8 aggregation in render.py (A8.3):** pooled OpenAI Agents + LangGraph (A1/A8.2), **per model,
+   never pooled across models** (§8.3); per-arm raw + exposure-conditioned ASR with Wilson CIs,
+   before/after Δ vs baseline, coarse-vs-fine, utility Δ beside each mitigation (from the M4-T2 DEV
+   eval), baseline per attack class. STALE-COMBINED guard: the held-out `combined` arm is the D86/A7
+   set `pinning+spotlight-strip+taint-coarse`; its utility = taint-coarse's (0% benign sink-block;
+   the other two never block sinks). The dev-util report's `combined` row is the pre-A7 D78 composition
+   (+taint-fine, meaningful_loss) and is EXPLICITLY NOT used.
+3. **Tests replaced, strictly stronger (no check weaker):** `placeholders-unfilled` → stub tokens must
+   be GONE and the held-out numbers must match the committed aggregate; `sources-dev+benign-only` →
+   sources MUST include the held-out aggregate (and it exists); `ledger` → reconciles across render
+   LEDGER + DECISIONS + rendered report + the aggregate's `cumulative_ledger_total`. Added an
+   integrity/zero-exfil corroboration test.
+4. **Ledger (#8).** `render.py` LEDGER completed with the 5 entries missing since M4-T2: adaptive-DEV
+   \$7.718286, ladder qual \$0.023938, held-out frontier static \$33.134640, ladder static \$0.251628,
+   adaptive held-out \$2.518366. New `LEDGER_TOTAL_USD` = **\$109.479119** (= \$65.832261 + those five),
+   reconciling with the spend log. `review/M3/report.html` regenerated (was stale at \$23.138059).
+5. **EXPLORATORY, clearly labelled (NOT pre-registered):** the baseline per-scaffold split
+   (OpenAI-Agents 5.1% vs LangGraph 0%) and the ladder capability ordering (A8.10). Answer-hijack
+   reported as **24 total, 22 excluding the 2 D55 refusal-quote cases** (refusal-quote recomputed over
+   all 24 hijack successes via the frozen A5 audit).
+6. **Resume template RETIRED (#12).** The SPEC "cut held-out ASR from X to Y" resume sentence is
+   removed; only pre-registered NUMBERS are filled. The author writes the headline framing.
+
+**Result (pre-registered, per model, pooled OA+LG, raw ASR @ baseline → mitigations; exfil 0 on every
+arm):** Sonnet 5.5 baseline 3.1% (5/160); Opus 5.5 baseline 2.5% (4/157). Successes are 52 persistence
++ 24 answer-hijack, **0 exfil, 0 forbidden** — the info-flow mitigations target exfil (already 0), so
+per-arm ASR is flat/within-noise and NOT a "cut X→Y" story. taint-fine costs ~16–19 DEV utility pts
+(meaningful_loss); coarse/combined ~0 (no_meaningful_loss).
+
+**Reviewer pass (CLAUDE.md #11): ACCEPT** — independent read-only subagent, all 9 items PASS, 0 blocking.
+Confirmed: reconstruction reproduces aggregate.json byte-for-byte and validates vs summary.json baseline
+(9/317 raw, 9/299 expcond, 0 mismatch, real SystemExit gate); Wilson CIs only from report.stats, per model
+never pooled across models; stale D78 combined row NOT used (combined utility = taint-coarse, 0% block);
+refusal-quote RECOMPUTED (2/24) via the frozen oracle audit; the 3 replaced tests are strictly stronger +1
+net-new (no coverage dropped); ledger $109.479119 reconciles across LEDGER/DECISIONS/report/aggregate;
+exploratory labels correct; no `<<`/resume tokens survive and the renderer reads only the fixed SOURCES
+(never globs runs/); honest framing (Opus positive deltas rendered as-is, no "mitigations cut ASR" claim).
+Advisory (non-blocking, ADOPTED): added test_report_sources_never_point_under_runs to make the
+"never reads runs/" invariant self-enforcing.
+
+Cost: \$0 (offline render + aggregate). Cumulative unchanged at \$109.479119 of the \$225 cap.
+AUTHOR-GATED, still NOT done (#12): README §14 and the resume-line / headline framing. No frozen
+attack/oracle/split/stat changed (#1).
