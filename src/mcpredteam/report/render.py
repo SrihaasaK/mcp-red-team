@@ -142,7 +142,7 @@ def _heldout_section(h: dict) -> str:
     n_cell = h["frozen"]["n_per_cell"]
     parts = [
         '<h2>Held-out headline (pre-registered, SPEC §8.3 / PREREG A8)</h2>',
-        '<p class="note">Pooled across <b>OpenAI Agents + LangGraph</b> (the Claude Agent SDK slice is '
+        ('<p class="note">Pooled across <b>OpenAI Agents + LangGraph</b> (the Claude Agent SDK slice is '
         'never pooled, A1), reported <b>per model and never pooled across models</b> (§8.3). '
         f'n={n_cell} trials per held-out cell. Raw and exposure-conditioned ASR shown together with '
         'Wilson 95% CIs (CLAUDE.md #5); utility &Delta; (points, 95% CI, 5-pt threshold §8.4) from the '
@@ -152,7 +152,7 @@ def _heldout_section(h: dict) -> str:
         '<code>review/M4/heldout-static/aggregate.json</code> (built offline from the frozen run; the '
         'renderer never reads <code>runs/</code>). <b>Integrity:</b> its baseline reconstruction matches '
         f'the committed run summary on all {h["integrity"]["baseline_vs_summary_checks"]} checks '
-        '(0 mismatch).</p>',
+        '(0 mismatch).</p>'),
     ]
     for model in HELD_OUT_MODEL_LABELS:
         m = h["headline_models"][model]
