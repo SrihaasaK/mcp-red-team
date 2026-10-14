@@ -8,7 +8,7 @@
   "scaffold": "claude-agent-sdk",
   "model": "claude-sonnet-5-5",
   "mode": "record",
-  "trial_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter",
+  "trial_dir": "<REPO>/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter",
   "servers": [
     "notes",
     "http"

@@ -35,12 +35,12 @@ ROOT = repo_root()
 # base_url default (Anthropic) for haiku; Ollama OpenAI-compatible endpoint for qwen3 (D93).
 # price = (input $/MTok, output $/MTok); qwen3 local => $0. Haiku 5.5 = public Anthropic rate.
 MODELS = {
-    "haiku55":   dict(model="claude-haiku-5-5", base_url="https://api.anthropic.com/v1/",
-                      local=False, digest="hosted-api (no local digest)", price=(0.10, 0.50)),
-    "qwen3-8b":  dict(model="qwen3:8b",  base_url="http://localhost:11434/v1/",
-                      local=True, digest="500a1f067a9f", price=(0.0, 0.0)),
-    "qwen3-14b": dict(model="qwen3:14b", base_url="http://localhost:11434/v1/",
-                      local=True, digest="bdbd181c33f2", price=(0.0, 0.0)),
+    "haiku55":   {"model": "claude-haiku-5-5", "base_url": "https://api.anthropic.com/v1/",
+                      "local": False, "digest": "hosted-api (no local digest)", "price": (0.10, 0.50)},
+    "qwen3-8b":  {"model": "qwen3:8b",  "base_url": "http://localhost:11434/v1/",
+                      "local": True, "digest": "500a1f067a9f", "price": (0.0, 0.0)},
+    "qwen3-14b": {"model": "qwen3:14b", "base_url": "http://localhost:11434/v1/",
+                      "local": True, "digest": "bdbd181c33f2", "price": (0.0, 0.0)},
 }
 
 

@@ -38,6 +38,9 @@ jobs:
           uv sync --frozen --project scaffolds/langgraph
           uv sync --frozen --project scaffolds/claude-agent-sdk
 
+      - name: Lint (ruff)
+        run: uv run ruff check .
+
       - name: Unit suite (offline; keys unset)
         run: uv run pytest -q
 

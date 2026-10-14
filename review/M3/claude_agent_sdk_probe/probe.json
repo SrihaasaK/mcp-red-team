@@ -49,9 +49,9 @@
       "hooks": null,
       "builtin_tools": [],
       "permission_mode": "bypassPermissions",
-      "cli_home": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_home",
-      "cli_config_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_config",
-      "cli_cwd": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_cwd"
+      "cli_home": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_home",
+      "cli_config_dir": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_config",
+      "cli_cwd": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_cwd"
     },
     "live_llm_calls": 4,
     "blocked_network_calls": 0,
@@ -177,9 +177,9 @@
       "hooks": null,
       "builtin_tools": [],
       "permission_mode": "bypassPermissions",
-      "cli_home": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_handshake_2turn/cli_home",
-      "cli_config_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_handshake_2turn/cli_config",
-      "cli_cwd": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_handshake_2turn/cli_cwd"
+      "cli_home": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_handshake_2turn/cli_home",
+      "cli_config_dir": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_handshake_2turn/cli_config",
+      "cli_cwd": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_handshake_2turn/cli_cwd"
     },
     "live_llm_calls": 4,
     "blocked_network_calls": 0,
@@ -279,9 +279,9 @@
       "hooks": null,
       "builtin_tools": [],
       "permission_mode": "bypassPermissions",
-      "cli_home": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_stdio_stateless_2turn/cli_home",
-      "cli_config_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_stdio_stateless_2turn/cli_config",
-      "cli_cwd": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_stdio_stateless_2turn/cli_cwd"
+      "cli_home": "<REPO>/review/M3/claude_agent_sdk_probe/era_stdio_stateless_2turn/cli_home",
+      "cli_config_dir": "<REPO>/review/M3/claude_agent_sdk_probe/era_stdio_stateless_2turn/cli_config",
+      "cli_cwd": "<REPO>/review/M3/claude_agent_sdk_probe/era_stdio_stateless_2turn/cli_cwd"
     },
     "live_llm_calls": 4,
     "blocked_network_calls": 0,
@@ -363,9 +363,9 @@
       "hooks": null,
       "builtin_tools": [],
       "permission_mode": "bypassPermissions",
-      "cli_home": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_stateless_1turn/cli_home",
-      "cli_config_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_stateless_1turn/cli_config",
-      "cli_cwd": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_stateless_1turn/cli_cwd"
+      "cli_home": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_stateless_1turn/cli_home",
+      "cli_config_dir": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_stateless_1turn/cli_config",
+      "cli_cwd": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_stateless_1turn/cli_cwd"
     },
     "live_llm_calls": 2,
     "blocked_network_calls": 0,
@@ -492,9 +492,9 @@
       "hooks": null,
       "builtin_tools": [],
       "permission_mode": "bypassPermissions",
-      "cli_home": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_home",
-      "cli_config_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_config",
-      "cli_cwd": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_cwd"
+      "cli_home": "<REPO>/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_home",
+      "cli_config_dir": "<REPO>/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_config",
+      "cli_cwd": "<REPO>/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_cwd"
     },
     "live_llm_calls": 4,
     "blocked_network_calls": 0,
@@ -708,9 +708,9 @@
         "hooks": null,
         "builtin_tools": [],
         "permission_mode": "bypassPermissions",
-        "cli_home": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_home",
-        "cli_config_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_config",
-        "cli_cwd": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_cwd"
+        "cli_home": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_home",
+        "cli_config_dir": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_config",
+        "cli_cwd": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_stateless_2turn/cli_cwd"
       },
       "zero_non_loopback": {
         "live_llm_calls_loopback_only": 4,

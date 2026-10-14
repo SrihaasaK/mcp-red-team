@@ -103,11 +103,11 @@ assert set(ARMS_ORDER) == set(ARMS), f"arm set drift: {sorted(ARMS_ORDER)} != {s
 # rate = $/trial fallback for the spend projection until an observed mean exists.
 #   Haiku: A8.12 adaptive estimate (~$0.00067/trial; ~1/20th of Sonnet's $0.0123). qwen3: $0.
 MODELS: dict[str, dict] = {
-    "haiku55": dict(model="claude-haiku-5-5", base_url="https://api.anthropic.com/v1/",
-                    local=False, digest="hosted-api (no local digest)", price=(0.10, 0.50),
-                    rate=0.00067),
-    "qwen3-8b": dict(model="qwen3:8b", base_url="http://localhost:11434/v1/",
-                     local=True, digest="500a1f067a9f", price=(0.0, 0.0), rate=0.0),
+    "haiku55": {"model": "claude-haiku-5-5", "base_url": "https://api.anthropic.com/v1/",
+                    "local": False, "digest": "hosted-api (no local digest)", "price": (0.10, 0.50),
+                    "rate": 0.00067},
+    "qwen3-8b": {"model": "qwen3:8b", "base_url": "http://localhost:11434/v1/",
+                     "local": True, "digest": "500a1f067a9f", "price": (0.0, 0.0), "rate": 0.0},
 }
 MODEL_ORDER = ["haiku55", "qwen3-8b"]
 RATE = {tag: MODELS[tag]["rate"] for tag in MODEL_ORDER}

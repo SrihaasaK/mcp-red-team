@@ -41,13 +41,11 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-from pathlib import Path
 
 from mcpredteam.config import anthropic_api_key, repo_root
 from mcpredteam.proxy.http_app import HubServer, ProxyHub
-from mcpredteam.proxy.relay import HANDSHAKE, STATELESS
+from mcpredteam.proxy.relay import HANDSHAKE
 from mcpredteam.runner.evaluate import (
-    HANDSHAKE_CLASSES,
     RUNNABLE_CLASSES,
     SERVERS,
     TrialRecord,
@@ -320,8 +318,8 @@ async def run_full(prior_spent: float) -> None:
                                 arm_err[key] += 1
                             if arm_n[key] >= 20 and arm_err[key] / arm_n[key] > 0.10:
                                 flush()
-                                write_summary([f"scaffold/arm {key} harness-error rate "
-                                               f"{arm_err[key]}/{arm_n[key]} > 10%"], aborted=True)
+                                write_summary([(f"scaffold/arm {key} harness-error rate "
+                                               f"{arm_err[key]}/{arm_n[key]} > 10%")], aborted=True)
                                 raise AbortRun(f"scaffold/arm {key} harness-error rate "
                                                f"{arm_err[key]}/{arm_n[key]} > 10%")
                         cell_rows.append({

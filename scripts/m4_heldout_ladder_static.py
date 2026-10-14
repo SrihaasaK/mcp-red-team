@@ -40,7 +40,6 @@ from __future__ import annotations
 import asyncio
 import json
 import sys
-from pathlib import Path
 
 from mcpredteam.config import anthropic_api_key, repo_root
 from mcpredteam.proxy.http_app import HubServer, ProxyHub
@@ -74,11 +73,11 @@ PRIOR_SPENT_DEFAULT = 106.709125   # cumulative to date (coordinator handoff)
 #   Haiku: A8.12 ladder-static estimate (~$0.24 / 360-trial upper bound => ~$0.000667/trial;
 #          consistent with Haiku 5.5 being ~1/20th of Sonnet's $0.0123/trial). qwen3: $0 local.
 MODELS: dict[str, dict] = {
-    "haiku55": dict(model="claude-haiku-5-5", base_url="https://api.anthropic.com/v1/",
-                    local=False, digest="hosted-api (no local digest)", price=(0.10, 0.50),
-                    rate=0.000667),
-    "qwen3-8b": dict(model="qwen3:8b", base_url="http://localhost:11434/v1/",
-                     local=True, digest="500a1f067a9f", price=(0.0, 0.0), rate=0.0),
+    "haiku55": {"model": "claude-haiku-5-5", "base_url": "https://api.anthropic.com/v1/",
+                    "local": False, "digest": "hosted-api (no local digest)", "price": (0.10, 0.50),
+                    "rate": 0.000667},
+    "qwen3-8b": {"model": "qwen3:8b", "base_url": "http://localhost:11434/v1/",
+                     "local": True, "digest": "500a1f067a9f", "price": (0.0, 0.0), "rate": 0.0},
 }
 MODEL_ORDER = ["haiku55", "qwen3-8b"]
 RATE = {tag: MODELS[tag]["rate"] for tag in MODEL_ORDER}
@@ -292,8 +291,8 @@ async def run_full(prior_spent: float) -> None:
                             arm_err[key] += 1
                         if arm_n[key] >= 20 and arm_err[key] / arm_n[key] > 0.10:
                             flush()
-                            write_summary([f"scaffold/arm {key} harness-error rate "
-                                           f"{arm_err[key]}/{arm_n[key]} > 10%"], aborted=True)
+                            write_summary([(f"scaffold/arm {key} harness-error rate "
+                                           f"{arm_err[key]}/{arm_n[key]} > 10%")], aborted=True)
                             raise AbortRun(f"scaffold/arm {key} harness-error rate "
                                            f"{arm_err[key]}/{arm_n[key]} > 10%")
                     cell_rows.append({

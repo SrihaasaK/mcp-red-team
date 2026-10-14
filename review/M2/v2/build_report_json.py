@@ -9,8 +9,11 @@ import json
 from collections import defaultdict
 
 from mcpredteam.config import repo_root
-from mcpredteam.oracle.rules import (score, audit_answer_hijack_refusal_quote,
-                                     audit_source_read_before_sink)
+from mcpredteam.oracle.rules import (
+    audit_answer_hijack_refusal_quote,
+    audit_source_read_before_sink,
+    score,
+)
 from mcpredteam.oracle.trajectory import Trajectory
 from mcpredteam.report import stats
 from mcpredteam.runner.canary import hydrate_attack_config

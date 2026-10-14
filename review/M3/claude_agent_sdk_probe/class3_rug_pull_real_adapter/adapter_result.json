@@ -64,14 +64,14 @@
     "hooks": null,
     "builtin_tools": [],
     "permission_mode": "bypassPermissions",
-    "cli_home": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_home",
-    "cli_config_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_config",
-    "cli_cwd": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_cwd"
+    "cli_home": "<REPO>/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_home",
+    "cli_config_dir": "<REPO>/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_config",
+    "cli_cwd": "<REPO>/review/M3/claude_agent_sdk_probe/class3_rug_pull_real_adapter/cli_cwd"
   },
   "tools_fetched": "CLI connects MCP lazily; a fresh CLAUDE_CONFIG_DIR per trial defeats the persistent tool-list cache (D6)",
   "versions": {
     "bundled_cli": "2.1.292",
-    "cli_path": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/scaffolds/claude-agent-sdk/.venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude",
+    "cli_path": "<REPO>/scaffolds/claude-agent-sdk/.venv/lib/python3.12/site-packages/claude_agent_sdk/_bundled/claude",
     "claude-agent-sdk": "0.2.164",
     "mcp": "2.3.0",
     "mcp-types": "2.3.0",

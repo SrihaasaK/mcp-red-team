@@ -8,7 +8,7 @@
   "scaffold": "mcp-client",
   "model": "none",
   "mode": "record",
-  "trial_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M2/mrtr_no_callback",
+  "trial_dir": "<REPO>/review/M2/mrtr_no_callback",
   "servers": [
     "probe_mrtr"
   ],

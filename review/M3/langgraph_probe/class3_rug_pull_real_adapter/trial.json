@@ -8,7 +8,7 @@
   "scaffold": "langgraph",
   "model": "claude-sonnet-5-5",
   "mode": "record",
-  "trial_dir": "/Users/srihaasa/mcp-red-team/.claude/worktrees/agent-a3b7e739c1d561527/review/M3/langgraph_probe/class3_rug_pull_real_adapter",
+  "trial_dir": "<HOME>/mcp-red-team/.claude/worktrees/agent-a3b7e739c1d561527/review/M3/langgraph_probe/class3_rug_pull_real_adapter",
   "servers": [
     "notes",
     "http"

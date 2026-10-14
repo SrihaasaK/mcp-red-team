@@ -8,7 +8,7 @@
   "scaffold": "langgraph",
   "model": "none",
   "mode": "record",
-  "trial_dir": "/Users/srihaasa/mcp-red-team/.claude/worktrees/agent-a3b7e739c1d561527/review/M3/langgraph_probe/c4_list_twice_ttl60000",
+  "trial_dir": "<HOME>/mcp-red-team/.claude/worktrees/agent-a3b7e739c1d561527/review/M3/langgraph_probe/c4_list_twice_ttl60000",
   "servers": [
     "probe_cache"
   ],

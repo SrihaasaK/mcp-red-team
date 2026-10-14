@@ -91,7 +91,7 @@ def rebuild_cell(cell_dir: Path, task_by_id: dict) -> dict:
 
 
 def main() -> None:
-    configs, _split, tasks = load_corpus()
+    _configs, _split, tasks = load_corpus()
     task_by_id = tasks  # load_corpus already returns {task_id: Task}
 
     cell_dirs = sorted(p for p in RUN.glob("*/seed*/*") if p.is_dir() and (p / "attempt_001").exists())

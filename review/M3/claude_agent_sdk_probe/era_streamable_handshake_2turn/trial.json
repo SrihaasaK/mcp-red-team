@@ -8,7 +8,7 @@
   "scaffold": "claude-agent-sdk",
   "model": "claude-sonnet-5-5",
   "mode": "record",
-  "trial_dir": "/Users/srihaasa/orca/workspaces/mcp-red-team/mcp-red-team/review/M3/claude_agent_sdk_probe/era_streamable_handshake_2turn",
+  "trial_dir": "<REPO>/review/M3/claude_agent_sdk_probe/era_streamable_handshake_2turn",
   "servers": [
     "notes"
   ],

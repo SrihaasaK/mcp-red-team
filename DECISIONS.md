@@ -3228,6 +3228,37 @@ seventh was added, sourced from D7 (fallback not triggered; held-out scaffolds O
 + LangGraph stateful-only ⇒ era confounded with scaffold) — the author may reword/remove it. Cost $0.
 No frozen attack/oracle/split/stat changed (#1).
 
+## D106. Path-redaction sweep + ruff debt fixed (release-prep) — guarded reverts
+Author release-prep. No git-history rewrite (author decision #10: DECISIONS cites SHAs; username public).
+
+**1. Path redaction (paths only, bundle scheme <REPO>/<HOME>).** Redacted the pre-migration Orca home
+path from **26 TRACKED files** (not 21 — the earlier count missed `review/M3/langgraph_probe/` (6);
+full set = `review/M2/{c6_resource_probe,cache_ttl_0,cache_ttl_60000,mrtr_no_callback,mrtr_with_callback}`
++ `review/M3/claude_agent_sdk_probe/*` + `review/M3/langgraph_probe/*`). VERIFIED after redaction: full
+suite **236 passed** + all **6 mcpr replay checks EQUAL** (zero live) ⇒ no check depends on the redacted
+bytes, no file reverted. The 11 other working-tree hits are GITIGNORED, untracked CLI caches
+(`cli_home`/`cli_config`) — never published. DECISIONS.md keeps 2 prose mentions of the pattern (this
+log documenting the decision; intentional).
+
+**2. ruff (33 pre-existing errors).** **19 FIXED** (F401/I001/C408/C401/ISC004/RUF059 across
+`scripts/m4_*`, `review/M4/adaptive/*`, `review/M2/v2/build_report_json.py`; render.py's ISC004 was
+fixed earlier). **14 REVERTED in 3 files per the author's guards:**
+  - `attacks/gen_corpus.py`: regenerating produces the **pre-A2 corpus** (hash `d74ca52`), NOT the
+    committed D61 re-pin (`60d7dabe`) — a PRE-EXISTING staleness (the edited and the original HEAD
+    gen_corpus produce identical output, so the ruff edit was behavior-preserving; the pin mismatch is
+    independent of it). Per "if it differs, revert and report" → reverted.
+  - `review/M2/sample_review_packet.py` + `review/M2/v2/sample_review_packet.py`: cannot reproduce their
+    committed packets in the current tree (D61 `canary_ref` hydration error / path drift) → reverted;
+    `review/M2/v2/build_report_json.py` reproduced `m2_report.json` BYTE-IDENTICAL and was KEPT.
+  The 3 reverted files are added to ruff `extend-exclude` (deferred to a dedicated lint sweep), so ruff
+  is clean on everything else.
+
+**3. CI.** Added a `uv run ruff check .` step to `.github/workflows/replay.yml` (before the unit suite).
+
+**4. Re-scan at HEAD.** Tracked-tree home-path grep CLEAN (only the 2 intentional DECISIONS prose
+mentions); secret-pattern scan CLEAN; `.env` never committed (only empty `.env.example`); full suite
+**236 passed**. Cost $0. No frozen attack/oracle/split/stat changed (#1).
+
 ## D104. README review applied — sanitized recordings release + verified prior art
 Author README review, all items applied:
 1. **Reproduction release.** Published a SANITIZED held-out recordings bundle as GitHub release
