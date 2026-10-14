@@ -3259,6 +3259,27 @@ fixed earlier). **14 REVERTED in 3 files per the author's guards:**
 mentions); secret-pattern scan CLEAN; `.env` never committed (only empty `.env.example`); full suite
 **236 passed**. Cost $0. No frozen attack/oracle/split/stat changed (#1).
 
+## D107. gen_corpus → legacy/ (corpus is source of truth); M2 scripts marked historical; CI runner pinned
+**1. gen_corpus.** Updating it to regenerate the A2-pinned corpus (`60d7dabe`) was NOT done, because the
+D61 re-pin was a HAND-EDIT of `attacks/corpus.yaml` (removed the literal `canary:` value from 19
+exfil/chain configs) and D65 explicitly DEFERRED updating the generator — the committed corpus has been
+hand-maintained as the source of truth since. gen_corpus only produces the PRE-A2 corpus (`d74ca52`).
+Per the author's fallback ("if that can't be done without changing the corpus, move it to legacy/"):
+**moved `attacks/gen_corpus.py` → `legacy/gen_corpus.py`** with a header note (source of truth =
+`attacks/corpus.yaml`, A2 pin; this script = pre-A2 version, provenance only). Applied the
+behavior-preserving ruff fixes so the legacy file is **lint-clean** (verified earlier: edited output ==
+original == `d74ca52`), and removed it from ruff `extend-exclude`. Added **`tests/test_corpus_pin.py`**
+asserting the committed `attacks/corpus.yaml` SHA-256 == the A2 pin `60d7dabe…` and that the pin is
+recorded in PREREG (test + prereg stay in sync).
+**2. M2 review-packet scripts.** Added HISTORICAL header notes to `review/M2/sample_review_packet.py`
+(raises `canary_ref`-not-hydrated since D61) and `review/M2/v2/sample_review_packet.py` (trips its own
+path-leak check in the post-migration tree) — each states it is not reproducible here and the committed
+packet is the source of truth. Kept ruff-excluded.
+**3. CI runner.** `runs-on: ubuntu-latest` → **`ubuntu-24.04`** (decision #6) so the reproducibility
+runner is fixed, not the moving `ubuntu-latest` label (GitHub migrates it to Ubuntu 26 on 2026-10-19).
+Full suite **237 passed** (236 + test_corpus_pin); ruff clean repo-wide. Cost $0. No frozen
+attack/oracle/split/stat changed (#1).
+
 ## D104. README review applied — sanitized recordings release + verified prior art
 Author README review, all items applied:
 1. **Reproduction release.** Published a SANITIZED held-out recordings bundle as GitHub release

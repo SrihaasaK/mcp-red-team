@@ -40,12 +40,9 @@ line-length = 100
 target-version = "py312"
 extend-exclude = [
     "probe",  # throwaway M0 measurement scripts (not shipped)
-    # Legacy generators whose ruff fixes could NOT be verified behavior-preserving against their
-    # pinned/committed outputs in the current (post-Orca-migration) tree (D106): gen_corpus.py
-    # regenerates the pre-A2 corpus (hash d74ca52, not the committed D61 re-pin 60d7dabe); the two
-    # M2 sample_review_packet.py cannot reproduce their committed packets (D61 canary hydration /
-    # path drift). Left for a dedicated lint sweep rather than risk changing a frozen artifact.
-    "attacks/gen_corpus.py",
+    # Historical M2 review-packet generators that cannot reproduce their committed packets in the
+    # current (post-Orca-migration) tree (D61 canary hydration / path drift) -- see their header
+    # notes. Kept ruff-excluded (D106/D107). (gen_corpus.py moved to legacy/ and is now lint-clean.)
     "review/M2/sample_review_packet.py",
     "review/M2/v2/sample_review_packet.py",
 ]

@@ -18,7 +18,9 @@ jobs:
     # package incl. claude-agent-sdk 0.2.164 (manylinux_2_17_x86_64), so `uv sync --frozen` works on
     # linux. Replay serves recorded SSE by sequence and request diffs are diagnostic-only, so the
     # darwin-made recordings replay here; this first Actions run IS the linux reproducibility proof.
-    runs-on: ubuntu-latest
+    # D107: pinned to ubuntu-24.04 (decision #6) so the reproducibility runner is FIXED, not the
+    # moving `ubuntu-latest` label (which GitHub migrates to Ubuntu 26 on 2026-10-19).
+    runs-on: ubuntu-24.04
     env:
       # Replay is offline. Leave the model keys unset so a live call is impossible.
       ANTHROPIC_API_KEY: ""

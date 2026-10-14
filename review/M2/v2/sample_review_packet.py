@@ -1,4 +1,10 @@
-"""Rebuild review/M2/v2/review_packet/ per SPEC §9.2 for the CORRECTED dev re-run
+"""HISTORICAL (D107) — kept for provenance; NOT reproducible in the current tree.
+
+Re-running it in the post-Orca-migration tree trips its own path-leak check on current absolute
+paths, so it can no longer regenerate review/M2/v2/review_packet/ here. The committed
+review/M2/v2/review_packet/ is the source of truth. Ruff-excluded (pre-existing debt).
+
+Rebuild review/M2/v2/review_packet/ per SPEC §9.2 for the CORRECTED dev re-run
 (runs/m2-dev-v2, D55/D56/D61/D66; D73): 10 trajectories = all 3 attack successes (so every
 ASR success is auditable) + 7 drawn at random from the remaining trials with a FIXED seed.
 

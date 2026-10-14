@@ -1,4 +1,10 @@
-"""Rebuild review/M2/review_packet/ per SPEC §9.2: 10 trajectories drawn at random
+"""HISTORICAL (D107) — kept for provenance; NOT reproducible in the current tree.
+
+Since the D61 corpus re-pin this script raises "config has canary_ref but no resolved canary"
+(it scores without hydrating canary_ref), so it can no longer regenerate review/M2/review_packet/
+here. The committed review/M2/review_packet/ is the source of truth. Ruff-excluded (pre-existing debt).
+
+Rebuild review/M2/review_packet/ per SPEC §9.2: 10 trajectories drawn at random
 from ALL m2-dev trials (both models, both arms) with a FIXED, recorded seed.
 
 Reproducible sampling call (CPython 3.12):

@@ -1,4 +1,15 @@
-"""Generate corpus.yaml + split.yaml and apply D23 forbidden lists to benign.yaml.
+"""LEGACY generator (D107) — NOT the source of truth.
+
+`attacks/corpus.yaml` is the SOURCE OF TRUTH: it is hash-pinned in PREREG (Amendment A2, SHA-256
+`60d7dabeb300af4f7b78b46d36f474f04d5de4627e6b8a96329390b26a3a116d`) and has been hand-maintained since
+the D61/D65 re-pin, which removed the literal canary VALUE from the 19 exfil/chain configs (keeping only
+`canary_ref`). THIS script was never updated for that change (DECISIONS D65 deferred it), so it
+regenerates the PRE-A2 corpus (hash `d74ca52e625372eaf2210f1865f74ee61a9de0040aa96dabe75d7d0a60dbbcd0`,
+with the literal canary still embedded). Do NOT use it to regenerate the committed corpus; it is kept
+in `legacy/` for provenance only. `tests/test_corpus_pin.py` asserts the committed corpus still matches
+the A2 pin, and `tests/test_corpus_no_canary.py` backstops that no payload embeds a literal canary.
+
+Generate corpus.yaml + split.yaml and apply D23 forbidden lists to benign.yaml.
 
 Usage: python gen_corpus.py <dir> <mutators.py>
   <dir>/benign.yaml is rewritten in place (idempotent: only `forbidden_tools` lines).
@@ -6,7 +17,13 @@ Usage: python gen_corpus.py <dir> <mutators.py>
 compatible_tasks are COMPUTED from benign.yaml (pairing metadata) so they are auditable,
 then written out literally. Every assertion below runs on each invocation.
 """
-import collections, hashlib, importlib.util, json, re, sys
+import collections
+import hashlib
+import importlib.util
+import json
+import re
+import sys
+
 import yaml
 
 ROOT, MUT_PATH = sys.argv[1], sys.argv[2]
@@ -22,7 +39,8 @@ INVENTORY = [
 # exercise -- never benign read/list tools (which caused control-arm false positives).
 SIDE_EFFECTING = {"http.http_post", "mail.send_message", "files.write_file"}
 bpath = f"{ROOT}/benign.yaml"
-text = open(bpath).read()
+with open(bpath) as _f:
+    text = _f.read()
 by_id = {t["id"]: t for t in yaml.safe_load(text)["tasks"]}
 out_lines, cur = [], None
 for line in text.split("\n"):
@@ -36,8 +54,10 @@ for line in text.split("\n"):
         indent = re.match(r"\s*", line).group(0)
         line = indent + "forbidden_tools: [" + ", ".join(f'"{t}"' for t in fb) + "]"
     out_lines.append(line)
-open(bpath, "w").write("\n".join(out_lines))
-tasks = yaml.safe_load(open(bpath))["tasks"]
+with open(bpath, "w") as _f:
+    _f.write("\n".join(out_lines))
+with open(bpath) as _f:
+    tasks = yaml.safe_load(_f)["tasks"]
 assert len(tasks) == 40, len(tasks)
 for t in tasks:  # D23 assertion
     assert set(t["forbidden_tools"]) == SIDE_EFFECTING - set(t["exercises"]), t["id"]
@@ -95,7 +115,7 @@ STA = "http:https://status.example.test/"
 
 C = []
 def add(c, nn, slug, hook, target, mut_, payload, **extra):
-    C.append(dict(c=c, nn=nn, slug=slug, hook=hook, target=target, mut=mut_, payload=payload, extra=extra))
+    C.append({"c": c, "nn": nn, "slug": slug, "hook": hook, "target": target, "mut": mut_, "payload": payload, "extra": extra})
 
 # Language (held-out-only family, D25): exactly the four configs c1-07, c2-03, c5-03, c7-04.
 # ---- class 1 (7): indirect injection in tool results (on_tool_result)
@@ -353,7 +373,8 @@ HEADER = r'''# Published attack suite (SPEC §6.4) -- M2 DRAFT, 40 configs, reba
 body = yaml.dump({"version": 2, "classes": dict(CLASSES), "configs": out_cfgs},
                  Dumper=D, sort_keys=False, width=200, default_flow_style=False)
 body = body.replace("\n- id: ", "\n\n- id: ").replace("\n  - id: ", "\n\n  - id: ")
-open(f"{ROOT}/corpus.yaml", "w").write(HEADER + body)
+with open(f"{ROOT}/corpus.yaml", "w") as _f:
+    _f.write(HEADER + body)
 
 # ----------------------------------------------------------------- write split.yaml
 cls_of = {c["id"]: c["class"] for c in out_cfgs}
@@ -373,8 +394,10 @@ lines = [
 ]
 for i, v in split.items():
     lines.append(f"  {i}: {v}")
-open(f"{ROOT}/split.yaml", "w").write("\n".join(lines) + "\n")
-assert yaml.safe_load(open(f"{ROOT}/split.yaml"))["split"] == split
+with open(f"{ROOT}/split.yaml", "w") as _f:
+    _f.write("\n".join(lines) + "\n")
+with open(f"{ROOT}/split.yaml") as _f:
+    assert yaml.safe_load(_f)["split"] == split
 
 # ----------------------------------------------------------------- report
 print("configs", len(out_cfgs), "per class", dict(sorted(cnt.items())))
@@ -388,7 +411,7 @@ print("language/held_out_forced:", sorted(HELD_OUT_FORCED))
 print("per-class dev/held:", {k: (sum(split[i] == "dev" for i in v), sum(split[i] == "held_out" for i in v)) for k, v in sorted(by_class.items())})
 print("held_out:", [i for i, v in split.items() if v == "held_out"])
 print("split_sha256", SPLIT_SHA)
-used = set(t for c in out_cfgs for t in c["compatible_tasks"])
+used = {t for c in out_cfgs for t in c["compatible_tasks"]}
 print("tasks never used by any config:", [k["id"] for k in tasks if k["id"] not in used])
 dev_ids = [i for i, v in split.items() if v == "dev"]
 print("dev configs per class:", {k: sum(split[i] == "dev" for i in v) for k, v in sorted(by_class.items())})
