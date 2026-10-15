@@ -15,12 +15,12 @@ from the published recordings via rescore_from_release.py).
 """
 import json
 
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
+import matplotlib.pyplot as plt
 
-from mcpredteam.config import repo_root  # noqa: E402
-from mcpredteam.report import stats  # noqa: E402
+from mcpredteam.config import repo_root
+from mcpredteam.report import stats
+
+plt.switch_backend("Agg")  # headless render (no display, e.g. CI)
 
 OUT = repo_root() / "review" / "M4" / "heldout-static"
 EXFIL_TRIALS = 978  # D96-verified held-out exfil-trial count (reproducible from the released recordings)
