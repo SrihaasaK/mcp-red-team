@@ -3319,6 +3319,20 @@ not reconstructable from a static recording — checked for consistency, not re-
 README "Reproduce" now lists both paths: "rebuild the aggregate" (small bundle) and "re-score every
 trial" (full set). Cost $0. No frozen attack/oracle/split/stat changed (#1).
 
-Cost: \$0 (offline render + aggregate). Cumulative unchanged at \$109.479119 of the \$225 cap.
-AUTHOR-GATED, still NOT done (#12): README §14 and the resume-line / headline framing. No frozen
-attack/oracle/split/stat changed (#1).
+## D108. Release-prep assets — PyPI trusted-publishing workflow (not triggered) + headline figure
+Author-approved prep (no tag pushed, nothing published). (1) `.github/workflows/release.yml`: builds with
+`uv build` and publishes to PyPI via **trusted publishing / OIDC** (`id-token: write`, no token),
+triggered only by a `v*` tag; `ubuntu-24.04` runner (decision #6). It does nothing until the maintainer
+adds this repo as a Trusted Publisher on PyPI and pushes a tag. (2) `review/M4/heldout-static/make_figure.py`
++ `headline_figure.{svg,png}`: two-panel headline figure from the committed `aggregate.json` — (a) exfil
+0/978 held-out (0 successes read from the aggregate; 978 = D96-verified exfil-trial count, carried as a
+documented constant since adding it to the hash-pinned aggregate would break the release rebuild), (b)
+EXPLORATORY baseline hijack/persistence ASR by framework (OpenAI Agents SDK 5.1% [2.7,9.4] (9/177) vs
+LangGraph 0.0% [0,2.7] (0/140), Wilson 95% CIs; pooled across the two models WITHIN each scaffold, no
+cross-scaffold pool per §8.3). Cost $0. No frozen attack/oracle/split/stat changed (#1). Going public +
+the PyPI release itself remain with the author.
+
+NOTE (housekeeping): earlier D102-D107 appends left this log's D104/D105 physically after D106/D107 and
+left a stray duplicate of D101's closing lines at EOF (removed here when appending D108). All entries'
+content is intact; only their file order is non-sequential (cosmetic; not reordered to avoid editing
+already-pushed entries).

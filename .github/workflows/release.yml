@@ -1,0 +1,37 @@
+name: release
+
+# Publish mcpredteam to PyPI via TRUSTED PUBLISHING (OIDC) — no API token, nothing to leak.
+# Prerequisite (one-time, done on pypi.org by the maintainer): add this GitHub repo + the `release`
+# workflow as a Trusted Publisher for the `mcpredteam` project. Then publishing is cutting a tag:
+#   git tag v0.1.0 && git push origin v0.1.0
+# This workflow does NOT run until such a tag is pushed; it never runs on a normal push.
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04  # pinned runner (decision #6), matches replay.yml
+    environment: pypi      # optional gate; also where a PyPI environment-scoped publisher is bound
+    permissions:
+      id-token: write      # REQUIRED for PyPI trusted publishing (OIDC); no password/token is used
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv (pinned Python 3.12)
+        uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist + wheel
+        run: uv build
+
+      - name: Publish to PyPI (trusted publishing / OIDC)
+        uses: pypa/gh-action-pypi-publish@release/v1
+        # No `password:` — trusted publishing exchanges the OIDC token for a short-lived API token.
+        # Reads the artifacts from ./dist (uv build's default output).
