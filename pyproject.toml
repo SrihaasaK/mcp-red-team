@@ -1,5 +1,5 @@
 [project]
-name = "mcpredteam"
+name = "mcp-redteam-harness"
 version = "0.1.0"
 description = "Dynamic red-team harness for MCP agents: a transparent proxy that injects attacks, measures attack success rate, and ships an information-flow mitigation layer."
 readme = "README.md"
@@ -28,6 +28,11 @@ mcpr = "mcpredteam.cli:main"
 [build-system]
 requires = ["uv_build>=0.12.23,<0.13.0"]
 build-backend = "uv_build"
+
+[tool.uv.build-backend]
+# Distribution name is `mcp-redteam-harness` (the PyPI name), but the import package and the `mcpr`
+# entry point stay `mcpredteam` (src/mcpredteam/), like scikit-learn -> import sklearn.
+module-name = "mcpredteam"
 
 [dependency-groups]
 dev = [

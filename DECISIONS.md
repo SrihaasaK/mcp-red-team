@@ -3336,3 +3336,16 @@ NOTE (housekeeping): earlier D102-D107 appends left this log's D104/D105 physica
 left a stray duplicate of D101's closing lines at EOF (removed here when appending D108). All entries'
 content is intact; only their file order is non-sequential (cosmetic; not reordered to avoid editing
 already-pushed entries).
+
+## D109. PyPI distribution renamed `mcpredteam` → `mcp-redteam-harness` (name-similarity block)
+The v0.1.0 release built fine but PyPI trusted-publishing refused the publish, and registering the
+pending publisher for `mcpredteam` hit PyPI's name-similarity guard ("too similar to an existing
+project"). The author chose `mcp-redteam-harness` (PyPI accepted it) and registered the pending
+publisher for it (owner SrihaasaK, repo mcp-red-team, workflow release.yml, environment pypi).
+Changed ONLY the distribution name in `pyproject.toml` (`[project].name`); the import package and the
+`mcpr` entry point stay `mcpredteam` via `[tool.uv.build-backend] module-name = "mcpredteam"` (like
+scikit-learn → import sklearn). Verified locally: `uv build` emits `mcp_redteam_harness-0.1.0.{whl,tar.gz}`,
+a clean-venv install of the wheel gives `import mcpredteam` + `mcpr --help` working, `pip show
+mcp-redteam-harness` = 0.1.0. No code/test/CLI change; ruff clean; version still 0.1.0. The v0.1.0 tag is
+moved to this commit to re-trigger the release. GitHub repo name unchanged (trusted publisher matches on
+repo, not PyPI project name).
