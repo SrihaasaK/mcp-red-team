@@ -5,6 +5,10 @@
 > exfiltration trials** moved the planted secret; attack success concentrated under one agent
 > framework (exploratory). See [Results](#14-results).
 
+![Two-panel held-out results. Left: data exfiltration, held-out — 0 of 978 trials moved the planted secret (0.0%). Right: baseline answer-hijack/persistence attack success rate per model per framework — OpenAI Agents SDK (Sonnet 5.5 5.6%, Opus 5.5 4.6%) vs LangGraph (both 0.0%), with Wilson 95% confidence intervals; exploratory panel.](review/M4/heldout-static/headline_figure.png)
+
+*Per model, per framework; exploratory panel labeled.*
+
 MCP Red Team is a dynamic red-team harness for agents that speak the Model Context Protocol. A
 transparent proxy sits between an agent and its MCP servers, injects attacks into the traffic the
 agent sees, measures attack success rate (ASR) with a deterministic oracle, and ships an
