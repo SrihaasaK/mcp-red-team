@@ -9,6 +9,12 @@
 
 *Per model, per framework; exploratory panel labeled.*
 
+## Install
+
+```
+pip install mcp-redteam-harness   # provides `import mcpredteam` and the `mcpr` CLI
+```
+
 MCP Red Team is a dynamic red-team harness for agents that speak the Model Context Protocol. A
 transparent proxy sits between an agent and its MCP servers, injects attacks into the traffic the
 agent sees, measures attack success rate (ASR) with a deterministic oracle, and ships an
